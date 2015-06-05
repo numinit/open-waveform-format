@@ -8,7 +8,14 @@ namespace OWF
 {
     public class Signal
     {
-        protected string id;
+        public Signal(string id, string unit, double[] samples)
+        {
+            this.id = id;
+            this.unit = unit;
+            this.samples = samples;
+        }
+
+        readonly protected string id;
         public string Id
         {
             get
@@ -17,7 +24,7 @@ namespace OWF
             }
         }
 
-        protected string unit;
+        readonly protected string unit;
         public string Unit
         {
             get
@@ -26,7 +33,7 @@ namespace OWF
             }
         }
 
-        protected double[] samples;
+        readonly protected double[] samples;
         public double[] Samples
         {
             get

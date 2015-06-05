@@ -11,7 +11,13 @@ namespace OWF
     /// </summary>
     class Alarm
     {
-        protected string data;
+        public Alarm(DateTime time, string data)
+        {
+            this.data = data;
+            this.startTime = time;
+        }
+
+        readonly protected string data;
         public string Data
         {
             get
@@ -20,7 +26,7 @@ namespace OWF
             }
         }
 
-        protected DateTime startTime;
+        readonly protected DateTime startTime;
         public DateTime Time
         {
             get

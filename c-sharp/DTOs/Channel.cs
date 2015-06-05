@@ -11,13 +11,28 @@ namespace OWF
     /// </summary>
     public class Channel
     {
-        protected string id;
+        public Channel( string id, List<Namespace> namespaces)
+        {
+            this.id = id;
+            this.namespaces = namespaces;
+        }
+
+        readonly protected string id;
         public string Id
         {
             get
             {
                 return id;
             }
-        }        
+        }
+
+        readonly protected List<Namespace> namespaces;
+        public List<Namespace> Namespace
+        {
+            get
+            {
+                return namespaces;
+            }
+        }
     }
 }

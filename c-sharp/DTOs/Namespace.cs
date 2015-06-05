@@ -8,7 +8,18 @@ namespace OWF
 {
     public class Namespace
     {
-        protected string id;
+
+        Namespace(string id, DateTime start, TimeSpan dt, List<Signal> signals, List<Event> events, List<Alarm> alarms)
+        {
+            this.id = id;
+            this.duration = dt;
+            this.startTime = start;
+            this.alarms = alarms;
+            this.events = events;
+            this.signals = signals;
+        }
+
+        readonly protected string id;
         public string Id
         {
             get
@@ -17,7 +28,7 @@ namespace OWF
             }
         }
 
-        protected List<Signal> signals = new List<Signal>();
+        readonly protected List<Signal> signals = new List<Signal>();
         public List<Signal> Signals
         {
             get
@@ -26,7 +37,7 @@ namespace OWF
             }
         }
 
-        protected List<Alarm> alarms = new List<Alarm>();
+        readonly protected List<Alarm> alarms = new List<Alarm>();
         public List<Alarm> Alarms
         {
             get
@@ -35,7 +46,7 @@ namespace OWF
             }
         }
 
-        protected List<Event> events = new List<Event>();
+        readonly protected List<Event> events = new List<Event>();
         public List<Event> Events
         {
             get
@@ -44,7 +55,7 @@ namespace OWF
             }
         }
 
-        protected DateTime startTime;
+        readonly protected DateTime startTime;
         public DateTime t0
         {
             get
@@ -53,7 +64,7 @@ namespace OWF
             }
         }
 
-        protected TimeSpan duration;
+        readonly protected TimeSpan duration;
         public TimeSpan dt
         {
             get

@@ -12,8 +12,12 @@ namespace OWF
     /// </summary>
     public class Package
     {
+        public Package(List<Channel> channels)
+        {
+            this.channels = channels;
+        }
 
-        protected List<Channel> channels = new List<Channel>();
+        readonly protected List<Channel> channels = new List<Channel>();
 
         public List<Channel> Channels
         {

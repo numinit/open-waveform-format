@@ -11,7 +11,14 @@ namespace OWF
     /// </summary>
     class Event
     {
-        protected string data;
+
+        public Event( DateTime time, string data)
+        {
+            this.data = data;
+            this.startTime = time;
+        }
+
+        readonly protected string data;
         public string Data
         {
             get
@@ -20,7 +27,7 @@ namespace OWF
             }
         }
 
-        protected DateTime startTime;
+        readonly protected DateTime startTime;
         public DateTime Time
         {
             get
