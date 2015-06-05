@@ -12,7 +12,7 @@ Features:
 * Designed to optionally transmist device alarms and events in free text
 * Support for batch updates for multiple data sources, multiple data acquisition devices, and multiple acquisition channels
 
-Read more on our [[wiki|https://github.com/medicalinformaticscorp/open-waveform-format/wiki]]
+Read more on our [wiki](https://github.com/medicalinformaticscorp/open-waveform-format/wiki)
 
 Current language libraries:
 
