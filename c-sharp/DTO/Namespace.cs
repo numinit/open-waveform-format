@@ -71,5 +71,38 @@ namespace OWF.DTO
             }
         }
 
+        public UInt32 getSizeInBytes()
+        {
+            checked
+            {
+                UInt32 idStringSizeSize = sizeof(UInt32);
+                UInt32 idStringSize = (UInt32)(System.Text.Encoding.UTF8.GetByteCount(id));
+                UInt32 idStringPaddingSize = idStringSize % 4;
+                UInt32 idSize = idStringPaddingSize + idStringSize + idStringSizeSize;
+
+                UInt32 signalsSize = 0;
+                foreach (var signal in signals)
+                {
+                    signalsSize += signal.getSizeInBytes();
+                }
+
+                UInt32 eventSize = 0;
+                foreach (var evt in events)
+                {
+                    eventSize += evt.getSizeInBytes();
+                }
+
+                UInt32 alarmsSize = 0;
+                foreach (var alarm in alarms)
+                {
+                    alarmsSize += alarm.getSizeInBytes();
+                }                
+
+                return idSize
+                       + signalsSize
+                       + alarmsSize
+                       + eventSize;
+            }
+        }
     }
 }

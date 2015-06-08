@@ -32,5 +32,24 @@ namespace OWF.DTO
                 return namespaces;
             }
         }
+
+        public UInt32 getSizeInBytes()
+        {
+            checked
+            {
+                UInt32 idStringSizeSize = sizeof(UInt32);
+                UInt32 idStringSize = (UInt32)(System.Text.Encoding.UTF8.GetByteCount(id));
+                UInt32 idStringPaddingSize = idStringSize % 4;
+                UInt32 idSize = idStringPaddingSize + idStringSize + idStringSizeSize;
+                
+                UInt32 namespaceSize = 0;
+                foreach (var ns in namespaces)
+                {
+                    namespaceSize += ns.getSizeInBytes();
+                }
+
+                return idSize + namespaceSize;
+            }
+        }
     }
 }

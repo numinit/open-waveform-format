@@ -33,5 +33,17 @@ namespace OWF.DTO
                 return startTime;
             }
         }
+
+        public UInt32 getSizeInBytes()
+        {
+            checked
+            {
+                UInt32 timeSize = sizeof(Int64);
+                UInt32 stringSizeSize = sizeof(UInt32);
+                UInt32 stringSize = (UInt32)(System.Text.Encoding.UTF8.GetByteCount(data));
+                UInt32 paddingSize = stringSize % 4;
+                return timeSize + stringSizeSize + stringSize + paddingSize;
+            }
+        }
     }
 }

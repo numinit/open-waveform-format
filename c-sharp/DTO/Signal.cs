@@ -39,5 +39,24 @@ namespace OWF.DTO
                 return samples;
             }
         }
+
+        public UInt32 getSizeInBytes()
+        {
+            checked
+            {
+                UInt32 idStringSizeSize = sizeof(UInt32);
+                UInt32 idStringSize = (UInt32)(System.Text.Encoding.UTF8.GetByteCount(id));
+                UInt32 idStringPaddingSize = idStringSize % 4;
+                UInt32 idSize = idStringPaddingSize + idStringSize + idStringSizeSize;
+
+                UInt32 unitStringSizeSize = sizeof(UInt32);
+                UInt32 unitStringSize = (UInt32)(System.Text.Encoding.UTF8.GetByteCount(unit));
+                UInt32 unitStringPaddingSize = unitStringSize % 4;
+                UInt32 unitSize = unitStringSizeSize + unitStringSize + unitStringPaddingSize;
+
+                UInt32 samplesSize = (UInt32) (sizeof(double) * samples.Length);
+                return idSize + unitSize + samplesSize;
+            }
+        }
     }
 }

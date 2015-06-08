@@ -25,5 +25,18 @@ namespace OWF.DTO
             }
         }
 
+        public UInt32 getSizeInBytes()
+        {
+            checked
+            {
+                UInt32 packageSize = 0;
+                foreach (var channel in channels)
+                {
+                    packageSize += channel.getSizeInBytes();
+                }
+
+                return packageSize;
+            }
+        }
     }
 }
