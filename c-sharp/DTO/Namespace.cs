@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace OWF
+namespace OWF.DTO
 {
     public class Namespace
     {
 
-        Namespace(string id, DateTime start, TimeSpan dt, List<Signal> signals, List<Event> events, List<Alarm> alarms)
+        public Namespace(string id, DateTime start, TimeSpan dt, List<Signal> signals, List<Event> events, List<Alarm> alarms)
         {
             this.id = id;
             this.duration = dt;

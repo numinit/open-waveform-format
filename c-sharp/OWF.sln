@@ -5,6 +5,11 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OWF", "OWF.csproj", "{F668DF78-12A6-44D7-B31E-466C151EBFF6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OWF-test", "OWF-test\OWF-test.csproj", "{C6FC2459-8493-449F-A0C2-CBA3EA93DCBD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F668DF78-12A6-44D7-B31E-466C151EBFF6} = {F668DF78-12A6-44D7-B31E-466C151EBFF6}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +20,10 @@ Global
 		{F668DF78-12A6-44D7-B31E-466C151EBFF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F668DF78-12A6-44D7-B31E-466C151EBFF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F668DF78-12A6-44D7-B31E-466C151EBFF6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6FC2459-8493-449F-A0C2-CBA3EA93DCBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6FC2459-8493-449F-A0C2-CBA3EA93DCBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6FC2459-8493-449F-A0C2-CBA3EA93DCBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6FC2459-8493-449F-A0C2-CBA3EA93DCBD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

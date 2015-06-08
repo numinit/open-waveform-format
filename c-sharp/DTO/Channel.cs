@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace OWF
+namespace OWF.DTO
 {
     /// <summary>
     /// OWFChannel contains the devices broadcasting on a particular data source, like a patient bed.
@@ -27,7 +25,7 @@ namespace OWF
         }
 
         readonly protected List<Namespace> namespaces;
-        public List<Namespace> Namespace
+        public List<Namespace> Namespaces
         {
             get
             {

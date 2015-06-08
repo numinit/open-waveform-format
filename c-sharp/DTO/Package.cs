@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 
-
-namespace OWF
+namespace OWF.DTO
 {
     /// <summary>
     /// OWFPackage is a class which contains the waveform data for some number of channels.

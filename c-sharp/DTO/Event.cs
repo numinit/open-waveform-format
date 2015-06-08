@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace OWF
+namespace OWF.DTO
 {
     /// <summary>
     /// Event is a way of reporting a non-alarm event from a device.
     /// </summary>
-    class Event
+    public class Event
     {
 
         public Event( DateTime time, string data)
