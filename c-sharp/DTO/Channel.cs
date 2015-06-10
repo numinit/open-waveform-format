@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace OWF.DTO
@@ -50,6 +51,46 @@ namespace OWF.DTO
                 }
 
                 return idSize + namespaceSize;
+            }
+        }
+
+        public override bool Equals(Object o)
+        {
+            if (o == null)
+            {
+                return false;
+            }
+
+            Channel other = o as Channel;
+            if ((Object)other == null)
+            {
+                return false;
+            }
+
+            return other.id == id &&
+                    Enumerable.SequenceEqual(other.namespaces, namespaces);
+        }
+
+        public bool Equals(Channel other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return other.id == id &&
+                    Enumerable.SequenceEqual(other.namespaces, namespaces);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                // based on FNV
+                int hash = (int)2166136261;
+                hash = (hash * 16777619) ^ id.GetHashCode();
+                hash = (hash * 16777619) ^ namespaces.GetHashCode();
+                return hash;
             }
         }
     }

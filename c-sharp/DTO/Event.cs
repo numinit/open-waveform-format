@@ -45,5 +45,44 @@ namespace OWF.DTO
                 return timeSize + stringSizeSize + stringSize + paddingSize;
             }
         }
+
+        public override bool Equals(Object o)
+        {
+            if (o == null)
+            {
+                return false;
+            }
+
+            Event other = o as Event;
+            if ((Object)other == null)
+            {
+                return false;
+            }
+
+            return other.data == data &&
+                    other.startTime.Equals(startTime);
+        }
+
+        public bool Equals(Event other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return other.data == data &&
+                    other.startTime.Equals(startTime);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked {
+                // based on FNV
+                int hash = (int) 2166136261;
+                hash = (hash * 16777619) ^ data.GetHashCode();
+                hash = (hash * 16777619) ^ startTime.GetHashCode();
+                return hash;
+            }            
+        }
     }
 }

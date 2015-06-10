@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace OWF.DTO
@@ -105,6 +106,58 @@ namespace OWF.DTO
                        + signalsSize
                        + alarmsSize
                        + eventsSize;
+            }
+        }
+
+        public override bool Equals(Object o)
+        {
+            if (o == null)
+            {
+                return false;
+            }
+
+            Namespace other = o as Namespace;
+            if ((Object)other == null)
+            {
+                return false;
+            }
+
+            return other.id == id &&
+                                other.t0.Equals(t0) &&
+                                other.dt.Equals(dt) &&
+                                Enumerable.SequenceEqual(other.signals, signals) &&
+                                Enumerable.SequenceEqual(other.alarms, alarms) &&
+                                Enumerable.SequenceEqual(other.events, events);
+        }
+
+        public bool Equals(Namespace other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return other.id == id &&
+                    other.t0.Equals(t0) &&
+                    other.dt.Equals(dt) &&
+                    Enumerable.SequenceEqual(other.signals, signals) &&
+                    Enumerable.SequenceEqual(other.alarms, alarms) &&
+                    Enumerable.SequenceEqual(other.events, events);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                // based on FNV
+                int hash = (int)2166136261;
+                hash = (hash * 16777619) ^ id.GetHashCode();
+                hash = (hash * 16777619) ^ t0.GetHashCode();
+                hash = (hash * 16777619) ^ dt.GetHashCode();
+                hash = (hash * 16777619) ^ signals.GetHashCode();
+                hash = (hash * 16777619) ^ alarms.GetHashCode();
+                hash = (hash * 16777619) ^ events.GetHashCode();
+                return hash;
             }
         }
     }

@@ -38,5 +38,42 @@ namespace OWF.DTO
                 return packageSize;
             }
         }
+
+        public override bool Equals(Object o)
+        {
+            if (o == null)
+            {
+                return false;
+            }
+
+            Package other = o as Package;
+            if ((Object)other == null)
+            {
+                return false;
+            }
+
+            return other.channels.Equals(channels);           
+        }
+
+        public bool Equals(Package other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return other.channels.Equals(channels);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                // based on FNV
+                int hash = (int)2166136261;
+                hash = (hash * 16777619) ^ channels.GetHashCode();
+                return hash;
+            }
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace OWF.DTO
@@ -56,6 +57,49 @@ namespace OWF.DTO
 
                 UInt32 samplesSize = (UInt32) (sizeof(double) * samples.Length);
                 return idSize + unitSize + samplesSize;
+            }
+        }
+        
+        public override bool Equals(Object o)
+        {
+            if (o == null)
+            {
+                return false;
+            }
+
+            Signal other = o as Signal;
+            if ((Object)other == null)
+            {
+                return false;
+            }
+
+            return other.id == id &&
+                    other.unit == unit &&
+                    Enumerable.SequenceEqual(other.samples, samples);
+        }
+
+        public bool Equals(Signal other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return other.id == id &&
+                    other.unit == unit &&
+                    Enumerable.SequenceEqual(other.samples, samples);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                // based on FNV
+                int hash = (int)2166136261;
+                hash = (hash * 16777619) ^ id.GetHashCode();
+                hash = (hash * 16777619) ^ unit.GetHashCode();
+                hash = (hash * 16777619) ^ samples.GetHashCode();
+                return hash;
             }
         }
     }
