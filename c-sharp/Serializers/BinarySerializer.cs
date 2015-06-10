@@ -8,7 +8,6 @@ namespace OWF.Serializers
 {
     public static class BinarySerializer
     {        
-
         public static void writeOWFString(BinaryWriter bw, string str)
         {
             checked
@@ -169,17 +168,17 @@ namespace OWF.Serializers
                 writeSignal(bw, sig);
             }
 
-            writeU32(bw, alarmsLength);
-            foreach (var alarm in ns.Alarms)
-            {
-                writeAlarm(bw, alarm);
-            }
-
             writeU32(bw, eventsLength);
             foreach (var evt in ns.Events)
             {
                 writeEvent(bw, evt);
             }
+
+            writeU32(bw, alarmsLength);
+            foreach (var alarm in ns.Alarms)
+            {
+                writeAlarm(bw, alarm);
+            }            
         }
 
         public static void writeSignal(BinaryWriter bw, Signal sig)
