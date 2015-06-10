@@ -84,24 +84,27 @@ namespace OWF.DTO
                 foreach (var signal in signals)
                 {
                     signalsSize += signal.getSizeInBytes();
+                    signalsSize += sizeof(UInt32); // each signal, packed, is length-prefixed
                 }
 
-                UInt32 eventSize = 0;
+                UInt32 eventsSize = 0;
                 foreach (var evt in events)
                 {
-                    eventSize += evt.getSizeInBytes();
+                    eventsSize += evt.getSizeInBytes();
+                    eventsSize += sizeof(UInt32); // each event, packed, is length-prefixed
                 }
 
                 UInt32 alarmsSize = 0;
                 foreach (var alarm in alarms)
                 {
                     alarmsSize += alarm.getSizeInBytes();
+                    alarmsSize += sizeof(UInt32); // each alarm, packed, is length-prefixed
                 }                
 
                 return idSize
                        + signalsSize
                        + alarmsSize
-                       + eventSize;
+                       + eventsSize;
             }
         }
     }

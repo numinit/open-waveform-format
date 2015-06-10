@@ -46,6 +46,7 @@ namespace OWF.DTO
                 foreach (var ns in namespaces)
                 {
                     namespaceSize += ns.getSizeInBytes();
+                    namespaceSize += sizeof(UInt32); // each namespace, packed, is length-prefixed
                 }
 
                 return idSize + namespaceSize;

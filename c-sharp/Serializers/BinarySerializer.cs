@@ -18,16 +18,7 @@ namespace OWF.Serializers
 
                 // write length
                 UInt32 fullSize = checked((strsize + padding));
-                if (BitConverter.IsLittleEndian)
-                {
-                    byte[] sizeBytes = BitConverter.GetBytes(fullSize); 
-                    Array.Reverse(sizeBytes);
-                    bw.Write(sizeBytes);
-                }
-                else
-                {
-                    bw.Write(fullSize);
-                }
+                writeU32(bw, fullSize);
 
 
                 // write string (this works becuase the Binary Writer is UTF8 encoded)
@@ -69,27 +60,153 @@ namespace OWF.Serializers
             Int64 time64 = time.ToFileTime();
             Int64 adjTime = time64 - unixEpochOffset;
 
+            writeS64(bw, adjTime);
+        }
+
+        public static void writeU64(BinaryWriter bw, UInt64 val)
+        {
             if (BitConverter.IsLittleEndian)
             {
-                byte[] valueBytes = BitConverter.GetBytes(adjTime);
+                byte[] valueBytes = BitConverter.GetBytes(val);
                 Array.Reverse(valueBytes);
                 bw.Write(valueBytes);
             }
             else
             {
-                bw.Write(adjTime);
+                bw.Write(val);
+            }
+        }
+
+        public static void writeS64(BinaryWriter bw, Int64 val)
+        {
+            if (BitConverter.IsLittleEndian)
+            {
+                byte[] valueBytes = BitConverter.GetBytes(val);
+                Array.Reverse(valueBytes);
+                bw.Write(valueBytes);
+            }
+            else
+            {
+                bw.Write(val);
+            }
+        }
+
+        public static void writeU32(BinaryWriter bw, UInt32 val)
+        {
+            if (BitConverter.IsLittleEndian)
+            {
+                byte[] valueBytes = BitConverter.GetBytes(val);
+                Array.Reverse(valueBytes);
+                bw.Write(valueBytes);
+            }
+            else
+            {
+                bw.Write(val);
+            }
+        }
+
+        public static void writeDouble(BinaryWriter bw, double val)
+        {
+            if (BitConverter.IsLittleEndian)
+            {
+                byte[] valueBytes = BitConverter.GetBytes(val);
+                Array.Reverse(valueBytes);
+                bw.Write(valueBytes);
+            }
+            else
+            {
+                bw.Write(val);
             }
         }
 
         public static void writeHeader( BinaryWriter bw, UInt32 length ){
             byte[] magic = {0x4f, 0x57, 0x46, 0x31 };
             bw.Write( magic );
-            bw.Write(length);
+            writeU32(bw, length);            
         }
 
         public static void writeChannel(BinaryWriter bw, Channel channel)
         {
-            bw.Write(channel.getSizeInBytes());
+            writeU32(bw, channel.getSizeInBytes());
+            writeOWFString(bw, channel.Id);
+            foreach (var ns in channel.Namespaces)
+            {
+                writeNamespace(bw, ns);
+            }
+        }
+
+        public static void writeNamespace(BinaryWriter bw, Namespace ns)
+        {
+            writeU32(bw, ns.getSizeInBytes());
+            writeOWFTimestamp(bw, ns.t0);
+            writeU64(bw, (UInt64) ns.dt.Ticks);
+            writeOWFString(bw, ns.Id);
+
+            UInt32 alarmsLength = 0;
+            UInt32 eventsLength = 0;
+            UInt32 signalsLength = 0;
+            checked
+            {
+                foreach (var sig in ns.Signals)
+                {
+                    signalsLength += sig.getSizeInBytes();
+                }
+
+                foreach (var alarm in ns.Alarms)
+                {
+                    alarmsLength += alarm.getSizeInBytes();
+                }
+
+                foreach (var evt in ns.Events)
+                {
+                    eventsLength += evt.getSizeInBytes();
+                }
+            }
+
+            writeU32(bw, signalsLength);
+            foreach (var sig in ns.Signals)
+            {
+                writeSignal(bw, sig);
+            }
+
+            writeU32(bw, alarmsLength);
+            foreach (var alarm in ns.Alarms)
+            {
+                writeAlarm(bw, alarm);
+            }
+
+            writeU32(bw, eventsLength);
+            foreach (var evt in ns.Events)
+            {
+                writeEvent(bw, evt);
+            }
+        }
+
+        public static void writeSignal(BinaryWriter bw, Signal sig)
+        {
+            writeU32(bw, sig.getSizeInBytes());
+            writeOWFString(bw, sig.Id);
+            writeOWFString(bw, sig.Unit);
+
+            UInt32 samplesLength = 0;
+            checked
+            {
+                samplesLength = sizeof(double) * (UInt32) sig.Samples.Length;
+            }
+            writeU32(bw, samplesLength);
+            writeOWFDoubles(bw, sig.Samples);
+        }
+
+        public static void writeAlarm(BinaryWriter bw, Alarm alarm)
+        {
+            writeOWFTimestamp(bw, alarm.Time);
+            writeOWFString(bw, alarm.Data);
+        }
+
+        public static void writeEvent(BinaryWriter bw, Event evt)
+        {
+            writeOWFTimestamp(bw, evt.Time);
+            writeOWFString(bw, evt.Data);
         }
 
         public static byte[] convert(Package package)
