@@ -14,15 +14,16 @@ Features:
 
 Read more on our [wiki](https://github.com/medicalinformaticscorp/open-waveform-format/wiki)
 
-Current language libraries:
+**Supported Languages**
+|Language| JSON | Binary |
+|--------|------|--------|
+| C | planned | planned |
+| C++ | planned | planned |
+| C# | planned | Serialize only|
+| JS (NodeJS) | planned | planned |
+| Ruby | planned | Serialize only |
+| Elixir | planned | planned |
 
-Planned language libraries:
-* C
-* C++
-* Javascript (Node)
-* C#
-* Ruby
-* Elixir
 
 ## Contributing
 
