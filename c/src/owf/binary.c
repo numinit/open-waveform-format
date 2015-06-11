@@ -143,7 +143,7 @@ bool owf_binary_read_str(owf_binary_reader_t *binary, void *ptr) {
 }
 
 bool owf_binary_read_samples(owf_binary_reader_t *binary, void *ptr) {
-    owf_signal_t *signal = (owf_signal_t *)ptr;
+    owf_signal_t *signal = &binary->reader.ctx.signal;
     uint32_t length = binary->segment_length, num_samples;
 
     /* Length is stored in segment_length, ensure it's also double aligned */
@@ -165,72 +165,72 @@ bool owf_binary_read_samples(owf_binary_reader_t *binary, void *ptr) {
 }
 
 bool owf_binary_read_signal(owf_binary_reader_t *binary, void *ptr) {
-    owf_signal_t signal;
+    owf_signal_t *signal = &binary->reader.ctx.signal;
 
-    if (!owf_binary_length_unwrap(binary, owf_binary_read_str, &signal.id) ||
-        !owf_binary_length_unwrap(binary, owf_binary_read_str, &signal.unit) ||
-        !owf_binary_length_unwrap(binary, owf_binary_read_samples, &signal)) {
+    if (!owf_binary_length_unwrap(binary, owf_binary_read_str, &signal->id) ||
+        !owf_binary_length_unwrap(binary, owf_binary_read_str, &signal->unit) ||
+        !owf_binary_length_unwrap(binary, owf_binary_read_samples, signal)) {
         return false;
     }
 
     /* Call the visitor */
-    fprintf(stderr, " signal: %s <%s>;", signal.id.data, signal.unit.data);
+    fprintf(stderr, " signal: %s <%s>;", signal->id.data, signal->unit.data);
     //OWF_READER_VISIT(binary->reader, &signal, OWF_READ_SIGNAL);
     return true;
 }
 
 bool owf_binary_read_event(owf_binary_reader_t *binary, void *ptr) {
-    owf_event_t event;
+    owf_event_t *event = &binary->reader.ctx.event;
 
     /* Read the timestamp */
-    OWF_BINARY_SAFE_READ(binary, &event.time, sizeof(event.time));
-    OWF_HOST64(event.time);
+    OWF_BINARY_SAFE_READ(binary, &event->time, sizeof(event->time));
+    OWF_HOST64(event->time);
 
     /* Read the data */
-    if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, &event.data))) {
+    if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, &event->data))) {
         return false;
     }
 
     /* Call the visitor */
-    fprintf(stderr, " event: %s <time=%" PRId64 ">;", event.data.data, event.time);
+    fprintf(stderr, " event: %s <time=%" PRId64 ">;", event->data.data, event->time);
     //OWF_READER_VISIT(binary->reader, &event, OWF_READ_EVENT);
     return true;
 }
 
 bool owf_binary_read_alarm(owf_binary_reader_t *binary, void *ptr) {
-    owf_alarm_t alarm;
+    owf_alarm_t *alarm = &binary->reader.ctx.alarm;
 
     /* Read the timestamp */
-    OWF_BINARY_SAFE_READ(binary, &alarm.time, sizeof(alarm.time));
-    OWF_HOST64(alarm.time);
+    OWF_BINARY_SAFE_READ(binary, &alarm->time, sizeof(alarm->time));
+    OWF_HOST64(alarm->time);
 
     /* Read the data */
-    if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, &alarm.data))) {
+    if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, &alarm->data))) {
         return false;
     }
 
     /* Call the visitor */
-    fprintf(stderr, " alarm: %s <time=%" PRId64 ">;", alarm.data.data, alarm.time);
+    fprintf(stderr, " alarm: %s <time=%" PRId64 ">;", alarm->data.data, alarm->time);
     //OWF_READER_VISIT(binary->reader, &alarm, OWF_READ_ALARM);
     return true;
 }
 
 bool owf_binary_read_namespace(owf_binary_reader_t *binary, void *ptr) {
-    owf_namespace_t namespace;
+    owf_namespace_t *ns = &binary->reader.ctx.ns;
 
     /* Read timestamps */
-    OWF_BINARY_SAFE_READ(binary, &namespace.t0, sizeof(namespace.t0));
-    OWF_HOST64(namespace.t0);
-    OWF_BINARY_SAFE_READ(binary, &namespace.dt, sizeof(namespace.dt));
-    OWF_HOST64(namespace.dt);
+    OWF_BINARY_SAFE_READ(binary, &ns->t0, sizeof(ns->t0));
+    OWF_HOST64(ns->t0);
+    OWF_BINARY_SAFE_READ(binary, &ns->dt, sizeof(ns->dt));
+    OWF_HOST64(ns->dt);
 
     /* Read the ID */
-    if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, &namespace.id))) {
+    if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, ns))) {
         return false;
     }
 
     /* Call the visitor */
-    fprintf(stderr, " namespace: %s <t0=%" PRId64 ", dt=%" PRId64 ">;", namespace.id.data, namespace.t0, namespace.dt);
+    fprintf(stderr, " namespace: %s <t0=%" PRId64 ", dt=%" PRId64 ">;", ns->id.data, ns->t0, ns->dt);
     //OWF_READER_VISIT(binary->reader, &namespace, OWF_READ_NAMESPACE);
 
     /* Read children */
@@ -241,17 +241,15 @@ bool owf_binary_read_namespace(owf_binary_reader_t *binary, void *ptr) {
 }
 
 bool owf_binary_read_channel(owf_binary_reader_t *binary, void *ptr) {
-    owf_channel_t channel;
-    channel.namespaces = NULL;
-    channel.num_namespaces = 0;
+    owf_channel_t *channel = &binary->reader.ctx.channel;
 
     /* Read the channel id */
-    if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, &channel.id))) {
+    if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, &channel->id))) {
         return false;
     }
 
     /* Call the visitor */
-    fprintf(stderr, " channel: %s;", channel.id.data);
+    fprintf(stderr, " channel: %s;", channel->id.data);
     //OWF_READER_VISIT(binary->reader, &channel, OWF_READ_CHANNEL);
 
     /* Read children */
