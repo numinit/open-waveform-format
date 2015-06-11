@@ -29,6 +29,12 @@
 #elif defined(_WINDOWS) || defined(_WIN32) || defined(__CYGWIN__)
     /* This is easy */
     #define OWF_ENDIAN OWF_LITTLE_ENDIAN
+    #ifdef __CYGWIN__
+        #include <byteswap.h>
+        #define _byteswap_uint64 bswap_64
+        #define _byteswap_ulong  bswap_32
+        #define _byteswap_ushort bswap_16
+    #endif
 
     #if OWF_ENDIAN == OWF_LITTLE_ENDIAN
         #define OWF_ENDIAN_SWAP64(value) do {OWF_ENDIAN_CAST(value, uint64_t) = _byteswap_uint64(OWF_ENDIAN_CAST(value, uint64_t));} while (0)

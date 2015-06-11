@@ -13,15 +13,22 @@ LIBOWF_TEST_SRCS = $(shell find test -type f -name '*.c')
 LIBOWF_TEST_OBJS = $(LIBOWF_TEST_SRCS:.c=.o)
 
 UNAME := $(shell uname)
-ifeq ($(UNAME),Darwin)
- DL_EXT := .dylib
+ifeq ($(UNAME), Darwin)
+	DL_EXT := .dylib
+	BIN_EXT := 
+else ifeq ($(UNAME), Linux)
+	DL_EXT := .so
+	BIN_EXT := 
+else ifneq (,$(findstring CYGWIN, $(UNAME)))
+	DL_EXT := .dll
+	BIN_EXT := .exe
 else
- DL_EXT := .so
+	$(error Unknown development platform, we support Darwin, Linux, and Cygwin)
 endif
 
 # define the executable file
 LIBOWF = build/lib/libowf$(DL_EXT)
-LIBOWF_TEST = build/bin/libowf-test
+LIBOWF_TEST = build/bin/libowf-test$(BIN_EXT)
 
 #
 # The following part of the makefile is generic; it can be used to
@@ -33,6 +40,8 @@ LIBOWF_TEST = build/bin/libowf-test
 
 all: $(LIBOWF)
 test: $(LIBOWF) $(LIBOWF_TEST)
+	export PATH=build/lib
+	export LD_LIBRARY_PATH=build/lib
 	$(LIBOWF_TEST)
 
 $(LIBOWF): CFLAGS += -fPIC

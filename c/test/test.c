@@ -32,7 +32,6 @@ static bool owf_visitor(owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *
             break;
         case OWF_READ_NAMESPACE:
             fprintf(stderr, "  [NS] %s <t0=%" PRIu64 ", dt=%" PRIu64 ">\n", ctx->ns.id.data, ctx->ns.t0, ctx->ns.dt);
-            return false;
             break;
         case OWF_READ_SIGNAL:
             fprintf(stderr, "    [SIGNAL] %s <units=%s>: [", ctx->signal.id.data, ctx->signal.unit.data);
