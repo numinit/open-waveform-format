@@ -17,7 +17,7 @@
     do { \
         /* Length of zero is a no-op */ \
         if (OWF_NOEXPECT(length != 0 && !binary->reader.read(ptr, length, binary->reader.data))) { \
-            OWF_READER_ERR(binary->reader, "read error"); \
+            OWF_READER_ERRF(binary->reader, "read error (%" PRIu32 " bytes)", (uint32_t)length); \
             return false; \
         } else { \
             OWF_BINARY_SAFE_SUB32(binary->segment_length, length); \
@@ -30,14 +30,14 @@
         /* length = (length > OWF_BINARY_MAX_ALLOC ? OWF_BINARY_MAX_ALLOC : length); */ \
         ptr = binary->reader.alloc(length); \
         if (OWF_NOEXPECT(length != 0 && !binary->reader.read(ptr, length, binary->reader.data))) { \
-            OWF_READER_ERR(binary->reader, "variable read error"); \
+            OWF_READER_ERRF(binary->reader, "variable read error (%" PRIu32 " bytes)", (uint32_t)length); \
             binary->reader.free(ptr); \
             return false; \
         } else { \
             bool ok; \
             binary->segment_length = owf_binary_safe_sub32(binary->segment_length, length, &ok); \
             if (OWF_NOEXPECT(!ok)) { \
-                OWF_READER_ERR(binary->reader, "out-of-bounds length"); \
+                OWF_READER_ERRF(binary->reader, "out-of-bounds length (%" PRIu32 " bytes)", (uint32_t)length); \
                 binary->reader.free(ptr); \
                 return false; \
             } \
@@ -101,7 +101,7 @@ bool owf_binary_length_unwrap_top(owf_binary_reader_t *binary, owf_binary_reader
     if (OWF_NOEXPECT(!cb(binary, ptr))) {
         return false;
     } else if (OWF_NOEXPECT(binary->segment_length > 0)) {
-        OWF_READER_ERRF(binary->reader, "trailing data when reading segment: %" PRIu32 " bytes", binary->segment_length);
+        OWF_READER_ERRF(binary->reader, "trailing data when reading segment: (%" PRIu32 " bytes)", binary->segment_length);
         return false;
     }
 
@@ -157,6 +157,7 @@ bool owf_binary_read_samples(owf_binary_reader_t *binary, void *ptr) {
     signal->num_samples = num_samples;
     OWF_BINARY_SAFE_VARIABLE_READ(binary, signal->samples, length);
 
+    /* Byteswap the samples */
     for (uint32_t i = 0; i < num_samples; i++) {
         OWF_HOST64(signal->samples[i]);
     }
