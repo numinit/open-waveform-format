@@ -69,6 +69,12 @@
 #define OWF_NOEXPECT(expr) (__builtin_expect((expr), false))
 
 /**
+ * Min/max
+ */
+#define OWF_MIN(a, b) (a < b ? a : b)
+#define OWF_MAX(a, b) (a > b ? a : b)
+
+/**
  * Array counts. From Chromium source.
  */
 #define OWF_COUNT(x) ((sizeof(x) / sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))

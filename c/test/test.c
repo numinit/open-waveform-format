@@ -25,12 +25,42 @@ typedef struct owf_test {
     int (*fn)(void);
 } owf_test_t;
 
+static bool owf_visitor(owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *data) {
+    switch (type) {
+        case OWF_READ_CHANNEL:
+            fprintf(stderr, "[CHANNEL] %s\n", ctx->channel.id.data);
+            break;
+        case OWF_READ_NAMESPACE:
+            fprintf(stderr, "  [NS] %s <t0=%" PRIu64 ", dt=%" PRIu64 ">\n", ctx->ns.id.data, ctx->ns.t0, ctx->ns.dt);
+            return false;
+            break;
+        case OWF_READ_SIGNAL:
+            fprintf(stderr, "    [SIGNAL] %s <units=%s>: [", ctx->signal.id.data, ctx->signal.unit.data);
+            for (uint32_t i = 0; i < ctx->signal.num_samples; i++) {
+                fprintf(stderr, "%.2f", ctx->signal.samples[i]);
+                if (ctx->signal.num_samples > 0 && i < ctx->signal.num_samples - 1) {
+                    fprintf(stderr, " ");
+                }
+            }
+            fprintf(stderr, "]\n");
+            break;
+        case OWF_READ_EVENT:
+            fprintf(stderr, "    [EVENT] %s <time=%" PRIu64 ">\n", ctx->event.data.data, ctx->event.time);
+            break;
+        case OWF_READ_ALARM:
+            fprintf(stderr, "    [ALARM] %s <time=%" PRIu64 ">\n", ctx->alarm.data.data, ctx->alarm.time);
+            break;
+        default:
+            break;
+    }
+    return true;
+}
 
-
-static int test_example_1_binary(void) {
+static int owf_test_example_1_binary(void) {
     owf_binary_reader_t reader;
     FILE *f = fopen("test/example/owf1_example_1.owf", "r");
-    owf_binary_reader_init_file(&reader, f, malloc, free, NULL, OWF_READER_DEFAULT_MAX_ALLOC);
+    owf_binary_reader_init_file(&reader, f, malloc, free, owf_visitor, OWF_READER_DEFAULT_MAX_ALLOC);
+    fprintf(stderr, "\n");
     if (!owf_binary_read(&reader)) {
         OWF_TEST_FAILF("unexpected error when reading OWF: %s", owf_binary_reader_strerror(&reader));
     }
@@ -40,10 +70,11 @@ static int test_example_1_binary(void) {
     OWF_TEST_OK;
 }
 
-static int test_example_2_binary(void) {
+static int owf_test_example_2_binary(void) {
     owf_binary_reader_t reader;
     FILE *f = fopen("test/example/owf1_example_2.owf", "r");
-    owf_binary_reader_init_file(&reader, f, malloc, free, NULL, OWF_READER_DEFAULT_MAX_ALLOC);
+    fprintf(stderr, "\n");
+    owf_binary_reader_init_file(&reader, f, malloc, free, owf_visitor, OWF_READER_DEFAULT_MAX_ALLOC);
     if (!owf_binary_read(&reader)) {
         OWF_TEST_FAILF("unexpected error when reading OWF: %s", owf_binary_reader_strerror(&reader));
     }
@@ -54,8 +85,8 @@ static int test_example_2_binary(void) {
 }
 
 static owf_test_t tests[] = {
-    {"example_1_binary", test_example_1_binary},
-    {"example_2_binary", test_example_2_binary}
+    {"example_1_binary", owf_test_example_1_binary},
+    {"example_2_binary", owf_test_example_2_binary}
 };
 
 int main(int argc, char **argv) {

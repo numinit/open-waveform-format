@@ -22,11 +22,6 @@ typedef enum owf_reader_cb_type {
     OWF_READ_ALARM
 } owf_reader_cb_type_t;
 
-typedef bool (*owf_read_cb_t)(void *, size_t, void *);
-typedef bool (*owf_visit_cb_t)(void *, owf_reader_cb_type_t, void *);
-typedef void *(*owf_alloc_cb_t)(size_t);
-typedef void (*owf_free_cb_t)(void *);
-
 /**
  * Abstracts a context.
  * Contexts store the current objects being read.
@@ -38,6 +33,11 @@ typedef struct owf_reader_ctx {
     owf_event_t event;
     owf_alarm_t alarm;
 } owf_reader_ctx_t;
+
+typedef bool (*owf_read_cb_t)(void *, size_t, void *);
+typedef bool (*owf_visit_cb_t)(owf_reader_ctx_t *, owf_reader_cb_type_t, void *);
+typedef void *(*owf_alloc_cb_t)(size_t);
+typedef void (*owf_free_cb_t)(void *);
 
 /**
  * Abstracts a reader.
@@ -69,7 +69,7 @@ void owf_reader_init(owf_reader_t *reader, owf_alloc_cb_t alloc_fn, owf_free_cb_
     do {snprintf((&(reader))->error, sizeof((&(reader))->error), (fmt));} while (0)
 #define OWF_READER_ERRF(reader, fmt, ...) \
     do {snprintf((&(reader))->error, sizeof((&(reader))->error), (fmt), __VA_ARGS__);} while (0)
-#define OWF_READER_VISIT(reader, obj, type) \
-    (!((&(reader))->visit != NULL && !(&(reader))->visit(obj, type, (&(reader))->data)))
+#define OWF_READER_VISIT(reader, type) \
+    (((&(reader))->visit != NULL && (&(reader))->visit(&(&(reader))->ctx, type, (&(reader))->data)))
 
 #endif /* OWF_READER_H */

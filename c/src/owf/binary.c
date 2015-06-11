@@ -27,6 +27,7 @@
 #define OWF_BINARY_SAFE_VARIABLE_READ(binary, ptr, length) \
     do { \
         if (length > binary->reader.max_alloc) { \
+            OWF_READER_ERRF(binary->reader, "max allocation size exceeded (attempted to allocate %" PRIu32 " bytes, max_alloc=%" PRIu32 " bytes)", (uint32_t)length, (uint32_t)binary->reader.max_alloc); \
             return false; \
         } else {\
             ptr = binary->reader.alloc(length); \
@@ -44,15 +45,25 @@
             bool ok; \
             binary->segment_length = owf_binary_safe_sub32(binary->segment_length, length, &ok); \
             if (OWF_NOEXPECT(!ok)) { \
-                OWF_READER_ERRF(binary->reader, "out-of-bounds length (%" PRIu32 " bytes)", (uint32_t)length); \
+                OWF_READER_ERRF(binary->reader, "out-of-bounds length (%" PRIu32 " bytes for segment length %" PRIu32 ")", (uint32_t)length, binary->segment_length); \
                 binary->reader.free(ptr); \
                 return false; \
             } \
         } \
     } while (0)
 
+#define OWF_BINARY_READER_VISIT(binary, type) \
+    do { \
+        if (!OWF_READER_VISIT(binary->reader, type)) { \
+            /* Skip the rest of the segment */ \
+            binary->skip_length = binary->segment_length; \
+            return true; \
+        } \
+    } while (0)
+
 void owf_binary_reader_init(owf_binary_reader_t *binary, owf_alloc_cb_t alloc_fn, owf_free_cb_t free_fn, owf_read_cb_t read_fn, owf_visit_cb_t visitor, size_t max_alloc, void *data) {
     owf_reader_init(&binary->reader, alloc_fn, free_fn, read_fn, visitor, max_alloc, data);
+    binary->segment_length = binary->skip_length = 0;
 }
 
 static bool owf_binary_reader_file_read_cb(void *dest, size_t size, void *data) {
@@ -105,9 +116,20 @@ bool owf_binary_length_unwrap_top(owf_binary_reader_t *binary, owf_binary_reader
 
     /* Yield to the callback, and ensure that we have no data left to read after the callback executes */
     binary->segment_length = length;
+    binary->skip_length = 0;
     if (OWF_NOEXPECT(!cb(binary, ptr))) {
         return false;
-    } else if (OWF_NOEXPECT(binary->segment_length > 0)) {
+    }
+
+    /* Read skipped bytes */
+    while (binary->skip_length > 0) {
+        const uint32_t to_skip = OWF_MIN(binary->skip_length, sizeof(binary->skip));
+        OWF_BINARY_SAFE_READ(binary, binary->skip, to_skip);
+        OWF_BINARY_SAFE_SUB32(binary->skip_length, to_skip);
+    }
+
+    /* Ensure we have no trailing bytes */
+    if (OWF_NOEXPECT(binary->segment_length > 0)) {
         OWF_READER_ERRF(binary->reader, "trailing data when reading segment: (%" PRIu32 " bytes)", binary->segment_length);
         return false;
     }
@@ -182,8 +204,7 @@ bool owf_binary_read_signal(owf_binary_reader_t *binary, void *ptr) {
     }
 
     /* Call the visitor */
-    fprintf(stderr, " signal: %s <%s>;", signal->id.data, signal->unit.data);
-    //OWF_READER_VISIT(binary->reader, &signal, OWF_READ_SIGNAL);
+    OWF_BINARY_READER_VISIT(binary, OWF_READ_SIGNAL);
     return true;
 }
 
@@ -200,8 +221,7 @@ bool owf_binary_read_event(owf_binary_reader_t *binary, void *ptr) {
     }
 
     /* Call the visitor */
-    fprintf(stderr, " event: %s <time=%" PRId64 ">;", event->data.data, event->time);
-    //OWF_READER_VISIT(binary->reader, &event, OWF_READ_EVENT);
+    OWF_BINARY_READER_VISIT(binary, OWF_READ_EVENT);
     return true;
 }
 
@@ -218,8 +238,7 @@ bool owf_binary_read_alarm(owf_binary_reader_t *binary, void *ptr) {
     }
 
     /* Call the visitor */
-    fprintf(stderr, " alarm: %s <time=%" PRId64 ">;", alarm->data.data, alarm->time);
-    //OWF_READER_VISIT(binary->reader, &alarm, OWF_READ_ALARM);
+    OWF_BINARY_READER_VISIT(binary, OWF_READ_ALARM);
     return true;
 }
 
@@ -238,8 +257,7 @@ bool owf_binary_read_namespace(owf_binary_reader_t *binary, void *ptr) {
     }
 
     /* Call the visitor */
-    fprintf(stderr, " namespace: %s <t0=%" PRId64 ", dt=%" PRId64 ">;", ns->id.data, ns->t0, ns->dt);
-    //OWF_READER_VISIT(binary->reader, &namespace, OWF_READ_NAMESPACE);
+    OWF_BINARY_READER_VISIT(binary, OWF_READ_NAMESPACE);
 
     /* Read children */
     return
@@ -257,8 +275,7 @@ bool owf_binary_read_channel(owf_binary_reader_t *binary, void *ptr) {
     }
 
     /* Call the visitor */
-    fprintf(stderr, " channel: %s;", channel->id.data);
-    //OWF_READER_VISIT(binary->reader, &channel, OWF_READ_CHANNEL);
+    OWF_BINARY_READER_VISIT(binary, OWF_READ_CHANNEL);
 
     /* Read children */
     return owf_binary_length_unwrap_nested_multi(binary, owf_binary_read_namespace);

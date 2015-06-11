@@ -9,10 +9,12 @@
 #define OWF_BINARY_H
 
 #define OWF_MAGIC 0x4f574631UL
+#define OWF_BINARY_READER_SKIP_BUF_SIZE 256
 
 typedef struct owf_binary_reader {
     owf_reader_t reader;
-    uint32_t segment_length;
+    char skip[OWF_BINARY_READER_SKIP_BUF_SIZE];
+    uint32_t segment_length, skip_length;
 } owf_binary_reader_t;
 
 typedef struct owf_binary_reader_file {
