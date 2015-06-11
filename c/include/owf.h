@@ -63,12 +63,6 @@
 #define OWF_NORETURN __attribute__ ((noreturn))
 
 /**
- * Branch prediction optimizations
- */
-#define OWF_EXPECT(expr) (__builtin_expect((expr), true))
-#define OWF_NOEXPECT(expr) (__builtin_expect((expr), false))
-
-/**
  * Min/max
  */
 #define OWF_MIN(a, b) (a < b ? a : b)

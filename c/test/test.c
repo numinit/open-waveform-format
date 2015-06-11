@@ -1,6 +1,8 @@
 #include <owf.h>
 #include <owf/binary.h>
 #include <owf/reader.h>
+#include <owf/platform.h>
+#include <owf/version.h>
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -57,7 +59,11 @@ static bool owf_visitor(owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *
 
 static int owf_test_example_1_binary(void) {
     owf_binary_reader_t reader;
-    FILE *f = fopen("test/example/owf1_example_1.owf", "r");
+    FILE *f = fopen("test/example/owf1_example_1.owf", "rb");
+	if (f == NULL) {
+		OWF_TEST_FAIL("couldn't open file");
+	}
+
     owf_binary_reader_init_file(&reader, f, malloc, free, owf_visitor, OWF_READER_DEFAULT_MAX_ALLOC);
     fprintf(stderr, "\n");
     if (!owf_binary_read(&reader)) {
@@ -71,9 +77,13 @@ static int owf_test_example_1_binary(void) {
 
 static int owf_test_example_2_binary(void) {
     owf_binary_reader_t reader;
-    FILE *f = fopen("test/example/owf1_example_2.owf", "r");
-    fprintf(stderr, "\n");
+    FILE *f = fopen("test/example/owf1_example_2.owf", "rb");
+	if (f == NULL) {
+		OWF_TEST_FAIL("couldn't open file");
+	}
+
     owf_binary_reader_init_file(&reader, f, malloc, free, owf_visitor, OWF_READER_DEFAULT_MAX_ALLOC);
+	fprintf(stderr, "\n");
     if (!owf_binary_read(&reader)) {
         OWF_TEST_FAILF("unexpected error when reading OWF: %s", owf_binary_reader_strerror(&reader));
     }
@@ -89,6 +99,7 @@ static owf_test_t tests[] = {
 };
 
 int main(int argc, char **argv) {
+	char dir[1024];
     int ret = 0, success = 0;
 
     // Disable output buffering
@@ -96,6 +107,11 @@ int main(int argc, char **argv) {
     setvbuf(stderr, NULL, _IONBF, 0);
 
     // And here we go...
+	getcwd(dir, sizeof(dir));
+	fprintf(stderr, "--------------------------------\n");
+	fprintf(stderr, "libowf " OWF_LIBRARY_VERSION_STRING " test harness starting\n");
+	fprintf(stderr, "--------------------------------\n");
+	fprintf(stderr, "(in %s)\n\n", dir);
     fprintf(stderr, ">> running %lu %s\n", OWF_COUNT(tests), OWF_COUNT(tests) == 1 ? "test" : "tests");
     for (int i = 0; i < OWF_COUNT(tests); i++) {
         owf_test_t *test = &tests[i];
@@ -115,5 +131,11 @@ int main(int argc, char **argv) {
 
     // Display results
     fprintf(stderr, ">> %d/%lu %s successful (%.2f%%)\n", success, OWF_COUNT(tests), OWF_COUNT(tests) != 1 ? "tests" : "test", (float)success / (float)OWF_COUNT(tests) * 100);
+
+	if (strcmp(argv[argc - 1], "--pause") == 0) {
+		fprintf(stderr, "(press enter to exit)\n");
+		getc(stdin);
+	}
+
     return ret;
 }

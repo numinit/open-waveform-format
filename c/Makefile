@@ -3,7 +3,7 @@ CC = clang
 CFLAGS += -Wall -O0 -g
 LDFLAGS +=
 
-INCLUDES = -Iinclude -Ilib/jansson
+INCLUDES = -Iinclude
 LIBS = -lm
 
 LIBOWF_SRCS = $(shell find src -type f -name '*.c')

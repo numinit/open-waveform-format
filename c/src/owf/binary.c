@@ -1,5 +1,5 @@
 #include <owf/binary.h>
-#include <signal.h>
+#include <owf/platform.h>
 
 #define OWF_BINARY_SAFE_SUB32(a, b) \
     do { \
@@ -16,7 +16,7 @@
 #define OWF_BINARY_SAFE_READ(binary, ptr, length) \
     do { \
         /* Length of zero is a no-op */ \
-        if (OWF_NOEXPECT(length != 0 && !binary->reader.read(ptr, length, binary->reader.data))) { \
+        if (OWF_NOEXPECT(length > 0 && !binary->reader.read(ptr, length, binary->reader.data))) { \
             OWF_READER_ERRF(binary->reader, "read error (%" PRIu32 " bytes)", (uint32_t)length); \
             return false; \
         } else { \
@@ -37,7 +37,7 @@
             } \
         } \
         \
-        if (OWF_NOEXPECT(length != 0 && !binary->reader.read(ptr, length, binary->reader.data))) { \
+        if (OWF_NOEXPECT(length > 0 && !binary->reader.read(ptr, length, binary->reader.data))) { \
             OWF_READER_ERRF(binary->reader, "variable read error (%" PRIu32 " bytes)", (uint32_t)length); \
             binary->reader.free(ptr); \
             return false; \

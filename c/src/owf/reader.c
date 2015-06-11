@@ -1,4 +1,5 @@
 #include <owf/reader.h>
+#include <owf/platform.h>
 
 void owf_reader_init(owf_reader_t *reader, owf_alloc_cb_t alloc_fn, owf_free_cb_t free_fn, owf_read_cb_t read_fn, owf_visit_cb_t visitor, size_t max_alloc, void *data) {
     reader->alloc = alloc_fn;

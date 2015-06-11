@@ -8,7 +8,21 @@
 html
 
 # Compiled files
+*.o
+*.a
+*.lib
+*.out
+*.so
+*.dylib
+*.dll
+*.exe
 build/*
 
 # Xcode userdata
 xcuserdata
+
+# MSVC userdata
+*.suo
+*.sdf
+*.opensdf
+*.v12

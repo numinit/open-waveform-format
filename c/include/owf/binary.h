@@ -1,6 +1,6 @@
 #include <owf.h>
 #include <owf/reader.h>
-#include <owf/endian.h>
+#include <owf/platform.h>
 
 #include <inttypes.h>
 #include <stdio.h>
