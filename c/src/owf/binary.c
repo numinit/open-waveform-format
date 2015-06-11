@@ -235,7 +235,7 @@ bool owf_binary_read_namespace(owf_binary_reader_t *binary, void *ptr) {
 
     /* Read children */
     return
-        owf_binary_length_unwrap(binary, owf_binary_length_unwrap_nested_multi, owf_binary_read_signal) &&
+        owf_binary_length_unwrap(binary, owf_binary_length_unwrap_multi, owf_binary_read_signal) &&
         owf_binary_length_unwrap(binary, owf_binary_length_unwrap_multi, owf_binary_read_event) &&
         owf_binary_length_unwrap(binary, owf_binary_length_unwrap_multi, owf_binary_read_alarm);
 }
