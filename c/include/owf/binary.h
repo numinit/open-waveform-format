@@ -21,8 +21,8 @@ typedef struct owf_binary_reader_file {
 
 typedef bool (*owf_binary_reader_cb_t)(owf_binary_reader_t *, void *);
 
-void owf_binary_reader_init(owf_binary_reader_t *binary, owf_alloc_cb_t alloc_fn, owf_free_cb_t free_fn, owf_read_cb_t read_fn, owf_visit_cb_t visitor, void *data);
-void owf_binary_reader_init_file(owf_binary_reader_t *binary, FILE *file, owf_alloc_cb_t alloc_fn, owf_free_cb_t free_fn, owf_visit_cb_t visitor);
+void owf_binary_reader_init(owf_binary_reader_t *binary, owf_alloc_cb_t alloc_fn, owf_free_cb_t free_fn, owf_read_cb_t read_fn, owf_visit_cb_t visitor, size_t max_alloc, void *data);
+void owf_binary_reader_init_file(owf_binary_reader_t *binary, FILE *file, owf_alloc_cb_t alloc_fn, owf_free_cb_t free_fn, owf_visit_cb_t visitor, size_t max_alloc);
 void owf_binary_reader_destroy_file(owf_binary_reader_t *binary);
 
 const char *owf_binary_reader_strerror(owf_binary_reader_t *binary);

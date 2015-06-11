@@ -26,9 +26,16 @@
 
 #define OWF_BINARY_SAFE_VARIABLE_READ(binary, ptr, length) \
     do { \
-        /* Length of zero is a no-op */ \
-        /* length = (length > OWF_BINARY_MAX_ALLOC ? OWF_BINARY_MAX_ALLOC : length); */ \
-        ptr = binary->reader.alloc(length); \
+        if (length > binary->reader.max_alloc) { \
+            return false; \
+        } else {\
+            ptr = binary->reader.alloc(length); \
+            if (ptr == NULL) { \
+                OWF_READER_ERRF(binary->reader, "memory allocation failure (%" PRIu32 " bytes, max_alloc=%" PRIu32 " bytes)", (uint32_t)length, (uint32_t)binary->reader.max_alloc); \
+                return false; \
+            } \
+        } \
+        \
         if (OWF_NOEXPECT(length != 0 && !binary->reader.read(ptr, length, binary->reader.data))) { \
             OWF_READER_ERRF(binary->reader, "variable read error (%" PRIu32 " bytes)", (uint32_t)length); \
             binary->reader.free(ptr); \
@@ -44,8 +51,8 @@
         } \
     } while (0)
 
-void owf_binary_reader_init(owf_binary_reader_t *binary, owf_alloc_cb_t alloc_fn, owf_free_cb_t free_fn, owf_read_cb_t read_fn, owf_visit_cb_t visitor, void *data) {
-    owf_reader_init(&binary->reader, alloc_fn, free_fn, read_fn, visitor, data);
+void owf_binary_reader_init(owf_binary_reader_t *binary, owf_alloc_cb_t alloc_fn, owf_free_cb_t free_fn, owf_read_cb_t read_fn, owf_visit_cb_t visitor, size_t max_alloc, void *data) {
+    owf_reader_init(&binary->reader, alloc_fn, free_fn, read_fn, visitor, max_alloc, data);
 }
 
 static bool owf_binary_reader_file_read_cb(void *dest, size_t size, void *data) {
@@ -53,10 +60,10 @@ static bool owf_binary_reader_file_read_cb(void *dest, size_t size, void *data) 
     return fread(dest, sizeof(uint8_t), size, ptr->file) == size;
 }
 
-void owf_binary_reader_init_file(owf_binary_reader_t *binary, FILE *file, owf_alloc_cb_t alloc_fn, owf_free_cb_t free_fn, owf_visit_cb_t visitor) {
+void owf_binary_reader_init_file(owf_binary_reader_t *binary, FILE *file, owf_alloc_cb_t alloc_fn, owf_free_cb_t free_fn, owf_visit_cb_t visitor, size_t max_alloc) {
     owf_binary_reader_file_t *ptr = alloc_fn(sizeof(owf_binary_reader_file_t));
     ptr->file = file;
-    owf_reader_init(&binary->reader, alloc_fn, free_fn, owf_binary_reader_file_read_cb, visitor, ptr);
+    owf_reader_init(&binary->reader, alloc_fn, free_fn, owf_binary_reader_file_read_cb, visitor, max_alloc, ptr);
 }
 
 void owf_binary_reader_destroy_file(owf_binary_reader_t *binary) {

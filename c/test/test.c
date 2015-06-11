@@ -1,6 +1,6 @@
 #include <owf.h>
 #include <owf/binary.h>
-#include <owf/binary.h>
+#include <owf/reader.h>
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -30,7 +30,7 @@ typedef struct owf_test {
 static int test_example_1_binary(void) {
     owf_binary_reader_t reader;
     FILE *f = fopen("test/example/owf1_example_1.owf", "r");
-    owf_binary_reader_init_file(&reader, f, malloc, free, NULL);
+    owf_binary_reader_init_file(&reader, f, malloc, free, NULL, OWF_READER_DEFAULT_MAX_ALLOC);
     if (!owf_binary_read(&reader)) {
         OWF_TEST_FAILF("unexpected error when reading OWF: %s", owf_binary_reader_strerror(&reader));
     }
@@ -43,7 +43,7 @@ static int test_example_1_binary(void) {
 static int test_example_2_binary(void) {
     owf_binary_reader_t reader;
     FILE *f = fopen("test/example/owf1_example_2.owf", "r");
-    owf_binary_reader_init_file(&reader, f, malloc, free, NULL);
+    owf_binary_reader_init_file(&reader, f, malloc, free, NULL, OWF_READER_DEFAULT_MAX_ALLOC);
     if (!owf_binary_read(&reader)) {
         OWF_TEST_FAILF("unexpected error when reading OWF: %s", owf_binary_reader_strerror(&reader));
     }
