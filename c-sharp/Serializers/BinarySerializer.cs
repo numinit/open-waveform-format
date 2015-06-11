@@ -183,7 +183,6 @@ namespace OWF.Serializers
 
         public static void writeSignal(BinaryWriter bw, Signal sig)
         {
-            writeU32(bw, sig.getSizeInBytes());
             writeOWFString(bw, sig.Id);
             writeOWFString(bw, sig.Unit);
 

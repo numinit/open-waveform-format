@@ -81,26 +81,23 @@ namespace OWF.DTO
                 UInt32 idStringPaddingSize = idStringSize % 4;
                 UInt32 idSize = idStringPaddingSize + idStringSize + idStringSizeSize;
 
-                UInt32 signalsSize = 0;
+                UInt32 signalsSize = sizeof(UInt32); // length of signals
                 foreach (var signal in signals)
                 {
                     signalsSize += signal.getSizeInBytes();
-                    signalsSize += sizeof(UInt32); // each signal, packed, is length-prefixed
                 }
 
-                UInt32 eventsSize = 0;
+                UInt32 eventsSize = sizeof(UInt32); // length of events
                 foreach (var evt in events)
                 {
                     eventsSize += evt.getSizeInBytes();
-                    eventsSize += sizeof(UInt32); // each event, packed, is length-prefixed
                 }
 
-                UInt32 alarmsSize = 0;
+                UInt32 alarmsSize = sizeof(UInt32); // length of alarms
                 foreach (var alarm in alarms)
                 {
                     alarmsSize += alarm.getSizeInBytes();
-                    alarmsSize += sizeof(UInt32); // each alarm, packed, is length-prefixed
-                }                
+                }
 
                 return idSize
                        + signalsSize

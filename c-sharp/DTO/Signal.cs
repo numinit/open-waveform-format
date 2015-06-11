@@ -55,8 +55,9 @@ namespace OWF.DTO
                 UInt32 unitStringPaddingSize = unitStringSize % 4;
                 UInt32 unitSize = unitStringSizeSize + unitStringSize + unitStringPaddingSize;
 
+                UInt32 samplesSizeSize = sizeof(UInt32);
                 UInt32 samplesSize = (UInt32) (sizeof(double) * samples.Length);
-                return idSize + unitSize + samplesSize;
+                return idSize + unitSize + samplesSize + samplesSizeSize;
             }
         }
         

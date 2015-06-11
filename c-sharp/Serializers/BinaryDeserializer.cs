@@ -45,7 +45,6 @@ namespace OWF.Serializers
 
         public static Signal readSignal( BinaryReader br)
         {
-            UInt32 signalLength = readU32(br);
             string id = readOWFString(br);
             string unit = readOWFString(br);
             UInt32 samplesLength = readU32(br);

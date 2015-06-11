@@ -5,11 +5,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace OWF_test.Serializers
 {
     [TestClass]
-    public class BinarySerializerTests
+    public class BinaryTests
     {
         [TestMethod]
         public void GeneratesCorrectEmptyObject()     
-        {            
+        {
+            
         }
     }
 }
