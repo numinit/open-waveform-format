@@ -37,6 +37,7 @@ bool owf_binary_read_str(owf_binary_reader_t *binary, void *ptr);
 bool owf_binary_read_channel(owf_binary_reader_t *binary, void *ptr);
 bool owf_binary_read_channels(owf_binary_reader_t *binary, void *ptr);
 bool owf_binary_read(owf_binary_reader_t *binary);
+uint32_t owf_binary_safe_add32(uint32_t a, uint32_t b, bool *ok);
 uint32_t owf_binary_safe_sub32(uint32_t a, uint32_t b, bool *ok);
 
 #endif /* OWF_BINARY_H */

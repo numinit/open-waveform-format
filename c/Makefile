@@ -36,13 +36,13 @@ LIBOWF_TEST = build/bin/libowf-test$(BIN_EXT)
 # deleting dependencies appended to the file from 'make depend'
 #
 
-.PHONY: depend clean
+.PHONY: depend clean test
 
 all: $(LIBOWF)
+tests: $(LIBOWF) $(LIBOWF_TEST)
+
 test: $(LIBOWF) $(LIBOWF_TEST)
-	export PATH=build/lib
-	export LD_LIBRARY_PATH=build/lib
-	$(LIBOWF_TEST)
+	$(LIBOWF_TEST) export LD_LIBRARY_PATH=build/lib LD_LIBRARY_PATH=build/lib
 
 $(LIBOWF): CFLAGS += -fPIC
 $(LIBOWF): $(LIBOWF_OBJS)

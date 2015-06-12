@@ -13,10 +13,11 @@
 #define OWF_TEST_FAILF(str, ...) {owf_test_fail(str, __VA_ARGS__); return 2;}
 #define OWF_TEST_OK return 0
 
+#define OWF_TEST_FILE(str, result) owf_binary_test_execute("../example/owf1_" str ".owf", result)
+
 void owf_test_fail(const char *fmt, ...) {
     va_list va;
     va_start(va, fmt);
-    putc(' ', stderr);
     vfprintf(stderr, fmt, va);
     printf("\n");
     va_end(va);
@@ -57,49 +58,70 @@ static bool owf_visitor(owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *
     return true;
 }
 
-static int owf_test_example_1_binary(void) {
+static int owf_binary_test_execute(const char *filename, bool result) {
     owf_binary_reader_t reader;
-    FILE *f = fopen("test/example/owf1_example_1.owf", "rb");
-	if (f == NULL) {
-		OWF_TEST_FAIL("couldn't open file");
-	}
+    FILE *f = fopen(filename, "rb");
+    if (f == NULL) {
+        OWF_TEST_FAIL("couldn't open file");
+    }
 
     owf_binary_reader_init_file(&reader, f, malloc, free, owf_visitor, OWF_READER_DEFAULT_MAX_ALLOC);
     fprintf(stderr, "\n");
-    if (!owf_binary_read(&reader)) {
-        OWF_TEST_FAILF("unexpected error when reading OWF: %s", owf_binary_reader_strerror(&reader));
+    if (owf_binary_read(&reader) != result) {
+        OWF_TEST_FAILF("unexpected result when reading OWF: %s", owf_binary_reader_strerror(&reader));
     }
+    fprintf(stderr, "** result: %s\n", owf_binary_reader_strerror(&reader));
 
     owf_binary_reader_destroy_file(&reader);
     fclose(f);
     OWF_TEST_OK;
 }
 
-static int owf_test_example_2_binary(void) {
-    owf_binary_reader_t reader;
-    FILE *f = fopen("test/example/owf1_example_2.owf", "rb");
-	if (f == NULL) {
-		OWF_TEST_FAIL("couldn't open file");
-	}
+static int owf_test_binary_valid_1(void) {
+    return OWF_TEST_FILE("binary_valid_1", true);
+}
 
-    owf_binary_reader_init_file(&reader, f, malloc, free, owf_visitor, OWF_READER_DEFAULT_MAX_ALLOC);
-	fprintf(stderr, "\n");
-    if (!owf_binary_read(&reader)) {
-        OWF_TEST_FAILF("unexpected error when reading OWF: %s", owf_binary_reader_strerror(&reader));
-    }
+static int owf_test_binary_valid_2(void) {
+    return OWF_TEST_FILE("binary_valid_2", true);
+}
 
-    owf_binary_reader_destroy_file(&reader);
-    fclose(f);
-    OWF_TEST_OK;
+static int owf_test_binary_valid_empty(void) {
+    return OWF_TEST_FILE("binary_valid_empty", true);
+}
+
+static int owf_test_binary_invalid_empty(void) {
+    return OWF_TEST_FILE("binary_invalid_empty", false);
+}
+
+static int owf_test_binary_invalid_magic(void) {
+    return OWF_TEST_FILE("binary_invalid_magic", false);
+}
+
+static int owf_test_binary_invalid_length_short(void) {
+    return OWF_TEST_FILE("binary_invalid_length_short", false);
+}
+
+static int owf_test_binary_invalid_length_long(void) {
+    return OWF_TEST_FILE("binary_invalid_length_long", false);
+}
+
+static int owf_test_binary_invalid_length_really_long(void) {
+    return OWF_TEST_FILE("binary_invalid_length_really_long", false);
 }
 
 static owf_test_t tests[] = {
-    {"example_1_binary", owf_test_example_1_binary},
-    {"example_2_binary", owf_test_example_2_binary}
+    {"binary_valid_1", owf_test_binary_valid_1},
+    {"binary_valid_2", owf_test_binary_valid_2},
+    {"binary_valid_empty", owf_test_binary_valid_empty},
+    {"binary_invalid_empty", owf_test_binary_invalid_empty},
+    {"binary_invalid_magic", owf_test_binary_invalid_magic},
+    {"binary_invalid_length_short", owf_test_binary_invalid_length_short},
+    {"binary_invalid_length_long", owf_test_binary_invalid_length_long},
+    {"binary_invalid_length_really_long", owf_test_binary_invalid_length_really_long}
 };
 
 int main(int argc, char **argv) {
-	char dir[1024];
+    char dir[1024];
     int ret = 0, success = 0;
 
     // Disable output buffering
@@ -107,11 +129,11 @@ int main(int argc, char **argv) {
     setvbuf(stderr, NULL, _IONBF, 0);
 
     // And here we go...
-	getcwd(dir, sizeof(dir));
-	fprintf(stderr, "--------------------------------\n");
-	fprintf(stderr, "libowf " OWF_LIBRARY_VERSION_STRING " test harness starting\n");
-	fprintf(stderr, "--------------------------------\n");
-	fprintf(stderr, "(in %s)\n\n", dir);
+    getcwd(dir, sizeof(dir));
+    fprintf(stderr, "--------------------------------\n");
+    fprintf(stderr, "libowf " OWF_LIBRARY_VERSION_STRING " test harness starting\n");
+    fprintf(stderr, "--------------------------------\n");
+    fprintf(stderr, "(in %s)\n\n", dir);
     fprintf(stderr, ">> running %lu %s\n", OWF_COUNT(tests), OWF_COUNT(tests) == 1 ? "test" : "tests");
     for (int i = 0; i < OWF_COUNT(tests); i++) {
         owf_test_t *test = &tests[i];
@@ -119,9 +141,9 @@ int main(int argc, char **argv) {
         int res = test->fn();
         if (res == 0) {
             success++;
-            fprintf(stderr, " <OK>\n");
+            fprintf(stderr, "<OK>\n");
         } else if (res == 1) {
-            fprintf(stderr, " <SOFT FAIL>\n");
+            fprintf(stderr, "<SOFT FAIL>\n");
         }
 
         if (res != 0 && res != 1) {
@@ -132,10 +154,10 @@ int main(int argc, char **argv) {
     // Display results
     fprintf(stderr, ">> %d/%lu %s successful (%.2f%%)\n", success, OWF_COUNT(tests), OWF_COUNT(tests) != 1 ? "tests" : "test", (float)success / (float)OWF_COUNT(tests) * 100);
 
-	if (strcmp(argv[argc - 1], "--pause") == 0) {
-		fprintf(stderr, "(press enter to exit)\n");
-		getc(stdin);
-	}
+    if (strcmp(argv[argc - 1], "--pause") == 0) {
+        fprintf(stderr, "(press enter to exit)\n");
+        getc(stdin);
+    }
 
     return ret;
 }
