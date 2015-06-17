@@ -1,12 +1,9 @@
 #include <owf/binary.h>
-#include <owf/platform.h>
 
 #define OWF_BINARY_SAFE_ADD32(binary, a, b) \
     do { \
-        bool ok; \
-        uint32_t tmp = owf_binary_safe_add32(a, b, &ok); \
-        if (OWF_NOEXPECT(!ok)) { \
-            OWF_READER_ERRF(binary->reader, "unsigned addition error (%" PRIu32 " + %" PRIu32 ")", (uint32_t)a, (uint32_t)b); \
+        uint32_t tmp = owf_arith_safe_add32(a, b, &binary->reader.error); \
+        if (OWF_NOEXPECT(binary->reader.error.is_error)) { \
             return false; \
         } else { \
             a = tmp; \
@@ -15,10 +12,8 @@
 
 #define OWF_BINARY_SAFE_SUB32(binary, a, b) \
     do { \
-        bool ok; \
-        uint32_t tmp = owf_binary_safe_sub32(a, b, &ok); \
-        if (OWF_NOEXPECT(!ok)) { \
-            OWF_READER_ERRF(binary->reader, "unsigned subtraction error (%" PRIu32 " - %" PRIu32 ")", (uint32_t)a, (uint32_t)b); \
+        uint32_t tmp = owf_arith_safe_sub32(a, b, &binary->reader.error); \
+        if (OWF_NOEXPECT(binary->reader.error.is_error)) { \
             return false; \
         } else { \
             a = tmp; \
@@ -36,37 +31,26 @@
         } \
     } while (0)
 
-#define OWF_BINARY_SAFE_VARIABLE_READ(binary, ptr, length, padding) \
+#define OWF_BINARY_SAFE_VARIABLE_READ(binary, arr, len, elem_size, padding) \
     do { \
-        uint32_t effective_length = length; \
+        uint32_t effective_length = len; \
         OWF_BINARY_SAFE_ADD32(binary, effective_length, padding); \
-        if (effective_length > binary->reader.max_alloc) { \
-            OWF_READER_ERRF(binary->reader, "max allocation size exceeded (attempted to allocate %" PRIu32 " bytes, max_alloc=%" PRIu32 " bytes)", (uint32_t)effective_length, (uint32_t)binary->reader.max_alloc); \
+        if (!owf_array_reserve_exactly((&(arr)), binary->reader.alloc, &binary->reader.error, effective_length, 1)) { \
             return false; \
-        } else if (OWF_EXPECT(effective_length > 0)) { \
-            ptr = binary->reader.alloc(effective_length); \
-            \
-            if (ptr == NULL) { \
-                OWF_READER_ERRF(binary->reader, "memory allocation failure (%" PRIu32 " bytes, max_alloc=%" PRIu32 " bytes)", (uint32_t)effective_length, (uint32_t)binary->reader.max_alloc); \
-                return false; \
-            } \
-            \
-            if (OWF_NOEXPECT(!binary->reader.read(ptr, length, binary->reader.data))) { \
-                OWF_READER_ERRF(binary->reader, "variable read error (%" PRIu32 " bytes into buffer of length %" PRIu32 ")", (uint32_t)length, (uint32_t)effective_length); \
-                binary->reader.free(ptr); \
-                return false; \
-            } else { \
-                bool ok; \
-                binary->segment_length = owf_binary_safe_sub32(binary->segment_length, length, &ok); \
-                if (OWF_NOEXPECT(!ok)) { \
-                    OWF_READER_ERRF(binary->reader, "out-of-bounds length (%" PRIu32 " bytes for segment length %" PRIu32 ")", (uint32_t)length, binary->segment_length); \
-                    binary->reader.free(ptr); \
-                    return false; \
-                } \
-            } \
+        } \
+        (&(arr))->length = effective_length / (elem_size); \
+        \
+        if (OWF_NOEXPECT(!binary->reader.read((&(arr))->ptr, len, binary->reader.data))) { \
+            OWF_READER_ERRF(binary->reader, "variable read error (%" PRIu32 " bytes into buffer of length %" PRIu32 ")", (uint32_t)len, (uint32_t)effective_length); \
+            owf_array_destroy((&(arr)), binary->reader.alloc, &binary->reader.error); \
+            return false; \
         } else { \
-            OWF_READER_ERR(binary->reader, "attempted to allocate a zero-length buffer"); \
-            return false; \
+            binary->segment_length = owf_arith_safe_sub32(binary->segment_length, len, &binary->reader.error); \
+            if (OWF_NOEXPECT(owf_reader_is_error(&binary->reader))) { \
+                OWF_READER_ERRF(binary->reader, "out-of-bounds length (%" PRIu32 " bytes for segment length %" PRIu32 ")", (uint32_t)len, binary->segment_length); \
+                owf_array_destroy((&(arr)), binary->reader.alloc, &binary->reader.error); \
+                return false; \
+            } \
         } \
     } while (0)
 
@@ -79,28 +63,22 @@
         } \
     } while (0)
 
-void owf_binary_reader_init(owf_binary_reader_t *binary, owf_alloc_cb_t alloc_fn, owf_free_cb_t free_fn, owf_read_cb_t read_fn, owf_visit_cb_t visitor, size_t max_alloc, void *data) {
-    owf_reader_init(&binary->reader, alloc_fn, free_fn, read_fn, visitor, max_alloc, data);
+void owf_binary_reader_init(owf_binary_reader_t *binary, owf_alloc_t *alloc, owf_reader_read_cb_t read, owf_reader_visit_cb_t visitor, void *data) {
+    owf_reader_init(&binary->reader, alloc, read, visitor, data);
     binary->segment_length = binary->skip_length = 0;
 }
 
 static bool owf_binary_reader_file_read_cb(void *dest, size_t size, void *data) {
-    owf_binary_reader_file_t *ptr = (owf_binary_reader_file_t *)data;
-    return fread(dest, sizeof(uint8_t), size, ptr->file) == size;
+    FILE *ptr = (FILE *)data;
+    return fread(dest, sizeof(uint8_t), size, ptr) == size;
 }
 
-void owf_binary_reader_init_file(owf_binary_reader_t *binary, FILE *file, owf_alloc_cb_t alloc_fn, owf_free_cb_t free_fn, owf_visit_cb_t visitor, size_t max_alloc) {
-    owf_binary_reader_file_t *ptr = alloc_fn(sizeof(owf_binary_reader_file_t));
-    ptr->file = file;
-    owf_reader_init(&binary->reader, alloc_fn, free_fn, owf_binary_reader_file_read_cb, visitor, max_alloc, ptr);
-}
-
-void owf_binary_reader_destroy_file(owf_binary_reader_t *binary) {
-    binary->reader.free(binary->reader.data);
+void owf_binary_reader_init_file(owf_binary_reader_t *binary, FILE *file, owf_alloc_t *alloc, owf_reader_visit_cb_t visitor) {
+    owf_reader_init(&binary->reader, alloc, owf_binary_reader_file_read_cb, visitor, file);
 }
 
 const char *owf_binary_reader_strerror(owf_binary_reader_t *binary) {
-    return binary->reader.error;
+    return binary->reader.error.error;
 }
 
 bool owf_binary_length_unwrap(owf_binary_reader_t *binary, owf_binary_reader_cb_t cb, void *ptr) {
@@ -128,7 +106,7 @@ bool owf_binary_length_unwrap_top(owf_binary_reader_t *binary, owf_binary_reader
 
     /* Verify alignment */
     if (OWF_NOEXPECT(length % sizeof(uint32_t) != 0)) {
-        OWF_READER_ERRF(binary->reader, "length was not %lu-byte aligned (got %" PRIu32 " bytes)", sizeof(uint32_t), length);
+        OWF_READER_ERRF(binary->reader, "length was not %zu-byte aligned (got %" PRIu32 " bytes)", sizeof(uint32_t), length);
         return false;
     }
 
@@ -184,36 +162,39 @@ bool owf_binary_read_str(owf_binary_reader_t *binary, void *ptr) {
      * Read the actual string.
      * The string's length is currently saved in binary->segment_length if this call is wrapped.
      */
-    str->length = binary->segment_length;
-    OWF_BINARY_SAFE_VARIABLE_READ(binary, str->data, str->length, 1);
-    
+    if (!owf_str_init(str, binary->reader.alloc, &binary->reader.error, binary->segment_length + 1)) {
+        return false;
+    } else {
+        OWF_BINARY_SAFE_VARIABLE_READ(binary, str->bytes, binary->segment_length, 1, 1);
+    }
+
     /*
      * If we got here, the variable read succeeded and we have a buffer of size
-     * str->length + 1 with the string in it. NULL-terminate it, just in case someone's
-     * trying anything funny.
+     * str->length + 1 with the string in it. NULL-terminate it, just in case someone forgot.
      */
-    ((uint8_t *)str->data)[str->length] = 0x00;
+    ((uint8_t *)str->bytes.ptr)[str->bytes.length - 1] = 0;
     return true;
 }
 
 bool owf_binary_read_samples(owf_binary_reader_t *binary, void *ptr) {
     owf_signal_t *signal = &binary->reader.ctx.signal;
-    uint32_t length = binary->segment_length, num_samples;
+    uint32_t length = binary->segment_length;
 
     /* Length is stored in segment_length, ensure it's also double aligned */
     if (OWF_NOEXPECT(length % sizeof(double) != 0)) {
-        OWF_READER_ERRF(binary->reader, "length of sample array is not %lu-byte aligned (got %" PRIu32 " bytes)", sizeof(double), length);
+        OWF_READER_ERRF(binary->reader, "length of sample array is not %zu-byte aligned (got %" PRIu32 " bytes)", sizeof(double), length);
         return false;
     }
 
     /* Read the double array */
-    num_samples = length / sizeof(double);
-    signal->num_samples = num_samples;
-    OWF_BINARY_SAFE_VARIABLE_READ(binary, signal->samples, length, 0);
+    owf_array_init(&signal->samples);
+    OWF_BINARY_SAFE_VARIABLE_READ(binary, signal->samples, length, sizeof(double), 0);
 
     /* Byteswap the samples */
-    for (uint32_t i = 0; i < num_samples; i++) {
-        OWF_HOST64(signal->samples[i]);
+    for (uint32_t i = 0; i < OWF_ARRAY_LEN(signal->samples); i++) {
+        double v = OWF_ARRAY_GET(signal->samples, double, i);
+        OWF_HOST64(v);
+        OWF_ARRAY_PUT(signal->samples, double, i, v);
     }
 
     return true;
@@ -223,8 +204,8 @@ bool owf_binary_read_signal(owf_binary_reader_t *binary, void *ptr) {
     owf_signal_t *signal = &binary->reader.ctx.signal;
 
     if (!owf_binary_length_unwrap(binary, owf_binary_read_str, &signal->id) ||
-        !owf_binary_length_unwrap(binary, owf_binary_read_str, &signal->unit) ||
-        !owf_binary_length_unwrap(binary, owf_binary_read_samples, signal)) {
+            !owf_binary_length_unwrap(binary, owf_binary_read_str, &signal->unit) ||
+            !owf_binary_length_unwrap(binary, owf_binary_read_samples, signal)) {
         return false;
     }
 
@@ -323,25 +304,4 @@ bool owf_binary_read(owf_binary_reader_t *binary) {
     /* Reset the segment length again, and start walking the tree */
     binary->segment_length = sizeof(length);
     return owf_binary_length_unwrap_top(binary, owf_binary_length_unwrap_nested_multi, &length, owf_binary_read_channel);
-}
-
-uint32_t owf_binary_safe_add32(uint32_t a, uint32_t b, bool *ok) {
-    uint64_t ret = a + b;
-    /* Ensure that the operation will not overflow and that the result will be aligned */
-    if (OWF_NOEXPECT(ret > UINT32_MAX)) {
-        *ok = false;
-    } else {
-        *ok = true;
-    }
-    return (uint32_t)ret;
-}
-
-uint32_t owf_binary_safe_sub32(uint32_t a, uint32_t b, bool *ok) {
-    /* Ensure that the operation will not underflow and that the result will be aligned */
-    if (OWF_NOEXPECT(b > a)) {
-        *ok = false;
-    } else {
-        *ok = true;
-    }
-    return a - b;
 }

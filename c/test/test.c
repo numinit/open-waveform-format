@@ -15,7 +15,47 @@
 
 #define OWF_TEST_FILE(str, result) owf_binary_test_execute("../example/owf1_" str ".owf", result)
 
-void owf_test_fail(const char *fmt, ...) {
+typedef struct owf_test {
+    const char *name;
+    int (*fn)(void);
+} owf_test_t;
+
+static size_t owf_total_allocations = 0;
+static size_t owf_total_frees = 0;
+static ssize_t owf_total_allocated = 0;
+
+static void *owf_test_malloc(size_t size) {
+    void *ret = malloc(size + sizeof(size_t));
+    if (ret != NULL) {
+        size_t *block = ret;
+        *block = size;
+        owf_total_allocated += size;
+        owf_total_allocations++;
+    }
+    return (void *)((uint8_t *)ret + sizeof(size_t));
+}
+
+static void owf_test_free(void *ptr) {
+    size_t *block = (size_t *)((uint8_t *)ptr - sizeof(size_t));
+    owf_total_allocated -= *block;
+    owf_total_frees++;
+    free(block);
+}
+
+static void *owf_test_realloc(void *ptr, size_t size) {
+    size_t *old_block = (size_t *)((uint8_t *)ptr - sizeof(size_t));
+    size_t old_size = *old_block;
+    void *ret = realloc(old_block, size + sizeof(size_t));
+    if (ret != NULL) {
+        size_t *block = ret;
+        *block = size;
+        owf_total_allocated -= old_size;
+        owf_total_allocated += size;
+    }
+    return (void *)((uint8_t *)ret + sizeof(size_t));
+}
+
+static void owf_test_fail(const char *fmt, ...) {
     va_list va;
     va_start(va, fmt);
     vfprintf(stderr, fmt, va);
@@ -23,34 +63,29 @@ void owf_test_fail(const char *fmt, ...) {
     va_end(va);
 }
 
-typedef struct owf_test {
-    const char *name;
-    int (*fn)(void);
-} owf_test_t;
-
-static bool owf_visitor(owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *data) {
+static bool owf_test_visitor(owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *data) {
     switch (type) {
         case OWF_READ_CHANNEL:
-            fprintf(stderr, "[CHANNEL] %s\n", ctx->channel.id.data);
+            fprintf(stderr, "[CHANNEL] %s\n", ctx->channel.id.bytes.ptr);
             break;
         case OWF_READ_NAMESPACE:
-            fprintf(stderr, "  [NS] %s <t0=%" PRIu64 ", dt=%" PRIu64 ">\n", ctx->ns.id.data, ctx->ns.t0, ctx->ns.dt);
+            fprintf(stderr, "  [NS] %s <t0=%" PRIu64 ", dt=%" PRIu64 ">\n", ctx->ns.id.bytes.ptr, ctx->ns.t0, ctx->ns.dt);
             break;
         case OWF_READ_SIGNAL:
-            fprintf(stderr, "    [SIGNAL] %s <units=%s>: [", ctx->signal.id.data, ctx->signal.unit.data);
-            for (uint32_t i = 0; i < ctx->signal.num_samples; i++) {
-                fprintf(stderr, "%.2f", ctx->signal.samples[i]);
-                if (ctx->signal.num_samples > 0 && i < ctx->signal.num_samples - 1) {
-                    fprintf(stderr, " ");
-                }
+            fprintf(stderr, "    [SIGNAL] %s <units=%s> [", ctx->signal.id.bytes.ptr, ctx->signal.unit.bytes.ptr);
+            for (uint32_t i = 0; i < OWF_ARRAY_LEN(ctx->signal.samples); i++) {
+              fprintf(stderr, "%.2f", OWF_ARRAY_GET(ctx->signal.samples, double, i));
+              if (OWF_ARRAY_LEN(ctx->signal.samples) > 0 && i < OWF_ARRAY_LEN(ctx->signal.samples) - 1) {
+                fprintf(stderr, " ");
+              }
             }
             fprintf(stderr, "]\n");
             break;
         case OWF_READ_EVENT:
-            fprintf(stderr, "    [EVENT] %s <time=%" PRIu64 ">\n", ctx->event.data.data, ctx->event.time);
+            fprintf(stderr, "    [EVENT] %s <time=%" PRIu64 ">\n", ctx->event.data.bytes.ptr, ctx->event.time);
             break;
         case OWF_READ_ALARM:
-            fprintf(stderr, "    [ALARM] %s <time=%" PRIu64 ">\n", ctx->alarm.data.data, ctx->alarm.time);
+            fprintf(stderr, "    [ALARM] %s <time=%" PRIu64 ">\n", ctx->alarm.data.bytes.ptr, ctx->alarm.time);
             break;
         default:
             break;
@@ -60,19 +95,18 @@ static bool owf_visitor(owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *
 
 static int owf_binary_test_execute(const char *filename, bool result) {
     owf_binary_reader_t reader;
+    owf_alloc_t alloc = {.malloc = owf_test_malloc, .realloc = owf_test_realloc, .free = owf_test_free, .max_alloc = OWF_ALLOC_DEFAULT_MAX_ALLOC};
     FILE *f = fopen(filename, "rb");
     if (f == NULL) {
         OWF_TEST_FAIL("couldn't open file");
     }
 
-    owf_binary_reader_init_file(&reader, f, malloc, free, owf_visitor, OWF_READER_DEFAULT_MAX_ALLOC);
+    owf_binary_reader_init_file(&reader, f, &alloc, owf_test_visitor);
     fprintf(stderr, "\n");
     if (owf_binary_read(&reader) != result) {
         OWF_TEST_FAILF("unexpected result when reading OWF: %s", owf_binary_reader_strerror(&reader));
     }
     fprintf(stderr, "** result: %s\n", owf_binary_reader_strerror(&reader));
-
-    owf_binary_reader_destroy_file(&reader);
     fclose(f);
     OWF_TEST_OK;
 }
@@ -122,7 +156,7 @@ static owf_test_t tests[] = {
 
 int main(int argc, char **argv) {
     char dir[1024];
-    int ret = 0, success = 0;
+    int ret = 0, success = 0, leaks = 0;
 
     // Disable output buffering
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -137,6 +171,7 @@ int main(int argc, char **argv) {
     fprintf(stderr, ">> running %lu %s\n", OWF_COUNT(tests), OWF_COUNT(tests) == 1 ? "test" : "tests");
     for (int i = 0; i < OWF_COUNT(tests); i++) {
         owf_test_t *test = &tests[i];
+        size_t diff = owf_total_allocations - owf_total_frees;
         fprintf(stderr, ">> test %d/%lu (%s)...", i + 1, OWF_COUNT(tests), test->name);
         int res = test->fn();
         if (res == 0) {
@@ -146,13 +181,23 @@ int main(int argc, char **argv) {
             fprintf(stderr, "<SOFT FAIL>\n");
         }
 
+        if (owf_total_allocations != owf_total_frees + diff) {
+            fprintf(stderr, ">> MEMORY LEAK! Test `%s' didn't free %lu %s! (allocations: %lu, frees: %lu)\n", tests[i].name, owf_total_allocations - owf_total_frees + diff, owf_total_allocations - owf_total_frees + diff != 1 ? "objects" : "object", owf_total_allocations, owf_total_frees);
+            leaks += owf_total_allocations - owf_total_frees + diff;
+        }
+
         if (res != 0 && res != 1) {
             ret = res;
         }
     }
 
     // Display results
-    fprintf(stderr, ">> %d/%lu %s successful (%.2f%%)\n", success, OWF_COUNT(tests), OWF_COUNT(tests) != 1 ? "tests" : "test", (float)success / (float)OWF_COUNT(tests) * 100);
+    fprintf(stderr, ">> %d/%lu %s successful, %d %s, %lu %s allocated (%.2f%%)\n", success, OWF_COUNT(tests), OWF_COUNT(tests) != 1 ? "tests" : "test", leaks, leaks != 1 ? "leaks" : "leak", owf_total_allocated, owf_total_allocated != 1 ? "bytes" : "byte", (float)success / (float)OWF_COUNT(tests) * 100);
+
+    // Leak advice
+    if (leaks > 0) {
+        fprintf(stderr, ">> LEAK ALERT: There %s %d memory %s among %lu %s allocated. Fix %s!\n", leaks != 1 ? "were" : "was", leaks, leaks != 1 ? "leaks" : "leak", owf_total_allocated, owf_total_allocated != 1 ? "bytes" : "byte", leaks != 1 ? "them" : "it");
+    }
 
     if (strcmp(argv[argc - 1], "--pause") == 0) {
         fprintf(stderr, "(press enter to exit)\n");

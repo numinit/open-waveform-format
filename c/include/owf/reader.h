@@ -1,4 +1,7 @@
 #include <owf.h>
+#include <owf/types.h>
+#include <owf/error.h>
+#include <owf/alloc.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -12,7 +15,6 @@
  * and the unpack will fail.
  */
 #define OWF_READER_DEFAULT_MAX_ALLOC 1048576
-#define OWF_READER_ERR_BUF_SIZE 128
 
 typedef enum owf_reader_cb_type {
     OWF_READ_CHANNEL,
@@ -34,42 +36,42 @@ typedef struct owf_reader_ctx {
     owf_alarm_t alarm;
 } owf_reader_ctx_t;
 
-typedef bool (*owf_read_cb_t)(void *, size_t, void *);
-typedef bool (*owf_visit_cb_t)(owf_reader_ctx_t *, owf_reader_cb_type_t, void *);
-typedef void *(*owf_alloc_cb_t)(size_t);
-typedef void (*owf_free_cb_t)(void *);
+typedef bool (*owf_reader_read_cb_t)(void *, size_t, void *);
+typedef bool (*owf_reader_visit_cb_t)(owf_reader_ctx_t *, owf_reader_cb_type_t, void *);
 
 /**
  * Abstracts a reader.
  * Readers store the current state of the read operation.
  */
 typedef struct owf_reader {
+    /** Error status */
+    owf_error_t error;
+
     /** Context for what we're currently reading */
     owf_reader_ctx_t ctx;
 
-    /** Buffer to store error strings */
-    char error[OWF_READER_ERR_BUF_SIZE];
+    /** The allocator */
+    owf_alloc_t *alloc;
 
     /** Callbacks */
-    owf_read_cb_t read;
-    owf_visit_cb_t visit;
-    owf_alloc_cb_t alloc;
-    owf_free_cb_t free;
+    owf_reader_read_cb_t read;
+    owf_reader_visit_cb_t visit;
 
     /** User data */
     void *data;
-
-    /** Max allocation size */
-    size_t max_alloc;
 } owf_reader_t;
 
-void owf_reader_init(owf_reader_t *reader, owf_alloc_cb_t alloc_fn, owf_free_cb_t free_fn, owf_read_cb_t read, owf_visit_cb_t visitor, size_t max_alloc, void *data);
+void owf_reader_init(owf_reader_t *reader, owf_alloc_t *alloc, owf_reader_read_cb_t read, owf_reader_visit_cb_t visitor, void *data);
+bool owf_reader_is_error(owf_reader_t *reader);
+const char *owf_reader_strerror(owf_reader_t *reader);
 
-#define OWF_READER_ERR(reader, fmt) \
-    do {snprintf((&(reader))->error, sizeof((&(reader))->error), (fmt));} while (0)
-#define OWF_READER_ERRF(reader, fmt, ...) \
-    do {snprintf((&(reader))->error, sizeof((&(reader))->error), (fmt), __VA_ARGS__);} while (0)
 #define OWF_READER_VISIT(reader, type) \
     (((&(reader))->visit != NULL && (&(reader))->visit(&(&(reader))->ctx, type, (&(reader))->data)))
+
+#define OWF_READER_ERR(reader, err) \
+    do { OWF_ERR_SET((&(reader))->error, err); } while (0)
+
+#define OWF_READER_ERRF(reader, err, ...) \
+    do { OWF_ERR_SETF((&(reader))->error, err, __VA_ARGS__); } while (0)
 
 #endif /* OWF_READER_H */
