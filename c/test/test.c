@@ -105,7 +105,7 @@ static bool owf_test_visitor(owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, v
 
 static int owf_binary_test_execute(const char *filename, bool result) {
     owf_binary_reader_t reader;
-    owf_alloc_t alloc = {.malloc = owf_test_malloc, .realloc = owf_test_realloc, .free = owf_test_free, .max_alloc = OWF_ALLOC_DEFAULT_MAX_ALLOC};
+    owf_alloc_t alloc = {.malloc = owf_test_malloc, .realloc = owf_test_realloc, .free = owf_test_free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
     FILE *f = fopen(filename, "rb");
     if (f == NULL) {
         OWF_TEST_FAIL("couldn't open file");

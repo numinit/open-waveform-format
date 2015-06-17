@@ -19,3 +19,22 @@ bool owf_reader_is_error(owf_reader_t *reader) {
 const char *owf_reader_strerror(owf_reader_t *reader) {
     return reader->error.error;
 }
+
+static bool owf_reader_materialize_cb(owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *ptr) {
+    owf_t *owf = (owf_t *)ptr;
+    switch (type) {
+        case OWF_READ_CHANNEL:
+            break;
+        case OWF_READ_NAMESPACE:
+            break;
+        case OWF_READ_SIGNAL:
+            break;
+        case OWF_READ_EVENT:
+            break;
+        case OWF_READ_ALARM:
+            break;
+        default:
+            break;
+    }
+    return true;
+}

@@ -8,7 +8,12 @@
 #ifndef OWF_ALLOC_H
 #define OWF_ALLOC_H
 
-#define OWF_ALLOC_DEFAULT_MAX_ALLOC 1048576
+/**
+ * Max allocation size: 1 MB. This can be overridden when initializing the owf_alloc_t.
+ * If we ever try to allocate a size bigger than this, the allocation function will not be called
+ * and will return NULL.
+ */
+#define OWF_ALLOC_DEFAULT_MAX 1048576
 
 typedef void *(*owf_malloc_cb_t)(size_t);
 typedef void *(*owf_realloc_cb_t)(void *, size_t);

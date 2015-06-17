@@ -9,13 +9,6 @@
 #ifndef OWF_READER_H
 #define OWF_READER_H
 
-/**
- * Max allocation size: 1 MB. This can be overridden when initializing the owf_reader_t.
- * If we ever try to allocate a size bigger than this, the allocation function will not be called
- * and the unpack will fail.
- */
-#define OWF_READER_DEFAULT_MAX_ALLOC 1048576
-
 typedef enum owf_reader_cb_type {
     OWF_READ_CHANNEL,
     OWF_READ_NAMESPACE,
