@@ -42,13 +42,13 @@
         \
         if (OWF_NOEXPECT(!binary->reader.read((&(arr))->ptr, len, binary->reader.data))) { \
             OWF_READER_ERRF(binary->reader, "variable read error (%" PRIu32 " bytes into buffer of length %" PRIu32 ")", (uint32_t)len, (uint32_t)effective_length); \
-            owf_array_destroy((&(arr)), binary->reader.alloc, &binary->reader.error); \
+            owf_array_destroy((&(arr)), binary->reader.alloc); \
             return false; \
         } else { \
             binary->segment_length = owf_arith_safe_sub32(binary->segment_length, len, &binary->reader.error); \
             if (OWF_NOEXPECT(owf_reader_is_error(&binary->reader))) { \
                 OWF_READER_ERRF(binary->reader, "out-of-bounds length (%" PRIu32 " bytes for segment length %" PRIu32 ")", (uint32_t)len, binary->segment_length); \
-                owf_array_destroy((&(arr)), binary->reader.alloc, &binary->reader.error); \
+                owf_array_destroy((&(arr)), binary->reader.alloc); \
                 return false; \
             } \
         } \

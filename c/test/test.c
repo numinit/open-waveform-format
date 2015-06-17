@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <math.h>
 
 #define OWF_TEST_SOFT_FAIL(str) {owf_test_fail(str); return 1;}
 #define OWF_TEST_SOFT_FAILF(str, ...) {owf_test_fail(str, __VA_ARGS__); return 1;}
@@ -74,10 +75,19 @@ static bool owf_test_visitor(owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, v
         case OWF_READ_SIGNAL:
             fprintf(stderr, "    [SIGNAL] %s <units=%s> [", ctx->signal.id.bytes.ptr, ctx->signal.unit.bytes.ptr);
             for (uint32_t i = 0; i < OWF_ARRAY_LEN(ctx->signal.samples); i++) {
-              fprintf(stderr, "%.2f", OWF_ARRAY_GET(ctx->signal.samples, double, i));
-              if (OWF_ARRAY_LEN(ctx->signal.samples) > 0 && i < OWF_ARRAY_LEN(ctx->signal.samples) - 1) {
-                fprintf(stderr, " ");
-              }
+                double d = OWF_ARRAY_GET(ctx->signal.samples, double, i);
+                if (isfinite(d)) {
+                    fprintf(stderr, "\"%.2f\"", d);
+                } else if (isnan(d)) {
+                    fprintf(stderr, "\"NaN\"");
+                } else if (d < 0) {
+                    fprintf(stderr, "\"-Infinity\"");
+                } else {
+                    fprintf(stderr, "\"Infinity\"");
+                }
+                if (OWF_ARRAY_LEN(ctx->signal.samples) > 0 && i < OWF_ARRAY_LEN(ctx->signal.samples) - 1) {
+                    fprintf(stderr, ", ");
+                }
             }
             fprintf(stderr, "]\n");
             break;

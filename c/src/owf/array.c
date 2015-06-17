@@ -8,8 +8,8 @@ void owf_array_init(owf_array_t *arr) {
     arr->capacity = 0;
 }
 
-void owf_array_destroy(owf_array_t *arr, owf_alloc_t *allocator, owf_error_t *error) {
-    owf_free(allocator, error, arr->ptr);
+void owf_array_destroy(owf_array_t *arr, owf_alloc_t *allocator) {
+    owf_free(allocator, arr->ptr);
 }
 
 bool owf_array_reserve(owf_array_t *arr, owf_alloc_t *allocator, owf_error_t *error, uint32_t capacity, uint32_t width) {

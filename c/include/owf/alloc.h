@@ -24,6 +24,6 @@ typedef struct owf_alloc {
 void owf_alloc_init(owf_alloc_t *alloc, owf_malloc_cb_t malloc_fn, owf_realloc_cb_t realloc_fn, owf_free_cb_t free_fn, size_t max_alloc);
 void *owf_malloc(owf_alloc_t *alloc, owf_error_t *error, size_t size);
 void *owf_realloc(owf_alloc_t *alloc, owf_error_t *error, void *bp, size_t size);
-void owf_free(owf_alloc_t *alloc, owf_error_t *error, void *bp);
+void owf_free(owf_alloc_t *alloc, void *bp);
 
 #endif /* OWF_ALLOC_H */

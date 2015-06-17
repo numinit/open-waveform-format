@@ -1,6 +1,7 @@
 #include <owf.h>
 #include <owf/array.h>
 #include <owf/alloc.h>
+#include <owf/arith.h>
 
 #ifndef OWF_TYPES_H
 #define OWF_TYPES_H
@@ -42,7 +43,13 @@ typedef struct owf {
     owf_array_t channels;
 } owf_t;
 
+void owf_channel_destroy(owf_channel_t *channel, owf_alloc_t *allocator);
+void owf_namespace_destroy(owf_namespace_t *ns, owf_alloc_t *allocator);
+void owf_signal_destroy(owf_signal_t *signal, owf_alloc_t *allocator);
+void owf_event_destroy(owf_event_t *event, owf_alloc_t *allocator);
+void owf_alarm_destroy(owf_alarm_t *alarm, owf_alloc_t *allocator);
 bool owf_str_init(owf_str_t *str, owf_alloc_t *allocator, owf_error_t *error, uint32_t length);
+void owf_str_destroy(owf_str_t *str, owf_alloc_t *allocator);
 uint32_t owf_str_bytesize(owf_str_t *str);
 
 #endif /* OWF_TYPES_H */
