@@ -6,7 +6,7 @@
 #ifndef OWF_TYPES_H
 #define OWF_TYPES_H
 
-#define OWF_STR_PTR(str) ((&(str))->bytes.ptr)
+#define OWF_STR_PTR(str) ((const char *)((&(str))->bytes.ptr))
 
 typedef int64_t owf_time_t;
 
