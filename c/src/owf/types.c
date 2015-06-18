@@ -1,5 +1,7 @@
 #include <owf/types.h>
 
+#include <string.h>
+
 void owf_init(owf_t *owf) {
     owf_array_init(&owf->channels);
 }
