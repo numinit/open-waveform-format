@@ -72,18 +72,23 @@ static bool owf_test_visitor(owf_reader_t *reader, owf_reader_ctx_t *ctx, owf_re
     switch (type) {
         case OWF_READ_CHANNEL:
             owf_test_print_channel(&ctx->channel);
+            owf_channel_destroy(&ctx->channel, reader->alloc);
             break;
         case OWF_READ_NAMESPACE:
             owf_test_print_namespace(&ctx->ns);
+            owf_namespace_destroy(&ctx->ns, reader->alloc);
             break;
         case OWF_READ_SIGNAL:
             owf_test_print_signal(&ctx->signal);
+            owf_signal_destroy(&ctx->signal, reader->alloc);
             break;
         case OWF_READ_EVENT:
             owf_test_print_event(&ctx->event);
+            owf_event_destroy(&ctx->event, reader->alloc);
             break;
         case OWF_READ_ALARM:
             owf_test_print_alarm(&ctx->alarm);
+            owf_alarm_destroy(&ctx->alarm, reader->alloc);
             break;
         default:
             break;
@@ -134,6 +139,7 @@ static int owf_test_binary_materialize_execute(const char *filename) {
         OWF_TEST_FAILF("unexpected result when reading OWF: %s", owf_binary_reader_strerror(&reader));
     }
 
+    fprintf(stderr, "\n");
     for (size_t channel_idx = 0; channel_idx < OWF_ARRAY_LEN(owf->channels); channel_idx++) {
         owf_channel_t *channel = OWF_ARRAY_PTR(owf->channels, owf_channel_t, channel_idx);
         owf_test_print_channel(channel);
@@ -237,9 +243,9 @@ int main(int argc, char **argv) {
         int res = test->fn();
         if (res == 0) {
             success++;
-            fprintf(stderr, "<OK>\n");
+            fprintf(stderr, "PASSED\n");
         } else if (res == 1) {
-            fprintf(stderr, "<SOFT FAIL>\n");
+            fprintf(stderr, "FAILED\n");
         }
 
         if (res != 0 && res != 1) {
