@@ -33,15 +33,15 @@ static void owf_test_fail(const char *fmt, ...) {
 }
 
 static void owf_test_print_channel(owf_channel_t *channel) {
-    fprintf(stderr, "[CHANNEL] %s\n", channel->id.bytes.ptr);
+    fprintf(stderr, "[CHANNEL] %s\n", OWF_STR_PTR(channel->id));
 }
 
 static void owf_test_print_namespace(owf_namespace_t *namespace) {
-    fprintf(stderr, "  [NS] %s <t0=%" PRIu64 ", dt=%" PRIu64 ">\n", namespace->id.bytes.ptr, namespace->t0, namespace->dt);
+    fprintf(stderr, "  [NS] %s <t0=%" PRIu64 ", dt=%" PRIu64 ">\n", OWF_STR_PTR(namespace->id), namespace->t0, namespace->dt);
 }
 
 static void owf_test_print_signal(owf_signal_t *signal) {
-    fprintf(stderr, "    [SIGNAL] %s <units=%s> [", signal->id.bytes.ptr, signal->unit.bytes.ptr);
+    fprintf(stderr, "    [SIGNAL] %s <units=%s> [", signal->id.bytes.ptr, OWF_STR_PTR(signal->unit));
     for (uint32_t i = 0; i < OWF_ARRAY_LEN(signal->samples); i++) {
         double d = OWF_ARRAY_GET(signal->samples, double, i);
         if (isfinite(d)) {
@@ -61,11 +61,11 @@ static void owf_test_print_signal(owf_signal_t *signal) {
 }
 
 static void owf_test_print_event(owf_event_t *event) {
-    fprintf(stderr, "    [EVENT] %s <time=%" PRIu64 ">\n", event->data.bytes.ptr, event->time);
+    fprintf(stderr, "    [EVENT] %s <time=%" PRIu64 ">\n", OWF_STR_PTR(event->data), event->time);
 }
 
 static void owf_test_print_alarm(owf_alarm_t *alarm) {
-    fprintf(stderr, "    [ALARM] %s <time=%" PRIu64 ">\n", alarm->data.bytes.ptr, alarm->time);
+    fprintf(stderr, "    [ALARM] %s <time=%" PRIu64 ">\n", OWF_STR_PTR(alarm->data), alarm->time);
 }
 
 static bool owf_test_visitor(owf_reader_t *reader, owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *data) {
