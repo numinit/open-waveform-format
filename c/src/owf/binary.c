@@ -59,7 +59,7 @@
         if (!OWF_READER_VISIT(binary->reader, type)) { \
             /* Skip the rest of the segment */ \
             binary->skip_length = binary->segment_length; \
-            return true; \
+            return !owf_reader_is_error(&binary->reader); \
         } \
     } while (0)
 
@@ -157,12 +157,13 @@ bool owf_binary_length_unwrap_multi(owf_binary_reader_t *binary, void *ptr) {
 
 bool owf_binary_read_str(owf_binary_reader_t *binary, void *ptr) {
     owf_str_t *str = (owf_str_t *)ptr;
+    owf_str_init(str);
 
     /*
      * Read the actual string.
      * The string's length is currently saved in binary->segment_length if this call is wrapped.
      */
-    if (!owf_str_init(str, binary->reader.alloc, &binary->reader.error, binary->segment_length + 1)) {
+    if (!owf_str_reserve(str, binary->reader.alloc, &binary->reader.error, binary->segment_length + 1)) {
         return false;
     } else {
         OWF_BINARY_SAFE_VARIABLE_READ(binary, str->bytes, binary->segment_length, 1, 1);
@@ -202,6 +203,7 @@ bool owf_binary_read_samples(owf_binary_reader_t *binary, void *ptr) {
 
 bool owf_binary_read_signal(owf_binary_reader_t *binary, void *ptr) {
     owf_signal_t *signal = &binary->reader.ctx.signal;
+    owf_signal_init(signal);
 
     if (!owf_binary_length_unwrap(binary, owf_binary_read_str, &signal->id) ||
             !owf_binary_length_unwrap(binary, owf_binary_read_str, &signal->unit) ||
@@ -216,6 +218,7 @@ bool owf_binary_read_signal(owf_binary_reader_t *binary, void *ptr) {
 
 bool owf_binary_read_event(owf_binary_reader_t *binary, void *ptr) {
     owf_event_t *event = &binary->reader.ctx.event;
+    owf_event_init(event);
 
     /* Read the timestamp */
     OWF_BINARY_SAFE_READ(binary, &event->time, sizeof(event->time));
@@ -233,6 +236,7 @@ bool owf_binary_read_event(owf_binary_reader_t *binary, void *ptr) {
 
 bool owf_binary_read_alarm(owf_binary_reader_t *binary, void *ptr) {
     owf_alarm_t *alarm = &binary->reader.ctx.alarm;
+    owf_alarm_init(alarm);
 
     /* Read the timestamp */
     OWF_BINARY_SAFE_READ(binary, &alarm->time, sizeof(alarm->time));
@@ -250,6 +254,7 @@ bool owf_binary_read_alarm(owf_binary_reader_t *binary, void *ptr) {
 
 bool owf_binary_read_namespace(owf_binary_reader_t *binary, void *ptr) {
     owf_namespace_t *ns = &binary->reader.ctx.ns;
+    owf_namespace_init(ns);
 
     /* Read timestamps */
     OWF_BINARY_SAFE_READ(binary, &ns->t0, sizeof(ns->t0));
@@ -274,6 +279,7 @@ bool owf_binary_read_namespace(owf_binary_reader_t *binary, void *ptr) {
 
 bool owf_binary_read_channel(owf_binary_reader_t *binary, void *ptr) {
     owf_channel_t *channel = &binary->reader.ctx.channel;
+    owf_channel_init(channel);
 
     /* Read the channel id */
     if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, &channel->id))) {
@@ -288,7 +294,11 @@ bool owf_binary_read_channel(owf_binary_reader_t *binary, void *ptr) {
 }
 
 bool owf_binary_read(owf_binary_reader_t *binary) {
+    owf_t *owf = &binary->reader.ctx.owf;
     uint32_t magic, length;
+
+    /* Initialize the owf_t */
+    owf_init(owf);
 
     /* Read the implicitly-sized header */
     binary->segment_length = sizeof(magic);
@@ -304,4 +314,14 @@ bool owf_binary_read(owf_binary_reader_t *binary) {
     /* Reset the segment length again, and start walking the tree */
     binary->segment_length = sizeof(length);
     return owf_binary_length_unwrap_top(binary, owf_binary_length_unwrap_nested_multi, &length, owf_binary_read_channel);
+}
+
+owf_t *owf_binary_materialize(owf_binary_reader_t *binary) {
+    owf_reader_visit_cb_t old_cb = binary->reader.visit;
+    binary->reader.visit = owf_reader_materialize_cb;
+    if (!owf_binary_read(binary)) {
+        return NULL;
+    }
+    binary->reader.visit = old_cb;
+    return &binary->reader.ctx.owf;
 }

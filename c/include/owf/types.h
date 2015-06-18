@@ -43,12 +43,20 @@ typedef struct owf {
     owf_array_t channels;
 } owf_t;
 
+void owf_init(owf_t *owf);
+void owf_destroy(owf_t *owf, owf_alloc_t *allocator);
+void owf_channel_init(owf_channel_t *channel);
 void owf_channel_destroy(owf_channel_t *channel, owf_alloc_t *allocator);
+void owf_namespace_init(owf_namespace_t *ns);
 void owf_namespace_destroy(owf_namespace_t *ns, owf_alloc_t *allocator);
+void owf_signal_init(owf_signal_t *signal);
 void owf_signal_destroy(owf_signal_t *signal, owf_alloc_t *allocator);
+void owf_event_init(owf_event_t *event);
 void owf_event_destroy(owf_event_t *event, owf_alloc_t *allocator);
+void owf_alarm_init(owf_alarm_t *alarm);
 void owf_alarm_destroy(owf_alarm_t *alarm, owf_alloc_t *allocator);
-bool owf_str_init(owf_str_t *str, owf_alloc_t *allocator, owf_error_t *error, uint32_t length);
+void owf_str_init(owf_str_t *str);
+bool owf_str_reserve(owf_str_t *str, owf_alloc_t *allocator, owf_error_t *error, uint32_t length);
 void owf_str_destroy(owf_str_t *str, owf_alloc_t *allocator);
 uint32_t owf_str_bytesize(owf_str_t *str);
 

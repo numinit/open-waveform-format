@@ -1,9 +1,9 @@
 #include <owf.h>
 #include <owf/platform.h>
+#include <owf/types.h>
 #include <owf/arith.h>
 #include <owf/reader.h>
 
-#include <inttypes.h>
 #include <stdio.h>
 
 #ifndef OWF_BINARY_H
@@ -33,5 +33,6 @@ bool owf_binary_read_str(owf_binary_reader_t *binary, void *ptr);
 bool owf_binary_read_channel(owf_binary_reader_t *binary, void *ptr);
 bool owf_binary_read_channels(owf_binary_reader_t *binary, void *ptr);
 bool owf_binary_read(owf_binary_reader_t *binary);
+owf_t *owf_binary_materialize(owf_binary_reader_t *binary);
 
 #endif /* OWF_BINARY_H */

@@ -54,7 +54,7 @@ bool owf_array_reserve_exactly(owf_array_t *arr, owf_alloc_t *allocator, owf_err
 }
 
 bool owf_array_push(owf_array_t *arr, owf_alloc_t *allocator, owf_error_t *error, void *obj, uint32_t width) {
-    if (OWF_NOEXPECT(arr->length == arr->capacity && !owf_array_reserve(arr, allocator, error, width, arr->capacity))) {
+    if (OWF_NOEXPECT(arr->length == arr->capacity && !owf_array_reserve(arr, allocator, error, arr->capacity + 1, width))) {
         return false;
     }
 
@@ -62,7 +62,7 @@ bool owf_array_push(owf_array_t *arr, owf_alloc_t *allocator, owf_error_t *error
 }
 
 bool owf_array_put(owf_array_t *arr, owf_error_t *error, void *obj, uint32_t idx, uint32_t width) {
-    void *ptr = owf_array_ptr_for(arr, error, arr->length, width);
+    void *ptr = owf_array_ptr_for(arr, error, idx, width);
     if (OWF_NOEXPECT(ptr == NULL)) {
         return false;
     }

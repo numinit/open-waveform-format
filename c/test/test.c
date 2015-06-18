@@ -1,4 +1,5 @@
 #include <owf.h>
+#include <owf/types.h>
 #include <owf/binary.h>
 #include <owf/reader.h>
 #include <owf/platform.h>
@@ -13,8 +14,10 @@
 #define OWF_TEST_FAIL(str) {owf_test_fail(str); return 2;}
 #define OWF_TEST_FAILF(str, ...) {owf_test_fail(str, __VA_ARGS__); return 2;}
 #define OWF_TEST_OK return 0
+#define OWF_TEST_PATH_TO(file) ("../example/owf1_" file ".owf")
 
-#define OWF_TEST_FILE(str, result) owf_binary_test_execute("../example/owf1_" str ".owf", result)
+#define OWF_TEST_VISITOR(str, result) owf_test_binary_visitor_execute(OWF_TEST_PATH_TO(str), result)
+#define OWF_TEST_MATERIALIZE(str) owf_test_binary_materialize_execute(OWF_TEST_PATH_TO(str))
 
 typedef struct owf_test {
     const char *name;
@@ -64,38 +67,58 @@ static void owf_test_fail(const char *fmt, ...) {
     va_end(va);
 }
 
-static bool owf_test_visitor(owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *data) {
+static void owf_test_print_channel(owf_channel_t *channel) {
+    fprintf(stderr, "[CHANNEL] %s\n", channel->id.bytes.ptr);
+}
+
+static void owf_test_print_namespace(owf_namespace_t *namespace) {
+    fprintf(stderr, "  [NS] %s <t0=%" PRIu64 ", dt=%" PRIu64 ">\n", namespace->id.bytes.ptr, namespace->t0, namespace->dt);
+}
+
+static void owf_test_print_signal(owf_signal_t *signal) {
+    fprintf(stderr, "    [SIGNAL] %s <units=%s> [", signal->id.bytes.ptr, signal->unit.bytes.ptr);
+    for (uint32_t i = 0; i < OWF_ARRAY_LEN(signal->samples); i++) {
+        double d = OWF_ARRAY_GET(signal->samples, double, i);
+        if (isfinite(d)) {
+            fprintf(stderr, "\"%.2f\"", d);
+        } else if (isnan(d)) {
+            fprintf(stderr, "\"NaN\"");
+        } else if (d < 0) {
+            fprintf(stderr, "\"-Infinity\"");
+        } else {
+            fprintf(stderr, "\"Infinity\"");
+        }
+        if (OWF_ARRAY_LEN(signal->samples) > 0 && i < OWF_ARRAY_LEN(signal->samples) - 1) {
+            fprintf(stderr, ", ");
+        }
+    }
+    fprintf(stderr, "]\n");
+}
+
+static void owf_test_print_event(owf_event_t *event) {
+    fprintf(stderr, "    [EVENT] %s <time=%" PRIu64 ">\n", event->data.bytes.ptr, event->time);
+}
+
+static void owf_test_print_alarm(owf_alarm_t *alarm) {
+    fprintf(stderr, "    [ALARM] %s <time=%" PRIu64 ">\n", alarm->data.bytes.ptr, alarm->time);
+}
+
+static bool owf_test_visitor(owf_reader_t *reader, owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *data) {
     switch (type) {
         case OWF_READ_CHANNEL:
-            fprintf(stderr, "[CHANNEL] %s\n", ctx->channel.id.bytes.ptr);
+            owf_test_print_channel(&ctx->channel);
             break;
         case OWF_READ_NAMESPACE:
-            fprintf(stderr, "  [NS] %s <t0=%" PRIu64 ", dt=%" PRIu64 ">\n", ctx->ns.id.bytes.ptr, ctx->ns.t0, ctx->ns.dt);
+            owf_test_print_namespace(&ctx->ns);
             break;
         case OWF_READ_SIGNAL:
-            fprintf(stderr, "    [SIGNAL] %s <units=%s> [", ctx->signal.id.bytes.ptr, ctx->signal.unit.bytes.ptr);
-            for (uint32_t i = 0; i < OWF_ARRAY_LEN(ctx->signal.samples); i++) {
-                double d = OWF_ARRAY_GET(ctx->signal.samples, double, i);
-                if (isfinite(d)) {
-                    fprintf(stderr, "\"%.2f\"", d);
-                } else if (isnan(d)) {
-                    fprintf(stderr, "\"NaN\"");
-                } else if (d < 0) {
-                    fprintf(stderr, "\"-Infinity\"");
-                } else {
-                    fprintf(stderr, "\"Infinity\"");
-                }
-                if (OWF_ARRAY_LEN(ctx->signal.samples) > 0 && i < OWF_ARRAY_LEN(ctx->signal.samples) - 1) {
-                    fprintf(stderr, ", ");
-                }
-            }
-            fprintf(stderr, "]\n");
+            owf_test_print_signal(&ctx->signal);
             break;
         case OWF_READ_EVENT:
-            fprintf(stderr, "    [EVENT] %s <time=%" PRIu64 ">\n", ctx->event.data.bytes.ptr, ctx->event.time);
+            owf_test_print_event(&ctx->event);
             break;
         case OWF_READ_ALARM:
-            fprintf(stderr, "    [ALARM] %s <time=%" PRIu64 ">\n", ctx->alarm.data.bytes.ptr, ctx->alarm.time);
+            owf_test_print_alarm(&ctx->alarm);
             break;
         default:
             break;
@@ -103,54 +126,112 @@ static bool owf_test_visitor(owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, v
     return true;
 }
 
-static int owf_binary_test_execute(const char *filename, bool result) {
-    owf_binary_reader_t reader;
-    owf_alloc_t alloc = {.malloc = owf_test_malloc, .realloc = owf_test_realloc, .free = owf_test_free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
+static bool owf_test_binary_open(owf_binary_reader_t *reader, const char *filename, owf_alloc_t *alloc, owf_reader_visit_cb_t visitor) {
     FILE *f = fopen(filename, "rb");
     if (f == NULL) {
-        OWF_TEST_FAIL("couldn't open file");
+        return false;
+    }
+    owf_binary_reader_init_file(reader, f, alloc, visitor);
+    return true;
+}
+
+static void owf_test_binary_close(owf_binary_reader_t *reader) {
+    fclose((FILE *)reader->reader.data);
+}
+
+static int owf_test_binary_visitor_execute(const char *filename, bool result) {
+    owf_alloc_t alloc = {.malloc = owf_test_malloc, .realloc = owf_test_realloc, .free = owf_test_free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
+    owf_binary_reader_t reader;
+
+    if (!owf_test_binary_open(&reader, filename, &alloc, owf_test_visitor)) {
+        OWF_TEST_FAIL("error opening file");
     }
 
-    owf_binary_reader_init_file(&reader, f, &alloc, owf_test_visitor);
     fprintf(stderr, "\n");
     if (owf_binary_read(&reader) != result) {
         OWF_TEST_FAILF("unexpected result when reading OWF: %s", owf_binary_reader_strerror(&reader));
     }
     fprintf(stderr, "** result: %s\n", owf_binary_reader_strerror(&reader));
-    fclose(f);
+    owf_test_binary_close(&reader);
+    OWF_TEST_OK;
+}
+
+static int owf_test_binary_materialize_execute(const char *filename) {
+    owf_alloc_t alloc = {.malloc = owf_test_malloc, .realloc = owf_test_realloc, .free = owf_test_free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
+    owf_binary_reader_t reader;
+    owf_t *owf;
+
+    if (!owf_test_binary_open(&reader, filename, &alloc, NULL)) {
+        OWF_TEST_FAIL("error opening file");
+    }
+    owf = owf_binary_materialize(&reader);
+    if (owf == NULL) {
+        OWF_TEST_FAILF("unexpected result when reading OWF: %s", owf_binary_reader_strerror(&reader));
+    }
+
+    for (size_t channel_idx = 0; channel_idx < OWF_ARRAY_LEN(owf->channels); channel_idx++) {
+        owf_channel_t *channel = OWF_ARRAY_PTR(owf->channels, owf_channel_t, channel_idx);
+        owf_test_print_channel(channel);
+        for (size_t ns_idx = 0; ns_idx < OWF_ARRAY_LEN(channel->namespaces); ns_idx++) {
+            owf_namespace_t *ns = OWF_ARRAY_PTR(channel->namespaces, owf_namespace_t, ns_idx);
+            owf_test_print_namespace(ns);
+            for (size_t sig_idx = 0; sig_idx < OWF_ARRAY_LEN(ns->signals); sig_idx++) {
+                owf_signal_t *sig = OWF_ARRAY_PTR(ns->signals, owf_signal_t, sig_idx);
+                owf_test_print_signal(sig);
+            }
+
+            for (size_t event_idx = 0; event_idx < OWF_ARRAY_LEN(ns->events); event_idx++) {
+                owf_event_t *event = OWF_ARRAY_PTR(ns->events, owf_event_t, event_idx);
+                owf_test_print_event(event);
+            }
+
+            for (size_t alarm_idx = 0; alarm_idx < OWF_ARRAY_LEN(ns->alarms); alarm_idx++) {
+                owf_alarm_t *alarm = OWF_ARRAY_PTR(ns->alarms, owf_alarm_t, alarm_idx);
+                owf_test_print_alarm(alarm);
+            }
+        }
+    }
+
+    owf_destroy(owf, &alloc);
+    fprintf(stderr, "** result: %s\n", owf_binary_reader_strerror(&reader));
+    owf_test_binary_close(&reader);
     OWF_TEST_OK;
 }
 
 static int owf_test_binary_valid_1(void) {
-    return OWF_TEST_FILE("binary_valid_1", true);
+    return OWF_TEST_VISITOR("binary_valid_1", true);
 }
 
 static int owf_test_binary_valid_2(void) {
-    return OWF_TEST_FILE("binary_valid_2", true);
+    return OWF_TEST_VISITOR("binary_valid_2", true);
 }
 
 static int owf_test_binary_valid_empty(void) {
-    return OWF_TEST_FILE("binary_valid_empty", true);
+    return OWF_TEST_VISITOR("binary_valid_empty", true);
 }
 
 static int owf_test_binary_invalid_empty(void) {
-    return OWF_TEST_FILE("binary_invalid_empty", false);
+    return OWF_TEST_VISITOR("binary_invalid_empty", false);
 }
 
 static int owf_test_binary_invalid_magic(void) {
-    return OWF_TEST_FILE("binary_invalid_magic", false);
+    return OWF_TEST_VISITOR("binary_invalid_magic", false);
 }
 
 static int owf_test_binary_invalid_length_short(void) {
-    return OWF_TEST_FILE("binary_invalid_length_short", false);
+    return OWF_TEST_VISITOR("binary_invalid_length_short", false);
 }
 
 static int owf_test_binary_invalid_length_long(void) {
-    return OWF_TEST_FILE("binary_invalid_length_long", false);
+    return OWF_TEST_VISITOR("binary_invalid_length_long", false);
 }
 
 static int owf_test_binary_invalid_length_really_long(void) {
-    return OWF_TEST_FILE("binary_invalid_length_really_long", false);
+    return OWF_TEST_VISITOR("binary_invalid_length_really_long", false);
+}
+
+static int owf_test_binary_materialize(void) {
+    return OWF_TEST_MATERIALIZE("binary_valid_1");
 }
 
 static owf_test_t tests[] = {
@@ -161,7 +242,8 @@ static owf_test_t tests[] = {
     {"binary_invalid_magic", owf_test_binary_invalid_magic},
     {"binary_invalid_length_short", owf_test_binary_invalid_length_short},
     {"binary_invalid_length_long", owf_test_binary_invalid_length_long},
-    {"binary_invalid_length_really_long", owf_test_binary_invalid_length_really_long}
+    {"binary_invalid_length_really_long", owf_test_binary_invalid_length_really_long},
+    {"binary_materialize_1", owf_test_binary_materialize}
 };
 
 int main(int argc, char **argv) {
@@ -199,6 +281,8 @@ int main(int argc, char **argv) {
         if (res != 0 && res != 1) {
             ret = res;
         }
+
+        fprintf(stderr, "--------------------------------\n");
     }
 
     // Display results
