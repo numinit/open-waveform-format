@@ -1,6 +1,6 @@
 CC ?= clang
 
-CFLAGS += -Wall -O0 -g
+CFLAGS += -Wall -O0 -std=c99 -g
 LDFLAGS +=
 
 INCLUDES = -Iinclude
@@ -42,7 +42,7 @@ all: $(LIBOWF)
 tests: $(LIBOWF) $(LIBOWF_TEST)
 
 test: $(LIBOWF) $(LIBOWF_TEST)
-	$(LIBOWF_TEST) export LD_LIBRARY_PATH=build/lib LD_LIBRARY_PATH=build/lib
+	$(LIBOWF_TEST) PATH=build/lib LD_LIBRARY_PATH=build/lib
 
 $(LIBOWF): CFLAGS += -fPIC
 $(LIBOWF): $(LIBOWF_OBJS)
