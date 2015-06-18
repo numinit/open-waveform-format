@@ -37,11 +37,11 @@ void *owf_realloc(owf_alloc_t *alloc, owf_error_t *error, void *bp, size_t size)
         owf_free(alloc, bp);
         return NULL;
     } else {
-        void *ret = alloc->realloc(bp, size);
-        if (OWF_NOEXPECT(ret == NULL)) {
+        bp = alloc->realloc(bp, size);
+        if (OWF_NOEXPECT(bp == NULL)) {
             OWF_ERR_SET(*error, "realloc failure");
         }
-        return ret;
+        return bp;
     }
 }
 
