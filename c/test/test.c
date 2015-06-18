@@ -24,41 +24,6 @@ typedef struct owf_test {
     int (*fn)(void);
 } owf_test_t;
 
-static size_t owf_total_allocations = 0;
-static size_t owf_total_frees = 0;
-static ssize_t owf_total_allocated = 0;
-
-static void *owf_test_malloc(size_t size) {
-    void *ret = malloc(size + sizeof(size_t));
-    if (ret != NULL) {
-        size_t *block = ret;
-        *block = size;
-        owf_total_allocated += size;
-        owf_total_allocations++;
-    }
-    return (void *)((uint8_t *)ret + sizeof(size_t));
-}
-
-static void owf_test_free(void *ptr) {
-    size_t *block = (size_t *)((uint8_t *)ptr - sizeof(size_t));
-    owf_total_allocated -= *block;
-    owf_total_frees++;
-    free(block);
-}
-
-static void *owf_test_realloc(void *ptr, size_t size) {
-    size_t *old_block = (size_t *)((uint8_t *)ptr - sizeof(size_t));
-    size_t old_size = *old_block;
-    void *ret = realloc(old_block, size + sizeof(size_t));
-    if (ret != NULL) {
-        size_t *block = ret;
-        *block = size;
-        owf_total_allocated -= old_size;
-        owf_total_allocated += size;
-    }
-    return (void *)((uint8_t *)ret + sizeof(size_t));
-}
-
 static void owf_test_fail(const char *fmt, ...) {
     va_list va;
     va_start(va, fmt);
@@ -140,7 +105,7 @@ static void owf_test_binary_close(owf_binary_reader_t *reader) {
 }
 
 static int owf_test_binary_visitor_execute(const char *filename, bool result) {
-    owf_alloc_t alloc = {.malloc = owf_test_malloc, .realloc = owf_test_realloc, .free = owf_test_free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
+    owf_alloc_t alloc = {.malloc = malloc, .realloc = realloc, .free = free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
     owf_binary_reader_t reader;
 
     if (!owf_test_binary_open(&reader, filename, &alloc, owf_test_visitor)) {
@@ -157,7 +122,7 @@ static int owf_test_binary_visitor_execute(const char *filename, bool result) {
 }
 
 static int owf_test_binary_materialize_execute(const char *filename) {
-    owf_alloc_t alloc = {.malloc = owf_test_malloc, .realloc = owf_test_realloc, .free = owf_test_free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
+    owf_alloc_t alloc = {.malloc = malloc, .realloc = realloc, .free = free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
     owf_binary_reader_t reader;
     owf_t *owf;
 
@@ -230,8 +195,12 @@ static int owf_test_binary_invalid_length_really_long(void) {
     return OWF_TEST_VISITOR("binary_invalid_length_really_long", false);
 }
 
-static int owf_test_binary_materialize(void) {
+static int owf_test_binary_materialize_1(void) {
     return OWF_TEST_MATERIALIZE("binary_valid_1");
+}
+
+static int owf_test_binary_materialize_2(void) {
+    return OWF_TEST_MATERIALIZE("binary_valid_2");
 }
 
 static owf_test_t tests[] = {
@@ -243,12 +212,13 @@ static owf_test_t tests[] = {
     {"binary_invalid_length_short", owf_test_binary_invalid_length_short},
     {"binary_invalid_length_long", owf_test_binary_invalid_length_long},
     {"binary_invalid_length_really_long", owf_test_binary_invalid_length_really_long},
-    {"binary_materialize_1", owf_test_binary_materialize}
+    {"binary_materialize_1", owf_test_binary_materialize_1},
+    {"binary_materialize_2", owf_test_binary_materialize_2}
 };
 
 int main(int argc, char **argv) {
     char dir[1024];
-    int ret = 0, success = 0, leaks = 0;
+    int ret = 0, success = 0;
 
     // Disable output buffering
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -263,7 +233,6 @@ int main(int argc, char **argv) {
     fprintf(stderr, ">> running %lu %s\n", OWF_COUNT(tests), OWF_COUNT(tests) == 1 ? "test" : "tests");
     for (int i = 0; i < OWF_COUNT(tests); i++) {
         owf_test_t *test = &tests[i];
-        size_t diff = owf_total_allocations - owf_total_frees;
         fprintf(stderr, ">> test %d/%lu (%s)...", i + 1, OWF_COUNT(tests), test->name);
         int res = test->fn();
         if (res == 0) {
@@ -271,11 +240,6 @@ int main(int argc, char **argv) {
             fprintf(stderr, "<OK>\n");
         } else if (res == 1) {
             fprintf(stderr, "<SOFT FAIL>\n");
-        }
-
-        if (owf_total_allocations != owf_total_frees + diff) {
-            fprintf(stderr, ">> MEMORY LEAK! Test `%s' didn't free %lu %s! (allocations: %lu, frees: %lu)\n", tests[i].name, owf_total_allocations - owf_total_frees + diff, owf_total_allocations - owf_total_frees + diff != 1 ? "objects" : "object", owf_total_allocations, owf_total_frees);
-            leaks += owf_total_allocations - owf_total_frees + diff;
         }
 
         if (res != 0 && res != 1) {
@@ -286,12 +250,7 @@ int main(int argc, char **argv) {
     }
 
     // Display results
-    fprintf(stderr, ">> %d/%lu %s successful, %d %s, %lu %s allocated (%.2f%%)\n", success, OWF_COUNT(tests), OWF_COUNT(tests) != 1 ? "tests" : "test", leaks, leaks != 1 ? "leaks" : "leak", owf_total_allocated, owf_total_allocated != 1 ? "bytes" : "byte", (float)success / (float)OWF_COUNT(tests) * 100);
-
-    // Leak advice
-    if (leaks > 0) {
-        fprintf(stderr, ">> LEAK ALERT: There %s %d memory %s among %lu %s allocated. Fix %s!\n", leaks != 1 ? "were" : "was", leaks, leaks != 1 ? "leaks" : "leak", owf_total_allocated, owf_total_allocated != 1 ? "bytes" : "byte", leaks != 1 ? "them" : "it");
-    }
+    fprintf(stderr, ">> %d/%lu %s successful (%.2f%%)\n", success, OWF_COUNT(tests), OWF_COUNT(tests) != 1 ? "tests" : "test", (float)success / (float)OWF_COUNT(tests) * 100);
 
     if (strcmp(argv[argc - 1], "--pause") == 0) {
         fprintf(stderr, "(press enter to exit)\n");
