@@ -32,7 +32,7 @@
 #elif !defined(__GNUC__) && (defined(_WINDOWS) || defined(_WIN32) || defined(_WIN64))
     #define OWF_PLATFORM OWF_PLATFORM_WINDOWS
 #else
-    #error Don't know how to build on your platform!
+    #error "Don't know how to build on your platform!"
 #endif
 
 #if OWF_PLATFORM == OWF_PLATFORM_LINUX || OWF_PLATFORM == OWF_PLATFORM_BSD || OWF_PLATFORM ==  OWF_PLATFORM_DARWIN || OWF_PLATFORM == OWF_PLATFORM_CYGWIN || OWF_PLATFORM == OWF_PLATFORM_MINGW
@@ -40,7 +40,7 @@
 #elif OWF_PLATFORM == OWF_PLATFORM_WINDOWS
     #define OWF_PLATFORM_IS_GNU 0
 #else
-    #error Don't know whether your platform is GNU or not!
+    #error "Don't know whether your platform is GNU or not!"
 #endif
 
 /**
@@ -51,7 +51,7 @@
     #define OWF_CHAR_BITS 8
     #define OWF_CHAR_BYTES 1
 #else
-    #error invalid CHAR_MAX value
+    #error "invalid CHAR_MAX value"
 #endif
 
 #if SHRT_MAX == INT16_MAX || SHRT_MAX == UINT16_MAX
@@ -59,7 +59,7 @@
     #define OWF_SHORT_BITS 16
     #define OWF_SHORT_BYTES 2
 #else
-    #error invalid SHRT_MAX value
+    #error "invalid SHRT_MAX value"
 #endif
 
 #if INT_MAX == INT32_MAX || INT_MAX == UINT32_MAX
@@ -67,7 +67,7 @@
     #define OWF_INT_BITS 32
     #define OWF_INT_BYTES 4
 #else
-    #error invalid INT_MAX value
+    #error "invalid INT_MAX value"
 #endif
 
 #if LLONG_MAX == INT64_MAX || LLONG_MAX == UINT64_MAX
@@ -75,7 +75,7 @@
     #define OWF_LLONG_BITS 64
     #define OWF_LLONG_BYTES 8
 #else
-    #error invalid LLONG_MAX value
+    #error "invalid LLONG_MAX value"
 #endif
 
 #if SIZE_MAX == INT32_MAX || SIZE_MAX == UINT32_MAX
@@ -85,7 +85,7 @@
     #define OWF_SIZE_BITS 64
     #define OWF_SIZE_BYTES 8
 #else
-    #error invalid SIZE_MAX value
+    #error "invalid SIZE_MAX value"
 #endif
 
 /**
@@ -106,36 +106,34 @@
     #if OWF_INT_BITS == 32
         #define OWF_CLZ_32(x) ((uint32_t)__builtin_clz((x)))
     #else
-        #error invalid OWF_INT_BITS value
+        #error "invalid OWF_INT_BITS value"
     #endif
 
     #if OWF_LLONG_BITS == 64
         #define OWF_CLZ_64(x) ((uint64_t)__builtin_clzll((x)))
     #else
-        #error invalid OWF_LLONG_BITS value
+        #error "invalid OWF_LLONG_BITS value"
     #endif
 #elif OWF_PLATFORM == OWF_PLATFORM_WINDOWS
     #if OWF_INT_BITS == 32
         #define OWF_CLZ_32(x) ((uint32_t)__lzcnt((x)))
     #else
-        #error invalid OWF_INT_BITS value
+        #error "invalid OWF_INT_BITS value"
     #endif
 
     #if OWF_LLONG_BITS == 64
         #define OWF_CLZ_64(x) ((uint64_t)__lzcnt64((x)))
     #else
-        #error invalid OWF_INT_BITS value
+        #error "invalid OWF_INT_BITS value"
     #endif
 #endif
 
 #if OWF_SIZE_BITS == 32
     #define OWF_CLZ_SIZE(x) OWF_CLZ_32(x)
-    #define OWF_CTZ_SIZE(x) OWF_CTZ_32(x)
 #elif OWF_SIZE_BITS == 64
     #define OWF_CLZ_SIZE(x) OWF_CLZ_64(x)
-    #define OWF_CTZ_SIZE(x) OWF_CTZ_64(x)
 #else
-    #error invalid OWF_SIZE_BITS value
+    #error "invalid OWF_SIZE_BITS value"
 #endif
 
 /**
@@ -176,9 +174,9 @@
     #elif __BYTE_ORDER__ && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
         #define OWF_ENDIAN OWF_ENDIAN_LITTLE
     #elif __BYTE_ORDER__ && __BYTE_ORDER__ == __ORDER_PDP_ENDIAN__
-        #error Please don't build OWF on a PDP.
+        #error "Please don't build libowf on a PDP."
     #else
-        #error Invalid endianness for a gnuc system
+        #error "Invalid endianness for a gnuc system"
     #endif
 
     #if OWF_ENDIAN == OWF_ENDIAN_BIG
@@ -197,7 +195,7 @@
         #define OWF_ENDIAN_SWAP32(value) do {OWF_ENDIAN_CAST(value, uint32_t) = _byteswap_ulong(OWF_ENDIAN_CAST(value, uint32_t));} while (0)
         #define OWF_ENDIAN_SWAP16(value) do {OWF_ENDIAN_CAST(value, uint16_t) = _byteswap_ushort(OWF_ENDIAN_CAST(value, uint16_t));} while (0)
     #else
-        #error Invalid endianness for a Windows system
+        #error "Invalid endianness for a Windows system"
     #endif
 #endif
 

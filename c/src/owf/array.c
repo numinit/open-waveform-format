@@ -1,6 +1,6 @@
 #include <owf/array.h>
 #include <owf/types.h>
-#include <owf/arith.H>
+#include <owf/arith.h>
 
 void owf_array_init(owf_array_t *arr) {
     arr->ptr = NULL;
