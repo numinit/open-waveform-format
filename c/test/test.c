@@ -41,7 +41,7 @@ static void owf_test_print_namespace(owf_namespace_t *namespace) {
 }
 
 static void owf_test_print_signal(owf_signal_t *signal) {
-    fprintf(stderr, "    [SIGNAL] %s <units=%s> [", signal->id.bytes.ptr, OWF_STR_PTR(signal->unit));
+    fprintf(stderr, "    [SIGNAL] %s <units=%s> [", OWF_STR_PTR(signal->id), OWF_STR_PTR(signal->unit));
     for (uint32_t i = 0; i < OWF_ARRAY_LEN(signal->samples); i++) {
         double d = OWF_ARRAY_GET(signal->samples, double, i);
         if (isfinite(d)) {
@@ -236,10 +236,10 @@ int main(int argc, char **argv) {
     fprintf(stderr, "libowf " OWF_LIBRARY_VERSION_STRING " test harness starting\n");
     fprintf(stderr, "--------------------------------\n");
     fprintf(stderr, "(in %s)\n\n", dir);
-    fprintf(stderr, ">> running %lu %s\n", OWF_COUNT(tests), OWF_COUNT(tests) == 1 ? "test" : "tests");
+    fprintf(stderr, ">> running %zu %s\n", OWF_COUNT(tests), OWF_COUNT(tests) == 1 ? "test" : "tests");
     for (int i = 0; i < OWF_COUNT(tests); i++) {
         owf_test_t *test = &tests[i];
-        fprintf(stderr, ">> test %d/%lu (%s)...", i + 1, OWF_COUNT(tests), test->name);
+        fprintf(stderr, ">> test %d/%zu (%s)...", i + 1, OWF_COUNT(tests), test->name);
         int res = test->fn();
         if (res == 0) {
             success++;
@@ -256,7 +256,7 @@ int main(int argc, char **argv) {
     }
 
     // Display results
-    fprintf(stderr, ">> %d/%lu %s successful (%.2f%%)\n", success, OWF_COUNT(tests), OWF_COUNT(tests) != 1 ? "tests" : "test", (float)success / (float)OWF_COUNT(tests) * 100);
+    fprintf(stderr, ">> %d/%zu %s successful (%.2f%%)\n", success, OWF_COUNT(tests), OWF_COUNT(tests) != 1 ? "tests" : "test", (float)success / (float)OWF_COUNT(tests) * 100);
 
     if (strcmp(argv[argc - 1], "--pause") == 0) {
         fprintf(stderr, "(press enter to exit)\n");
