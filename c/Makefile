@@ -1,6 +1,6 @@
 CC ?= clang
 
-CFLAGS += -Wall -O0 -std=c99 -g
+override CFLAGS := -Wall -std=c99 -g $(CFLAGS)
 LDFLAGS +=
 
 INCLUDES = -Iinclude
