@@ -26,13 +26,15 @@ void *owf_malloc(owf_alloc_t *alloc, owf_error_t *error, size_t size) {
 }
 
 void *owf_realloc(owf_alloc_t *alloc, owf_error_t *error, void *bp, size_t size) {
-    if (OWF_NOEXPECT(size == 0)) {
+    if (OWF_NOEXPECT(size == 0 && bp != NULL)) {
         OWF_ERR_SET(*error, "can't reallocate zero bytes");
+        owf_free(alloc, bp);
         return NULL;
     } else if (OWF_NOEXPECT(bp == NULL)) {
         return owf_malloc(alloc, error, size);
     } else if (OWF_NOEXPECT(size > alloc->max_alloc)) {
         OWF_ERR_SETF(*error, "reallocated size was greater than max (%zu > %zu)", size, alloc->max_alloc);
+        owf_free(alloc, bp);
         return NULL;
     } else {
         void *ret = alloc->realloc(bp, size);
