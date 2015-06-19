@@ -28,20 +28,55 @@ module OWF
     end
     alias :push_str_strict :push_str
 
+    # Pushes an 8-bit int.
+    # @param u8 The 8-bit int to push
+    def push_u8 u8
+      raise ArgumentError, 'u8 must be an Integer' unless u8.is_a? Integer
+      raise ArgumentError, 'u8 out of range' unless u8 >= 0x00 and u8 <= 0xff
+      @fmt << 'C'.freeze
+      @res << u8
+      self
+    end
+    alias :push_u8_strict :push_u8
+
+    # Pushes a 16-bit int.
+    # @param u16 The 16-bit int to push
+    def push_u16 u16
+      raise ArgumentError, 'u16 must be an Integer' unless u16.is_a? Integer
+      raise ArgumentError, 'u16 out of range' unless u16 >= 0x0000 and u16 <= 0xffff
+      @fmt << 'S>'.freeze
+      @res << u16
+      self
+    end
+    alias :push_u16_strict :push_u16
+
     # Pushes a 32-bit int.
     # @param u32 The u32 to push.
     def push_u32 u32
       raise ArgumentError, 'u32 must be an Integer' unless u32.is_a? Integer
+      raise ArgumentError, 'u32 out of range' unless u32 >= 0x00000000 and u32 <= 0xffffffff
       @fmt << 'L>'.freeze
       @res << u32
       self
     end
     alias :push_u32_strict :push_u32
 
+    # Pushes a signed 64-bit int.
+    # @param s64 The s64 to push.
+    def push_s64 s64
+      raise ArgumentError, 's64 must be an Integer' unless s64.is_a? Integer
+      raise ArgumentError, 's64 out of range' unless s64 >= -0x8000000000000000 && s64 <= 0x7fffffffffffffff
+      @fmt << 'q!>'.freeze
+      @res << s64
+      self
+    end
+    alias :push_s64_strict :push_s64
+
     # Pushes a 64-bit int.
     # @param u64 The u64 to push.
     def push_u64 u64
       raise ArgumentError, 'u64 must be an Integer' unless u64.is_a? Integer
+      raise ArgumentError, 'u64 out of range' unless u64 >= 0x0000000000000000 and u64 <= 0xffffffffffffffff
       @fmt << 'Q>'.freeze
       @res << u64
       self
@@ -86,7 +121,7 @@ module OWF
     # @param t64 The t64 to push.
     def push_t64 t64
       if t64.is_a? Integer
-        push_u64 t64
+        push_s64 t64
       elsif t64.is_a? String
         push_t64_strict t64
       else
@@ -102,7 +137,7 @@ module OWF
       raise ArgumentError, 't64 must be a String' unless t64.is_a? String
       t = DateTime.parse(t64).to_time
       val = t.tv_sec * 10_000_000 + t.tv_nsec / 100
-      push_u64 val
+      push_s64 val
 
       self
     end
@@ -122,7 +157,7 @@ module OWF
             channel[:namespaces].each do |namespace|
               length_wrap {
                 push_t64_strict namespace[:t0]
-                push_u64_strict namespace[:dt]
+                push_u64_strict num_to_duration(namespace[:dt])
                 push_str_strict namespace[:id]
 
                 length_wrap {
@@ -147,7 +182,17 @@ module OWF
 
                 length_wrap {
                   namespace[:alarms].each do |alarm|
-                    push_t64_strict alarm[:time]
+                    # Time and duration
+                    push_t64_strict alarm[:t0]
+                    push_u64_strict num_to_duration(alarm[:dt])
+
+                    # Level, volume, and padding
+                    push_u8_strict alarm[:level]
+                    push_u8_strict alarm[:volume]
+                    push_u16_strict 0
+
+                    # Type and data
+                    push_str_strict alarm[:type]
                     push_str_strict alarm[:data]
                   end
                 }
@@ -166,6 +211,10 @@ module OWF
     end
 
     private
+
+    def num_to_duration num
+      (num * 10000).floor
+    end
 
     # Wraps a block, prefixing it with that block's length.
     def length_wrap &block
