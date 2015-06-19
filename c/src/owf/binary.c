@@ -77,6 +77,24 @@ void owf_binary_reader_init_file(owf_binary_reader_t *binary, FILE *file, owf_al
     owf_reader_init(&binary->reader, alloc, owf_binary_reader_file_read_cb, visitor, file);
 }
 
+static bool owf_binary_reader_buffer_read_cb(void *dest, size_t size, void *data) {
+    owf_buffer_t *ptr = (owf_buffer_t *)data;
+    size_t new_position = ptr->position + size;
+    if (new_position > ptr->length) {
+        /* Attempted to read more bytes than this buffer has */
+        return false;
+    }
+
+    /* Copy memory and update the position in the stream */
+    memcpy(dest, (uint8_t *)ptr->ptr + ptr->position, size);
+    ptr->position = new_position;
+    return true;
+}
+
+void owf_binary_reader_init_buffer(owf_binary_reader_t *binary, owf_buffer_t *buf, owf_alloc_t *alloc, owf_reader_visit_cb_t visitor) {
+    owf_reader_init(&binary->reader, alloc, owf_binary_reader_buffer_read_cb, visitor, buf);
+}
+
 const char *owf_binary_reader_strerror(owf_binary_reader_t *binary) {
     return binary->reader.error.error;
 }

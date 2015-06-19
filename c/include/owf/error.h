@@ -20,7 +20,6 @@ typedef struct owf_error {
 #define OWF_ERR_SET(err, fmt) \
     do { \
         (&(err))->is_error = true; \
-        strcpy((&(err))->error, fmt); \
         snprintf((&(err))->error, sizeof((&(err))->error), "%s:%d@%s: " fmt, __FILE__, __LINE__, __FUNCTION__); \
     } while (0)
 #define OWF_ERR_SETF(err, fmt, ...) \

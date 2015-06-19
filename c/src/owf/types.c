@@ -111,3 +111,9 @@ uint32_t owf_str_bytesize(owf_str_t *str) {
     /* Extra for the trailing null byte that was added */
     return (uint32_t)strnlen(str->bytes.ptr, str->bytes.length - 1);
 }
+
+void owf_buffer_init(owf_buffer_t *buf, void *ptr, size_t length) {
+    buf->ptr = ptr;
+    buf->length = length;
+    buf->position = 0;
+}

@@ -22,6 +22,7 @@ typedef bool (*owf_binary_reader_cb_t)(owf_binary_reader_t *, void *);
 
 void owf_binary_reader_init(owf_binary_reader_t *binary, owf_alloc_t *alloc, owf_reader_read_cb_t read, owf_reader_visit_cb_t visitor, void *data);
 void owf_binary_reader_init_file(owf_binary_reader_t *binary, FILE *file, owf_alloc_t *alloc, owf_reader_visit_cb_t visitor);
+void owf_binary_reader_init_buffer(owf_binary_reader_t *binary, owf_buffer_t *bu, owf_alloc_t *alloc, owf_reader_visit_cb_t visitor);
 
 const char *owf_binary_reader_strerror(owf_binary_reader_t *binary);
 

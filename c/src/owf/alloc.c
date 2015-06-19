@@ -30,6 +30,9 @@ void *owf_realloc(owf_alloc_t *alloc, owf_error_t *error, void *bp, size_t size)
         OWF_ERR_SET(*error, "can't reallocate zero bytes");
         owf_free(alloc, bp);
         return NULL;
+    } else if (OWF_NOEXPECT(size == 0 && bp == NULL)) {
+        OWF_ERR_SET(*error, "can't reallocate zero bytes, much less with a NULL pointer");
+        return NULL;
     } else if (OWF_NOEXPECT(bp == NULL)) {
         return owf_malloc(alloc, error, size);
     } else if (OWF_NOEXPECT(size > alloc->max_alloc)) {

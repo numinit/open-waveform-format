@@ -10,6 +10,11 @@
 
 typedef int64_t owf_time_t;
 
+typedef struct owf_buffer {
+    void *ptr;
+    size_t length, position;
+} owf_buffer_t;
+
 typedef struct owf_str {
     owf_array_t bytes;
 } owf_str_t;
@@ -61,5 +66,7 @@ void owf_str_init(owf_str_t *str);
 bool owf_str_reserve(owf_str_t *str, owf_alloc_t *allocator, owf_error_t *error, uint32_t length);
 void owf_str_destroy(owf_str_t *str, owf_alloc_t *allocator);
 uint32_t owf_str_bytesize(owf_str_t *str);
+
+void owf_buffer_init(owf_buffer_t *buf, void *ptr, size_t size);
 
 #endif /* OWF_TYPES_H */
