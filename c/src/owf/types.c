@@ -71,19 +71,21 @@ void owf_signal_destroy(owf_signal_t *signal, owf_alloc_t *allocator) {
 }
 
 void owf_event_init(owf_event_t *event) {
-    owf_str_init(&event->data);
+    owf_str_init(&event->message);
 }
 
 void owf_event_destroy(owf_event_t *event, owf_alloc_t *allocator) {
-    owf_str_destroy(&event->data, allocator);
+    owf_str_destroy(&event->message, allocator);
 }
 
 void owf_alarm_init(owf_alarm_t *alarm) {
-    owf_str_init(&alarm->data);
+    owf_str_init(&alarm->type);
+    owf_str_init(&alarm->message);
 }
 
 void owf_alarm_destroy(owf_alarm_t *alarm, owf_alloc_t *allocator) {
-    owf_str_destroy(&alarm->data, allocator);
+    owf_str_destroy(&alarm->type, allocator);
+    owf_str_destroy(&alarm->message, allocator);
 }
 
 void owf_str_init(owf_str_t *str) {

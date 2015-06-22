@@ -61,11 +61,11 @@ static void owf_test_print_signal(owf_signal_t *signal) {
 }
 
 static void owf_test_print_event(owf_event_t *event) {
-    fprintf(stderr, "    [EVENT] %s <time=%" PRIu64 ">\n", OWF_STR_PTR(event->data), event->time);
+    fprintf(stderr, "    [EVENT] <message=%s, t0=%" PRIu64 ">\n", OWF_STR_PTR(event->message), event->t0);
 }
 
 static void owf_test_print_alarm(owf_alarm_t *alarm) {
-    fprintf(stderr, "    [ALARM] %s <time=%" PRIu64 ">\n", OWF_STR_PTR(alarm->data), alarm->time);
+    fprintf(stderr, "    [ALARM] <type=%s, message=%s, t0=%" PRIu64 ", dt=%" PRIu64 ", level=%" PRIu8 "x, volume=%" PRIu8 "x>\n", OWF_STR_PTR(alarm->type), OWF_STR_PTR(alarm->message), alarm->t0, alarm->dt, alarm->details.level, alarm->details.volume);
 }
 
 static bool owf_test_visitor(owf_reader_t *reader, owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *data) {

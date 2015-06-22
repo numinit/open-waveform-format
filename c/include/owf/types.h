@@ -26,13 +26,17 @@ typedef struct owf_signal {
 } owf_signal_t;
 
 typedef struct owf_event {
-    owf_time_t time;
-    owf_str_t data;
+    owf_time_t t0;
+    owf_str_t message;
 } owf_event_t;
 
 typedef struct owf_alarm {
-    owf_time_t time;
-    owf_str_t data;
+    owf_time_t t0, dt;
+    union {
+        uint8_t  level, volume, _reserved_0, _reserved_1;
+        uint32_t u32;
+    } OWF_PACK details;
+    owf_str_t type, message;
 } owf_alarm_t;
 
 typedef struct owf_namespace {

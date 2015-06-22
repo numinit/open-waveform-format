@@ -239,11 +239,11 @@ bool owf_binary_read_event(owf_binary_reader_t *binary, void *ptr) {
     owf_event_init(event);
 
     /* Read the timestamp */
-    OWF_BINARY_SAFE_READ(binary, &event->time, sizeof(event->time));
-    OWF_HOST64(event->time);
+    OWF_BINARY_SAFE_READ(binary, &event->t0, sizeof(event->t0));
+    OWF_HOST64(event->t0);
 
     /* Read the data */
-    if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, &event->data))) {
+    if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, &event->message))) {
         return false;
     }
 
@@ -257,11 +257,23 @@ bool owf_binary_read_alarm(owf_binary_reader_t *binary, void *ptr) {
     owf_alarm_init(alarm);
 
     /* Read the timestamp */
-    OWF_BINARY_SAFE_READ(binary, &alarm->time, sizeof(alarm->time));
-    OWF_HOST64(alarm->time);
+    OWF_BINARY_SAFE_READ(binary, &alarm->t0, sizeof(alarm->t0));
+    OWF_HOST64(alarm->t0);
+
+    /* Read the duration */
+    OWF_BINARY_SAFE_READ(binary, &alarm->dt, sizeof(alarm->dt));
+    OWF_HOST64(alarm->dt);
+
+    /* Read the level, volume, etc */
+    OWF_BINARY_SAFE_READ(binary, &alarm->details, sizeof(alarm->details));
+
+    /* Read the type */
+    if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, &alarm->type))) {
+        return false;
+    }
 
     /* Read the data */
-    if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, &alarm->data))) {
+    if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, &alarm->message))) {
         return false;
     }
 
