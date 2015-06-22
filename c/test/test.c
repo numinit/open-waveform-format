@@ -16,8 +16,10 @@
 #define OWF_TEST_OK return 0
 #define OWF_TEST_PATH_TO(file) ("../example/owf1_" file ".owf")
 
-#define OWF_TEST_VISITOR(str, result) owf_test_binary_visitor_execute(OWF_TEST_PATH_TO(str), result)
-#define OWF_TEST_MATERIALIZE(str) owf_test_binary_materialize_execute(OWF_TEST_PATH_TO(str))
+#define OWF_TEST_VISITOR_FILE(str, result) owf_test_binary_visitor_file_execute(OWF_TEST_PATH_TO(str), result)
+#define OWF_TEST_VISITOR_BUFFER(str, result) owf_test_binary_visitor_buffer_execute(OWF_TEST_PATH_TO(str), result)
+#define OWF_TEST_MATERIALIZE_FILE(str, result) owf_test_binary_materialize_file_execute(OWF_TEST_PATH_TO(str), result)
+#define OWF_TEST_MATERIALIZE_BUFFER(str, result) owf_test_binary_materialize_buffer_execute(OWF_TEST_PATH_TO(str), result)
 
 typedef struct owf_test {
     const char *name;
@@ -32,6 +34,7 @@ static void owf_test_fail(const char *fmt, ...) {
     va_end(va);
 }
 
+/* ---------- HELPERS ---------- */
 static void owf_test_print_channel(owf_channel_t *channel) {
     fprintf(stderr, "[CHANNEL] %s\n", OWF_STR_PTR(channel->id));
 }
@@ -41,7 +44,7 @@ static void owf_test_print_namespace(owf_namespace_t *namespace) {
 }
 
 static void owf_test_print_signal(owf_signal_t *signal) {
-    fprintf(stderr, "    [SIGNAL] %s <units=%s> [", OWF_STR_PTR(signal->id), OWF_STR_PTR(signal->unit));
+    fprintf(stderr, "    [SIGNAL] <id=%s, units=%s> [", OWF_STR_PTR(signal->id), OWF_STR_PTR(signal->unit));
     for (uint32_t i = 0; i < OWF_ARRAY_LEN(signal->samples); i++) {
         double d = OWF_ARRAY_GET(signal->samples, double, i);
         if (isfinite(d)) {
@@ -133,7 +136,6 @@ static bool owf_test_binary_read_file(const char *filename, owf_binary_reader_t 
     }
 
     /* Write the pointer and length to the reader_buffer_t */
-    /* TODO: This is confusing, move to owf_buffer_t */
     owf_buffer_init(buf, dest, size);
     fclose(f);
 
@@ -160,7 +162,8 @@ static void owf_test_binary_buffer_close(owf_binary_reader_t *reader) {
     owf_free(reader->reader.alloc, ((owf_buffer_t *)reader->reader.data)->ptr);
 }
 
-static int owf_test_binary_visitor_execute(const char *filename, bool result) {
+/* ---------- TESTS ---------- */
+static int owf_test_binary_visitor_file_execute(const char *filename, bool result) {
     owf_alloc_t alloc = {.malloc = malloc, .realloc = realloc, .free = free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
     owf_binary_reader_t reader;
 
@@ -170,10 +173,29 @@ static int owf_test_binary_visitor_execute(const char *filename, bool result) {
 
     fprintf(stderr, "\n");
     if (owf_binary_read(&reader) != result) {
-        OWF_TEST_FAILF("unexpected result when reading OWF: %s", owf_binary_reader_strerror(&reader));
+        OWF_TEST_FAILF("unexpected result when reading OWF in file mode: %s", owf_binary_reader_strerror(&reader));
     }
     fprintf(stderr, "** result: %s\n", owf_binary_reader_strerror(&reader));
     owf_test_binary_file_close(&reader);
+    OWF_TEST_OK;
+}
+
+static int owf_test_binary_visitor_buffer_execute(const char *filename, bool result) {
+    owf_alloc_t alloc = {.malloc = malloc, .realloc = realloc, .free = free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
+    owf_binary_reader_t reader;
+    owf_buffer_t buf;
+
+    if (!owf_test_binary_read_file(filename, &reader, &alloc, &buf, NULL)) {
+        OWF_TEST_FAIL("error reading file");
+    }
+
+    fprintf(stderr, "\n");
+    if (owf_binary_read(&reader) != result) {
+        OWF_TEST_FAILF("unexpected result when reading OWF in buffer mode: %s", owf_binary_reader_strerror(&reader));
+    }
+    fprintf(stderr, "** result: %s\n", owf_binary_reader_strerror(&reader));
+    owf_test_binary_buffer_close(&reader);
+
     OWF_TEST_OK;
 }
 
@@ -206,9 +228,8 @@ static int owf_test_binary_materialize_print(owf_binary_reader_t *reader, owf_t 
     OWF_TEST_OK;
 }
 
-static int owf_test_binary_materialize_execute(const char *filename) {
+static int owf_test_binary_materialize_file_execute(const char *filename, bool result) {
     owf_alloc_t alloc = {.malloc = malloc, .realloc = realloc, .free = free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
-    owf_buffer_t buf;
     owf_binary_reader_t reader;
     owf_t *owf;
 
@@ -216,78 +237,121 @@ static int owf_test_binary_materialize_execute(const char *filename) {
         OWF_TEST_FAIL("error opening file");
     }
     owf = owf_binary_materialize(&reader);
-    if (owf == NULL) {
+    if (owf != NULL) {
+        owf_test_binary_materialize_print(&reader, owf);
+        owf_destroy(owf, &alloc);
+    }
+    if ((result == true && owf == NULL) || (result == false && owf != NULL)) {
         OWF_TEST_FAILF("unexpected result when reading OWF: %s", owf_binary_reader_strerror(&reader));
     }
-    owf_test_binary_materialize_print(&reader, owf);
-    owf_destroy(owf, &alloc);
     owf_test_binary_file_close(&reader);
+
+    OWF_TEST_OK;
+}
+
+static int owf_test_binary_materialize_buffer_execute(const char *filename, bool result) {
+    owf_alloc_t alloc = {.malloc = malloc, .realloc = realloc, .free = free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
+    owf_buffer_t buf;
+    owf_binary_reader_t reader;
+    owf_t *owf;
 
     if (!owf_test_binary_read_file(filename, &reader, &alloc, &buf, NULL)) {
         OWF_TEST_FAIL("error reading file");
     }
     owf = owf_binary_materialize(&reader);
-    if (owf == NULL) {
+    if (owf != NULL) {
+        owf_test_binary_materialize_print(&reader, owf);
+        owf_destroy(owf, &alloc);
+    }
+    if ((result == true && owf == NULL) || (result == false && owf != NULL)) {
         OWF_TEST_FAILF("unexpected result when reading OWF: %s", owf_binary_reader_strerror(&reader));
     }
-    owf_test_binary_materialize_print(&reader, owf);
-    owf_destroy(owf, &alloc);
     owf_test_binary_buffer_close(&reader);
 
     OWF_TEST_OK;
 }
 
-static int owf_test_binary_valid_1(void) {
-    return OWF_TEST_VISITOR("binary_valid_1", true);
+static int owf_test_binary_visitor_file_valid_1(void) {
+    return OWF_TEST_VISITOR_FILE("binary_valid_1", true);
 }
 
-static int owf_test_binary_valid_2(void) {
-    return OWF_TEST_VISITOR("binary_valid_2", true);
+static int owf_test_binary_visitor_buffer_valid_1(void) {
+    return OWF_TEST_VISITOR_BUFFER("binary_valid_1", true);
 }
 
-static int owf_test_binary_valid_empty(void) {
-    return OWF_TEST_VISITOR("binary_valid_empty", true);
+static int owf_test_binary_visitor_file_valid_2(void) {
+    return OWF_TEST_VISITOR_FILE("binary_valid_2", true);
 }
 
-static int owf_test_binary_invalid_empty(void) {
-    return OWF_TEST_VISITOR("binary_invalid_empty", false);
+static int owf_test_binary_visitor_buffer_valid_2(void) {
+    return OWF_TEST_VISITOR_BUFFER("binary_valid_2", true);
 }
 
-static int owf_test_binary_invalid_magic(void) {
-    return OWF_TEST_VISITOR("binary_invalid_magic", false);
+static int owf_test_binary_visitor_file_valid_3(void) {
+    return OWF_TEST_VISITOR_FILE("binary_valid_3", true);
 }
 
-static int owf_test_binary_invalid_length_short(void) {
-    return OWF_TEST_VISITOR("binary_invalid_length_short", false);
+static int owf_test_binary_visitor_buffer_valid_3(void) {
+    return OWF_TEST_VISITOR_BUFFER("binary_valid_3", true);
 }
 
-static int owf_test_binary_invalid_length_long(void) {
-    return OWF_TEST_VISITOR("binary_invalid_length_long", false);
+static int owf_test_binary_visitor_file_valid_empty(void) {
+    return OWF_TEST_VISITOR_FILE("binary_valid_empty", true);
 }
 
-static int owf_test_binary_invalid_length_really_long(void) {
-    return OWF_TEST_VISITOR("binary_invalid_length_really_long", false);
+static int owf_test_binary_visitor_buffer_valid_empty(void) {
+    return OWF_TEST_VISITOR_BUFFER("binary_valid_empty", true);
 }
 
-static int owf_test_binary_materialize_1(void) {
-    return OWF_TEST_MATERIALIZE("binary_valid_1");
+static int owf_test_binary_materialize_file_valid_1(void) {
+    return OWF_TEST_MATERIALIZE_FILE("binary_valid_1", true);
 }
 
-static int owf_test_binary_materialize_2(void) {
-    return OWF_TEST_MATERIALIZE("binary_valid_2");
+static int owf_test_binary_materialize_buffer_valid_1(void) {
+    return OWF_TEST_MATERIALIZE_BUFFER("binary_valid_1", true);
+}
+
+static int owf_test_binary_materialize_file_valid_2(void) {
+    return OWF_TEST_MATERIALIZE_FILE("binary_valid_2", true);
+}
+
+static int owf_test_binary_materialize_buffer_valid_2(void) {
+    return OWF_TEST_MATERIALIZE_BUFFER("binary_valid_2", true);
+}
+
+static int owf_test_binary_materialize_file_valid_3(void) {
+    return OWF_TEST_MATERIALIZE_FILE("binary_valid_3", true);
+}
+
+static int owf_test_binary_materialize_buffer_valid_3(void) {
+    return OWF_TEST_MATERIALIZE_BUFFER("binary_valid_3", true);
+}
+
+static int owf_test_binary_materialize_file_valid_empty(void) {
+    return OWF_TEST_MATERIALIZE_FILE("binary_valid_empty", true);
+}
+
+static int owf_test_binary_materialize_buffer_valid_empty(void) {
+    return OWF_TEST_MATERIALIZE_BUFFER("binary_valid_empty", true);
 }
 
 static owf_test_t tests[] = {
-    {"binary_valid_1", owf_test_binary_valid_1},
-    {"binary_valid_2", owf_test_binary_valid_2},
-    {"binary_valid_empty", owf_test_binary_valid_empty},
-    {"binary_invalid_empty", owf_test_binary_invalid_empty},
-    {"binary_invalid_magic", owf_test_binary_invalid_magic},
-    {"binary_invalid_length_short", owf_test_binary_invalid_length_short},
-    {"binary_invalid_length_long", owf_test_binary_invalid_length_long},
-    {"binary_invalid_length_really_long", owf_test_binary_invalid_length_really_long},
-    {"binary_materialize_1", owf_test_binary_materialize_1},
-    {"binary_materialize_2", owf_test_binary_materialize_2}
+    {"binary_visitor_file_valid_1", owf_test_binary_visitor_file_valid_1},
+    {"binary_visitor_buffer_valid_1", owf_test_binary_visitor_buffer_valid_1},
+    {"binary_visitor_file_valid_2", owf_test_binary_visitor_file_valid_2},
+    {"binary_visitor_buffer_valid_2", owf_test_binary_visitor_buffer_valid_2},
+    {"binary_visitor_file_valid_3", owf_test_binary_visitor_file_valid_3},
+    {"binary_visitor_buffer_valid_3", owf_test_binary_visitor_buffer_valid_3},
+    {"binary_visitor_file_valid_empty", owf_test_binary_visitor_file_valid_empty},
+    {"binary_visitor_buffer_valid_empty", owf_test_binary_visitor_buffer_valid_empty},
+    {"binary_materialize_file_valid_1", owf_test_binary_materialize_file_valid_1},
+    {"binary_materialize_buffer_valid_1", owf_test_binary_materialize_buffer_valid_1},
+    {"binary_materialize_file_valid_2", owf_test_binary_materialize_file_valid_2},
+    {"binary_materialize_buffer_valid_2", owf_test_binary_materialize_buffer_valid_2},
+    {"binary_materialize_file_valid_3", owf_test_binary_materialize_file_valid_3},
+    {"binary_materialize_buffer_valid_3", owf_test_binary_materialize_buffer_valid_3},
+    {"binary_materialize_file_valid_empty", owf_test_binary_materialize_file_valid_empty},
+    {"binary_materialize_buffer_valid_empty", owf_test_binary_materialize_buffer_valid_empty}
 };
 
 int main(int argc, char **argv) {
