@@ -22,6 +22,7 @@ const char *owf_reader_strerror(owf_reader_t *reader) {
 
 bool owf_reader_materialize_cb(owf_reader_t *reader, owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *ptr) {
     owf_t *owf = &ctx->owf;
+    bool ret = true;
 
     switch (type) {
         owf_channel_t *channel;
@@ -50,7 +51,8 @@ bool owf_reader_materialize_cb(owf_reader_t *reader, owf_reader_ctx_t *ctx, owf_
             break;
         default:
             OWF_READER_ERR(*reader, "unknown callback type");
+            ret = false;
             break;
     }
-    return true;
+    return ret;
 }
