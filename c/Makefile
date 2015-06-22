@@ -28,11 +28,11 @@ UNAME := $(shell uname)
 ifeq ($(UNAME), Darwin)
 	DL_EXT := .dylib
 	BIN_EXT := 
-	CFLAGS += -fPIC
+	override CFLAGS := -fPIC $(CFLAGS)
 else ifeq ($(UNAME), Linux)
 	DL_EXT := .so
 	BIN_EXT := 
-	CFLAGS += -fPIC
+	override CFLAGS := -fPIC $(CFLAGS)
 else ifneq (,$(findstring CYGWIN, $(UNAME)))
 	DL_EXT := .dll
 	BIN_EXT := .exe
@@ -54,18 +54,21 @@ test: $(LIBOWF) $(LIBOWF_TEST)
 
 $(LIBOWF): 
 $(LIBOWF): $(LIBOWF_OBJS)
-	$(CC) $(CFLAGS) -shared $(INCLUDES) -o $(LIBOWF) $(LIBOWF_OBJS) $(LDFLAGS) $(LIBS)
+	@$(CC) $(CFLAGS) $(LIBOWF_CFLAGS) -shared $(INCLUDES) -o $(LIBOWF) $(LIBOWF_OBJS) $(LDFLAGS) $(LIBS)
+	@echo "LD $(LIBOWF)"
 
 $(LIBOWF_TEST): LDFLAGS += -Lbuild/lib -lm -lowf
 $(LIBOWF_TEST): $(LIBOWF) $(LIBOWF_TEST_OBJS)
-	$(CC) $(CFLAGS) $(INCLUDES) -o $(LIBOWF_TEST) $(LIBOWF_TEST_OBJS) $(LDFLAGS) $(LIBS)
+	@$(CC) $(CFLAGS) $(LIBOWF_TEST_CFLAGS) $(INCLUDES) -o $(LIBOWF_TEST) $(LIBOWF_TEST_OBJS) $(LDFLAGS) $(LIBS)
+	@echo "LD $(LIBOWF_TEST)"
 
 # this is a suffix replacement rule for building .o's from .c's
 # it uses automatic variables $<: the name of the prerequisite of
 # the rule(a .c file) and $@: the name of the target of the rule (a .o file)
 # (see the gnu make manual section about automatic variables)
 .c.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $<  -o $@
+	@$(CC) $(CFLAGS) $(INCLUDES) -c $<  -o $@
+	@echo "CC $<"
 
 clean:
 	rm -f $(LIBOWF) $(LIBOWF_TEST)
