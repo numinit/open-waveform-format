@@ -76,7 +76,7 @@ void *owf_array_at(owf_array_t *arr, owf_error_t *error, uint32_t idx, uint32_t 
     if (OWF_EXPECT(idx < arr->length)) {
         return owf_array_ptr_for(arr, error, idx, width);
     } else {
-		OWF_ERR_SETF(*error, "array index out of bounds: " OWF_PRINT_U32 " >= " OWF_PRINT_U32, idx, arr->length);
+        OWF_ERR_SETF(*error, "array index out of bounds: " OWF_PRINT_U32 " >= " OWF_PRINT_U32, idx, arr->length);
         return NULL;
     }
 }

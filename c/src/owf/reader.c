@@ -8,7 +8,7 @@ void owf_reader_init(owf_reader_t *reader, owf_alloc_t *alloc, owf_reader_read_c
     reader->data = data;
 
     /* Start with no error */
-	OWF_READER_ERR(*reader, "no error");
+    OWF_READER_ERR(*reader, "no error");
     reader->error.is_error = false;
 }
 
@@ -26,7 +26,6 @@ bool owf_reader_materialize_cb(owf_reader_t *reader, owf_reader_ctx_t *ctx, owf_
     switch (type) {
         owf_channel_t *channel;
         owf_namespace_t *ns;
-
         case OWF_READ_CHANNEL:
             owf_array_push(&owf->channels, reader->alloc, &reader->error, &ctx->channel, sizeof(owf_channel_t));
             break;

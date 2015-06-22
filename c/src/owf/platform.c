@@ -25,5 +25,4 @@ int owf_platform_windows_snprintf(char *dst, size_t size, const char *format, ..
 char *owf_platform_windows_getcwd(char *buf, size_t size) {
     return _getcwd(buf, (int)size);
 }
-
 #endif

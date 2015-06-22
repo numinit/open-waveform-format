@@ -38,49 +38,49 @@ static void owf_test_fail(const char *fmt, ...) {
 
 /* ---------- HELPERS ---------- */
 static void owf_test_print_channel(owf_channel_t *channel) {
-	if (owf_test_verbose) {
-		fprintf(stderr, "[CHANNEL] %s\n", OWF_STR_PTR(channel->id));
-	}
+    if (owf_test_verbose) {
+        fprintf(stderr, "[CHANNEL] %s\n", OWF_STR_PTR(channel->id));
+    }
 }
 
 static void owf_test_print_namespace(owf_namespace_t *namespace) {
-	if (owf_test_verbose) {
-		fprintf(stderr, "  [NS] %s <t0=" OWF_PRINT_U64 ", dt=" OWF_PRINT_U64 ">\n", OWF_STR_PTR(namespace->id), namespace->t0, namespace->dt);
-	}
+    if (owf_test_verbose) {
+        fprintf(stderr, "  [NS] %s <t0=" OWF_PRINT_U64 ", dt=" OWF_PRINT_U64 ">\n", OWF_STR_PTR(namespace->id), namespace->t0, namespace->dt);
+    }
 }
 
 static void owf_test_print_signal(owf_signal_t *signal) {
-	if (owf_test_verbose) {
-		fprintf(stderr, "    [SIGNAL] <id=%s, units=%s> [", OWF_STR_PTR(signal->id), OWF_STR_PTR(signal->unit));
-		for (uint32_t i = 0; i < OWF_ARRAY_LEN(signal->samples); i++) {
-			double d = OWF_ARRAY_GET(signal->samples, double, i);
-			if (isfinite(d)) {
-				fprintf(stderr, "\"%.2f\"", d);
-			} else if (isnan(d)) {
-				fprintf(stderr, "\"NaN\"");
-			} else if (d < 0) {
-				fprintf(stderr, "\"-Infinity\"");
-			} else {
-				fprintf(stderr, "\"Infinity\"");
-			}
-			if (OWF_ARRAY_LEN(signal->samples) > 0 && i < OWF_ARRAY_LEN(signal->samples) - 1) {
-				fprintf(stderr, ", ");
-			}
-		}
-		fprintf(stderr, "]\n");
-	}
+    if (owf_test_verbose) {
+        fprintf(stderr, "    [SIGNAL] <id=%s, units=%s> [", OWF_STR_PTR(signal->id), OWF_STR_PTR(signal->unit));
+        for (uint32_t i = 0; i < OWF_ARRAY_LEN(signal->samples); i++) {
+            double d = OWF_ARRAY_GET(signal->samples, double, i);
+            if (isfinite(d)) {
+                fprintf(stderr, "\"%.2f\"", d);
+            } else if (isnan(d)) {
+                fprintf(stderr, "\"NaN\"");
+            } else if (d < 0) {
+                fprintf(stderr, "\"-Infinity\"");
+            } else {
+                fprintf(stderr, "\"Infinity\"");
+            }
+            if (OWF_ARRAY_LEN(signal->samples) > 0 && i < OWF_ARRAY_LEN(signal->samples) - 1) {
+                fprintf(stderr, ", ");
+            }
+        }
+        fprintf(stderr, "]\n");
+    }
 }
 
 static void owf_test_print_event(owf_event_t *event) {
-	if (owf_test_verbose) {
-		fprintf(stderr, "    [EVENT] <message=%s, t0=" OWF_PRINT_U64 ">\n", OWF_STR_PTR(event->message), event->t0);
-	}
+    if (owf_test_verbose) {
+        fprintf(stderr, "    [EVENT] <message=%s, t0=" OWF_PRINT_U64 ">\n", OWF_STR_PTR(event->message), event->t0);
+    }
 }
 
 static void owf_test_print_alarm(owf_alarm_t *alarm) {
-	if (owf_test_verbose) {
-		fprintf(stderr, "    [ALARM] <type=%s, message=%s, t0=" OWF_PRINT_U64 ", dt=" OWF_PRINT_U64 ", level=" OWF_PRINT_U8 ", volume=" OWF_PRINT_U8 ">\n", OWF_STR_PTR(alarm->type), OWF_STR_PTR(alarm->message), alarm->t0, alarm->dt, alarm->details.level, alarm->details.volume);
-	}
+    if (owf_test_verbose) {
+        fprintf(stderr, "    [ALARM] <type=%s, message=%s, t0=" OWF_PRINT_U64 ", dt=" OWF_PRINT_U64 ", level=" OWF_PRINT_U8 ", volume=" OWF_PRINT_U8 ">\n", OWF_STR_PTR(alarm->type), OWF_STR_PTR(alarm->message), alarm->t0, alarm->dt, alarm->details.level, alarm->details.volume);
+    }
 }
 
 static bool owf_test_visitor(owf_reader_t *reader, owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *data) {
@@ -367,12 +367,12 @@ static owf_test_t tests[] = {
 };
 
 static bool owf_test_opt(const char *opt, int argc, char **argv) {
-	for (int i = 0; i < argc; i++) {
-		if (strcmp(argv[i], opt) == 0) {
-			return true;
-		}
-	}
-	return false;
+    for (int i = 0; i < argc; i++) {
+        if (strcmp(argv[i], opt) == 0) {
+            return true;
+        }
+    }
+    return false;
 }
 
 int main(int argc, char **argv) {
@@ -383,8 +383,8 @@ int main(int argc, char **argv) {
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
 
-	// Set verbosity
-	owf_test_verbose = owf_test_opt("--verbose", argc, argv);
+    // Set verbosity
+    owf_test_verbose = owf_test_opt("--verbose", argc, argv);
 
     // And here we go...
     getcwd(dir, sizeof(dir));
@@ -414,7 +414,7 @@ int main(int argc, char **argv) {
     // Display results
     fprintf(stdout, ">> %d/" OWF_PRINT_SIZE " %s successful (%.2f%%)\n", success, OWF_COUNT(tests), OWF_COUNT(tests) != 1 ? "tests" : "test", (float)success / (float)OWF_COUNT(tests) * 100);
 
-	if (owf_test_opt("--pause", argc, argv)) {
+    if (owf_test_opt("--pause", argc, argv)) {
         fprintf(stdout, "(press enter to exit)\n");
         getc(stdin);
     }
