@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -200,10 +201,29 @@
 #endif
 
 /**
- * Shims for stdlib _s functions on Windows
+ * printf definitions
+ */
+#define OWF_PRINT_U8 "%"PRIu8
+#define OWF_PRINT_S8 "%"PRId8
+#define OWF_PRINT_U16 "%"PRIu16
+#define OWF_PRINT_S16 "%"PRId16
+#define OWF_PRINT_U32 "%"PRIu32
+#define OWF_PRINT_S32 "%"PRId32
+#define OWF_PRINT_U64 "%"PRIu64
+#define OWF_PRINT_S64 "%"PRId64
+#if OWF_PLATFORM_IS_GNU
+    #define OWF_PRINT_SIZE  "%zu"
+    #define OWF_PRINT_SSIZE "%zd"
+#elif OWF_PLATFORM == OWF_PLATFORM_WINDOWS
+    #define OWF_PRINT_SIZE  "%Iu"
+    #define OWF_PRINT_SSIZE "%Id"
+#endif
+
+/**
+ * Shims for GNU components on Windows
  */
 #if OWF_PLATFORM_IS_GNU
-    #include <unistd.h>
+    #include <unistd.h> 
 #elif OWF_PLATFORM == OWF_PLATFORM_WINDOWS
     #define WIN32_LEAN_AND_MEAN
     #include <windows.h>

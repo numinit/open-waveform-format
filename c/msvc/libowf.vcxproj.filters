@@ -30,6 +30,18 @@
     <ClCompile Include="..\src\owf\platform.c">
       <Filter>Source Files\owf</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\owf\alloc.c">
+      <Filter>Source Files\owf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\owf\arith.c">
+      <Filter>Source Files\owf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\owf\array.c">
+      <Filter>Source Files\owf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\owf\types.c">
+      <Filter>Source Files\owf</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\owf.h">
@@ -45,6 +57,21 @@
       <Filter>Header Files\owf</Filter>
     </ClInclude>
     <ClInclude Include="..\include\owf\version.h">
+      <Filter>Header Files\owf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\owf\alloc.h">
+      <Filter>Header Files\owf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\owf\arith.h">
+      <Filter>Header Files\owf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\owf\array.h">
+      <Filter>Header Files\owf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\owf\error.h">
+      <Filter>Header Files\owf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\owf\types.h">
       <Filter>Header Files\owf</Filter>
     </ClInclude>
   </ItemGroup>

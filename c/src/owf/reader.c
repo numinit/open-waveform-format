@@ -8,7 +8,7 @@ void owf_reader_init(owf_reader_t *reader, owf_alloc_t *alloc, owf_reader_read_c
     reader->data = data;
 
     /* Start with no error */
-    strncpy(reader->error.error, "no error", sizeof(reader->error.error));
+	OWF_READER_ERR(*reader, "no error");
     reader->error.is_error = false;
 }
 

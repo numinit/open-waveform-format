@@ -36,7 +36,7 @@ void *owf_realloc(owf_alloc_t *alloc, owf_error_t *error, void *bp, size_t size)
     } else if (OWF_NOEXPECT(bp == NULL)) {
         return owf_malloc(alloc, error, size);
     } else if (OWF_NOEXPECT(size > alloc->max_alloc)) {
-        OWF_ERR_SETF(*error, "reallocated size was greater than max (%zu > %zu)", size, alloc->max_alloc);
+        OWF_ERR_SETF(*error, "reallocated size was greater than max (" OWF_PRINT_SIZE " > " OWF_PRINT_SIZE ")", size, alloc->max_alloc);
         owf_free(alloc, bp);
         return NULL;
     } else {

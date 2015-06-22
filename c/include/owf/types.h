@@ -35,7 +35,7 @@ typedef struct owf_alarm {
     union {
         uint8_t  level, volume, _reserved_0, _reserved_1;
         uint32_t u32;
-    } OWF_PACK details;
+    } details;
     owf_str_t type, message;
 } owf_alarm_t;
 

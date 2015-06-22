@@ -21,6 +21,8 @@
 #define OWF_TEST_MATERIALIZE_FILE(str, result) owf_test_binary_materialize_file_execute(OWF_TEST_PATH_TO(str), result)
 #define OWF_TEST_MATERIALIZE_BUFFER(str, result) owf_test_binary_materialize_buffer_execute(OWF_TEST_PATH_TO(str), result)
 
+static bool owf_test_verbose;
+
 typedef struct owf_test {
     const char *name;
     int (*fn)(void);
@@ -36,39 +38,49 @@ static void owf_test_fail(const char *fmt, ...) {
 
 /* ---------- HELPERS ---------- */
 static void owf_test_print_channel(owf_channel_t *channel) {
-    fprintf(stderr, "[CHANNEL] %s\n", OWF_STR_PTR(channel->id));
+	if (owf_test_verbose) {
+		fprintf(stderr, "[CHANNEL] %s\n", OWF_STR_PTR(channel->id));
+	}
 }
 
 static void owf_test_print_namespace(owf_namespace_t *namespace) {
-    fprintf(stderr, "  [NS] %s <t0=%" PRIu64 ", dt=%" PRIu64 ">\n", OWF_STR_PTR(namespace->id), namespace->t0, namespace->dt);
+	if (owf_test_verbose) {
+		fprintf(stderr, "  [NS] %s <t0=" OWF_PRINT_U64 ", dt=" OWF_PRINT_U64 ">\n", OWF_STR_PTR(namespace->id), namespace->t0, namespace->dt);
+	}
 }
 
 static void owf_test_print_signal(owf_signal_t *signal) {
-    fprintf(stderr, "    [SIGNAL] <id=%s, units=%s> [", OWF_STR_PTR(signal->id), OWF_STR_PTR(signal->unit));
-    for (uint32_t i = 0; i < OWF_ARRAY_LEN(signal->samples); i++) {
-        double d = OWF_ARRAY_GET(signal->samples, double, i);
-        if (isfinite(d)) {
-            fprintf(stderr, "\"%.2f\"", d);
-        } else if (isnan(d)) {
-            fprintf(stderr, "\"NaN\"");
-        } else if (d < 0) {
-            fprintf(stderr, "\"-Infinity\"");
-        } else {
-            fprintf(stderr, "\"Infinity\"");
-        }
-        if (OWF_ARRAY_LEN(signal->samples) > 0 && i < OWF_ARRAY_LEN(signal->samples) - 1) {
-            fprintf(stderr, ", ");
-        }
-    }
-    fprintf(stderr, "]\n");
+	if (owf_test_verbose) {
+		fprintf(stderr, "    [SIGNAL] <id=%s, units=%s> [", OWF_STR_PTR(signal->id), OWF_STR_PTR(signal->unit));
+		for (uint32_t i = 0; i < OWF_ARRAY_LEN(signal->samples); i++) {
+			double d = OWF_ARRAY_GET(signal->samples, double, i);
+			if (isfinite(d)) {
+				fprintf(stderr, "\"%.2f\"", d);
+			} else if (isnan(d)) {
+				fprintf(stderr, "\"NaN\"");
+			} else if (d < 0) {
+				fprintf(stderr, "\"-Infinity\"");
+			} else {
+				fprintf(stderr, "\"Infinity\"");
+			}
+			if (OWF_ARRAY_LEN(signal->samples) > 0 && i < OWF_ARRAY_LEN(signal->samples) - 1) {
+				fprintf(stderr, ", ");
+			}
+		}
+		fprintf(stderr, "]\n");
+	}
 }
 
 static void owf_test_print_event(owf_event_t *event) {
-    fprintf(stderr, "    [EVENT] <message=%s, t0=%" PRIu64 ">\n", OWF_STR_PTR(event->message), event->t0);
+	if (owf_test_verbose) {
+		fprintf(stderr, "    [EVENT] <message=%s, t0=" OWF_PRINT_U64 ">\n", OWF_STR_PTR(event->message), event->t0);
+	}
 }
 
 static void owf_test_print_alarm(owf_alarm_t *alarm) {
-    fprintf(stderr, "    [ALARM] <type=%s, message=%s, t0=%" PRIu64 ", dt=%" PRIu64 ", level=%" PRIu8 ", volume=%" PRIu8 ">\n", OWF_STR_PTR(alarm->type), OWF_STR_PTR(alarm->message), alarm->t0, alarm->dt, alarm->details.level, alarm->details.volume);
+	if (owf_test_verbose) {
+		fprintf(stderr, "    [ALARM] <type=%s, message=%s, t0=" OWF_PRINT_U64 ", dt=" OWF_PRINT_U64 ", level=" OWF_PRINT_U8 ", volume=" OWF_PRINT_U8 ">\n", OWF_STR_PTR(alarm->type), OWF_STR_PTR(alarm->message), alarm->t0, alarm->dt, alarm->details.level, alarm->details.volume);
+	}
 }
 
 static bool owf_test_visitor(owf_reader_t *reader, owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *data) {
@@ -175,7 +187,7 @@ static int owf_test_binary_visitor_file_execute(const char *filename, bool resul
     if (owf_binary_read(&reader) != result) {
         OWF_TEST_FAILF("unexpected result when reading OWF in file mode: %s", owf_binary_reader_strerror(&reader));
     }
-    fprintf(stderr, "** result: %s\n", owf_binary_reader_strerror(&reader));
+    fprintf(stdout, "** result: %s\n", owf_binary_reader_strerror(&reader));
     owf_test_binary_file_close(&reader);
     OWF_TEST_OK;
 }
@@ -193,7 +205,7 @@ static int owf_test_binary_visitor_buffer_execute(const char *filename, bool res
     if (owf_binary_read(&reader) != result) {
         OWF_TEST_FAILF("unexpected result when reading OWF in buffer mode: %s", owf_binary_reader_strerror(&reader));
     }
-    fprintf(stderr, "** result: %s\n", owf_binary_reader_strerror(&reader));
+    fprintf(stdout, "** result: %s\n", owf_binary_reader_strerror(&reader));
     owf_test_binary_buffer_close(&reader);
 
     OWF_TEST_OK;
@@ -224,7 +236,7 @@ static int owf_test_binary_materialize_print(owf_binary_reader_t *reader, owf_t 
         }
     }
 
-    fprintf(stderr, "** result: %s\n", owf_binary_reader_strerror(reader));
+    fprintf(stdout, "** result: %s\n", owf_binary_reader_strerror(reader));
     OWF_TEST_OK;
 }
 
@@ -354,6 +366,15 @@ static owf_test_t tests[] = {
     {"binary_materialize_buffer_valid_empty", owf_test_binary_materialize_buffer_valid_empty}
 };
 
+static bool owf_test_opt(const char *opt, int argc, char **argv) {
+	for (int i = 0; i < argc; i++) {
+		if (strcmp(argv[i], opt) == 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
 int main(int argc, char **argv) {
     char dir[1024];
     int ret = 0, success = 0;
@@ -362,36 +383,39 @@ int main(int argc, char **argv) {
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
 
+	// Set verbosity
+	owf_test_verbose = owf_test_opt("--verbose", argc, argv);
+
     // And here we go...
     getcwd(dir, sizeof(dir));
-    fprintf(stderr, "--------------------------------\n");
-    fprintf(stderr, "libowf " OWF_LIBRARY_VERSION_STRING " test harness starting\n");
-    fprintf(stderr, "--------------------------------\n");
-    fprintf(stderr, "(in %s)\n\n", dir);
-    fprintf(stderr, ">> running %zu %s\n", OWF_COUNT(tests), OWF_COUNT(tests) == 1 ? "test" : "tests");
+    fprintf(stdout, "--------------------------------\n");
+    fprintf(stdout, "libowf " OWF_LIBRARY_VERSION_STRING " test harness starting\n");
+    fprintf(stdout, "--------------------------------\n");
+    fprintf(stdout, "(in %s)\n\n", dir);
+    fprintf(stdout, ">> running " OWF_PRINT_SIZE " %s\n", OWF_COUNT(tests), OWF_COUNT(tests) == 1 ? "test" : "tests");
     for (int i = 0; i < OWF_COUNT(tests); i++) {
         owf_test_t *test = &tests[i];
-        fprintf(stderr, ">> test %d/%zu (%s)...", i + 1, OWF_COUNT(tests), test->name);
+        fprintf(stdout, ">> test %d/" OWF_PRINT_SIZE " (%s)...", i + 1, OWF_COUNT(tests), test->name);
         int res = test->fn();
         if (res == 0) {
             success++;
-            fprintf(stderr, "PASSED\n");
+            fprintf(stdout, "PASSED\n");
         } else if (res == 1) {
-            fprintf(stderr, "FAILED\n");
+            fprintf(stdout, "FAILED\n");
         }
 
         if (res != 0 && res != 1) {
             ret = res;
         }
 
-        fprintf(stderr, "--------------------------------\n");
+        fprintf(stdout, "--------------------------------\n");
     }
 
     // Display results
-    fprintf(stderr, ">> %d/%zu %s successful (%.2f%%)\n", success, OWF_COUNT(tests), OWF_COUNT(tests) != 1 ? "tests" : "test", (float)success / (float)OWF_COUNT(tests) * 100);
+    fprintf(stdout, ">> %d/" OWF_PRINT_SIZE " %s successful (%.2f%%)\n", success, OWF_COUNT(tests), OWF_COUNT(tests) != 1 ? "tests" : "test", (float)success / (float)OWF_COUNT(tests) * 100);
 
-    if (strcmp(argv[argc - 1], "--pause") == 0) {
-        fprintf(stderr, "(press enter to exit)\n");
+	if (owf_test_opt("--pause", argc, argv)) {
+        fprintf(stdout, "(press enter to exit)\n");
         getc(stdin);
     }
 
