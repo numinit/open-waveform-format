@@ -17,6 +17,7 @@ html
 *.dll
 *.exe
 build/*
+msvc/build/*
 
 # Xcode userdata
 xcuserdata

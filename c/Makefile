@@ -44,32 +44,33 @@ endif
 LIBOWF = build/lib/libowf$(DL_EXT)
 LIBOWF_TEST = build/bin/libowf-test$(BIN_EXT)
 
-.PHONY: depend clean test
-
+# Define `make all`, `make tests`, and `make test`.
 all: $(LIBOWF)
 tests: $(LIBOWF) $(LIBOWF_TEST)
-
 test: $(LIBOWF) $(LIBOWF_TEST)
-	$(LIBOWF_TEST)
+	@echo "TEST $(LIBOWF_TEST)"
+	@$(LIBOWF_TEST)
+.PHONY: clean test
 
-$(LIBOWF): 
+# Define the libowf target
 $(LIBOWF): $(LIBOWF_OBJS)
-	@$(CC) $(CFLAGS) $(LIBOWF_CFLAGS) -shared $(INCLUDES) -o $(LIBOWF) $(LIBOWF_OBJS) $(LDFLAGS) $(LIBS)
 	@echo "LD $(LIBOWF)"
+	@$(CC) $(CFLAGS) $(LIBOWF_CFLAGS) -shared $(INCLUDES) -o $(LIBOWF) $(LIBOWF_OBJS) $(LDFLAGS) $(LIBS)
 
+# Define the libowf-test target
 $(LIBOWF_TEST): LDFLAGS += -Lbuild/lib -lm -lowf
 $(LIBOWF_TEST): $(LIBOWF) $(LIBOWF_TEST_OBJS)
-	@$(CC) $(CFLAGS) $(LIBOWF_TEST_CFLAGS) $(INCLUDES) -o $(LIBOWF_TEST) $(LIBOWF_TEST_OBJS) $(LDFLAGS) $(LIBS)
 	@echo "LD $(LIBOWF_TEST)"
+	@$(CC) $(CFLAGS) $(LIBOWF_TEST_CFLAGS) $(INCLUDES) -o $(LIBOWF_TEST) $(LIBOWF_TEST_OBJS) $(LDFLAGS) $(LIBS)
 
-# this is a suffix replacement rule for building .o's from .c's
-# it uses automatic variables $<: the name of the prerequisite of
-# the rule(a .c file) and $@: the name of the target of the rule (a .o file)
-# (see the gnu make manual section about automatic variables)
+# Rule for translating .c into .o
 .c.o:
-	@$(CC) $(CFLAGS) $(INCLUDES) -c $<  -o $@
 	@echo "CC $<"
+	@$(CC) $(CFLAGS) $(INCLUDES) -c $<  -o $@
 
+# Rule for cleaning build files
 clean:
-	rm -f $(LIBOWF) $(LIBOWF_TEST)
-	find src test -name '*.o' -exec rm -f {} \;
+	@echo "RM $(LIBOWF) $(LIBOWF_TEST)"
+	@rm -f $(LIBOWF) $(LIBOWF_TEST)
+	@echo "RM *.o"
+	@find src test -name '*.o' -exec rm -f {} \;
