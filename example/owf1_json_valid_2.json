@@ -41,12 +41,12 @@
                     ],
                     "events": [
                         {
-                            "time": "2015-06-04T17:05:53.2608900",
-                            "data": "POST OK"
+                            "t0": "2015-06-04T17:05:53.2608900",
+                            "message": "POST OK"
                         },
                         {
-                            "time": "2015-06-04T17:05:53.2608950",
-                            "data": "PING"
+                            "t0": "2015-06-04T17:05:53.2608950",
+                            "message": "PING"
                         }
                     ],
                     "alarms": [
@@ -56,7 +56,7 @@
                             "level": 0,
                             "volume": 255,
                             "type": "SPO2 LO",
-                            "data": "43"
+                            "message": "43"
                         },
                         {
                             "t0": "2015-06-04T12:05:53.2609050",
@@ -64,7 +64,7 @@
                             "level": 255,
                             "volume": 255,
                             "type": "ASYSTOLE",
-                            "data": ""
+                            "message": ""
                         }
                     ]
                 },
@@ -75,12 +75,12 @@
                     "signals": [],
                     "events": [
                         {
-                            "time": "2015-06-04T17:05:53.2609150",
-                            "data": "POWER_GOOD"
+                            "t0": "2015-06-04T17:05:53.2609150",
+                            "message": "POWER_GOOD"
                         },
                         {
-                            "time": "2015-06-04T17:05:53.2609200",
-                            "data": "PING"
+                            "t0": "2015-06-04T17:05:53.2609200",
+                            "message": "PING"
                         }
                     ],
                     "alarms": []
@@ -97,12 +97,12 @@
                     "signals": [],
                     "events": [
                         {
-                            "time": "2015-07-04T12:43:03",
-                            "data": "VENT PHONE HOME"
+                            "t0": "2015-07-04T12:43:03",
+                            "message": "VENT PHONE HOME"
                         },
                         {
-                            "time": "2015-07-04T12:44:03",
-                            "data": "POWER GOOD"
+                            "t0": "2015-07-04T12:44:03",
+                            "message": "POWER GOOD"
                         }
                     ],
                     "alarms": []
@@ -140,8 +140,8 @@
                     ],
                     "events": [
                         {
-                            "time": "2015-07-04T12:44:03",
-                            "data": "{\"msg\" : \"ping\"}"
+                            "t0": "2015-07-04T12:44:03",
+                            "message": "{\"msg\" : \"ping\"}"
                         }
                     ],
                     "alarms": []

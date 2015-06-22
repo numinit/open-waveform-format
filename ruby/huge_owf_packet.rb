@@ -1,4 +1,6 @@
-{
+require 'json'
+
+puts (JSON.pretty_generate({
 	channels: 16.times.map {|i|
 		{
 			id: "CHANNEL_#{i}",
@@ -16,8 +18,8 @@
 					},
 					events: 16.times.map {|k|
 						{
-							time: Time.now.utc.strftime('%FT%T.%7N'),
-							data: "EVENT_#{i}_#{j}_#{k}"
+							t0: Time.now.utc.strftime('%FT%T.%7N'),
+							message: "EVENT_#{i}_#{j}_#{k}"
 						}
 					},
 					alarms: 16.times.map {|k|
@@ -27,11 +29,11 @@
 							level: rand(0..255),
 							volume: rand(0..255),
 							type: "ALARM_#{i}_#{j}",
-							data: "#{k}"
+							message: "#{k}"
 						}
 					}
 				}
 			}
 		}
 	}
-}
+}, indent: '    '))
