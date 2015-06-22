@@ -1,10 +1,17 @@
+# OWF: the Open Waveform Format
+# @file Makefile
+# @author Morgan Jones <morgan@medicalinformaticscorp.com>
+
+# Set the C compiler
 CC ?= clang
 
+# Set the CFLAGS and LDFLAGS
 override CFLAGS := -Wall -std=c99 -g -D_GNU_SOURCE $(CFLAGS)
-LDFLAGS +=
+override LDFLAGS := $(LDFLAGS)
 
+# Define includes and linker libs
 INCLUDES = -Iinclude
-LIBS = -lm
+LIBS = 
 
 LIBOWF_SRCS = $(shell find src -type f -name '*.c')
 LIBOWF_OBJS = $(LIBOWF_SRCS:.c=.o)
@@ -12,13 +19,20 @@ LIBOWF_OBJS = $(LIBOWF_SRCS:.c=.o)
 LIBOWF_TEST_SRCS = $(shell find test -type f -name '*.c')
 LIBOWF_TEST_OBJS = $(LIBOWF_TEST_SRCS:.c=.o)
 
+# Export variables for subprocesses
+export PATH := ./build/lib:./build/bin:$(PATH)
+export LD_LIBRARY_PATH := ./build/lib:$(LD_LIBRARY_PATH)
+
+# Perform some basic platform detection
 UNAME := $(shell uname)
 ifeq ($(UNAME), Darwin)
 	DL_EXT := .dylib
 	BIN_EXT := 
+	CFLAGS += -fPIC
 else ifeq ($(UNAME), Linux)
 	DL_EXT := .so
 	BIN_EXT := 
+	CFLAGS += -fPIC
 else ifneq (,$(findstring CYGWIN, $(UNAME)))
 	DL_EXT := .dll
 	BIN_EXT := .exe
@@ -26,15 +40,9 @@ else
 	$(error Unknown development platform, we support Darwin, Linux, and Cygwin)
 endif
 
-# define the executable file
+# Define the executable file
 LIBOWF = build/lib/libowf$(DL_EXT)
 LIBOWF_TEST = build/bin/libowf-test$(BIN_EXT)
-
-#
-# The following part of the makefile is generic; it can be used to
-# build any executable just by changing the definitions above and by
-# deleting dependencies appended to the file from 'make depend'
-#
 
 .PHONY: depend clean test
 
@@ -42,9 +50,9 @@ all: $(LIBOWF)
 tests: $(LIBOWF) $(LIBOWF_TEST)
 
 test: $(LIBOWF) $(LIBOWF_TEST)
-	PATH=build/lib LD_LIBRARY_PATH=build/lib $(LIBOWF_TEST)
+	$(LIBOWF_TEST)
 
-$(LIBOWF): CFLAGS += -fPIC
+$(LIBOWF): 
 $(LIBOWF): $(LIBOWF_OBJS)
 	$(CC) $(CFLAGS) -shared $(INCLUDES) -o $(LIBOWF) $(LIBOWF_OBJS) $(LDFLAGS) $(LIBS)
 
@@ -62,6 +70,3 @@ $(LIBOWF_TEST): $(LIBOWF) $(LIBOWF_TEST_OBJS)
 clean:
 	rm -f $(LIBOWF) $(LIBOWF_TEST)
 	find src test -name '*.o' -exec rm -f {} \;
-
-depend: $(SRCS)
-	makedepend $(INCLUDES) $^
