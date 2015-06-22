@@ -148,6 +148,7 @@ module OWF
       @fmt, @res = [], []
 
       json = JSON.parse(blob, symbolize_names: true)
+      json.default_proc = -> h, k {raise KeyError, "key `#{k}' not found"}
 
       push_u32_strict V1_MAGIC
       length_wrap {
@@ -175,8 +176,8 @@ module OWF
 
                 length_wrap {
                   namespace[:events].each do |event|
-                    push_t64_strict event[:time]
-                    push_str_strict event[:data]
+                    push_t64_strict event[:t0]
+                    push_str_strict event[:message]
                   end
                 }
 
@@ -193,7 +194,7 @@ module OWF
 
                     # Type and data
                     push_str_strict alarm[:type]
-                    push_str_strict alarm[:data]
+                    push_str_strict alarm[:message]
                   end
                 }
               }
