@@ -28,8 +28,8 @@
                     ],
                     "events": [
                         {
-                            "time": "2015-06-04T16:59:04.3018350",
-                            "data": "POST OK"
+                            "t0": "2015-06-04T16:59:04.3018350",
+                            "message": "POST OK"
                         }
                     ],
                     "alarms": [
@@ -39,7 +39,7 @@
                             "level": 0,
                             "volume": 255,
                             "type": "SPO2 LO",
-                            "data": "43"
+                            "message": "43"
                         }
                     ]
                 }
