@@ -42,7 +42,7 @@ all: $(LIBOWF)
 tests: $(LIBOWF) $(LIBOWF_TEST)
 
 test: $(LIBOWF) $(LIBOWF_TEST)
-	$(LIBOWF_TEST) PATH=build/lib LD_LIBRARY_PATH=build/lib
+	PATH=build/lib LD_LIBRARY_PATH=build/lib $(LIBOWF_TEST)
 
 $(LIBOWF): CFLAGS += -fPIC
 $(LIBOWF): $(LIBOWF_OBJS)
