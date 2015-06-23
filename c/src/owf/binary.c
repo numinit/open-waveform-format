@@ -209,11 +209,17 @@ bool owf_binary_read_samples(owf_binary_reader_t *binary, void *ptr) {
     owf_array_init(&signal->samples);
     OWF_BINARY_SAFE_VARIABLE_READ(binary, signal->samples, length, sizeof(double), 0);
 
+    /* Treat this memory as a union between a double and a uint64_t to protect strict-aliasing */
+    union {
+        double f64;
+        uint64_t u64;
+    } val;
+    
     /* Byteswap the samples */
     for (uint32_t i = 0; i < OWF_ARRAY_LEN(signal->samples); i++) {
-        double v = OWF_ARRAY_GET(signal->samples, double, i);
-        OWF_HOST64(v);
-        OWF_ARRAY_PUT(signal->samples, double, i, v);
+        val.u64 = OWF_ARRAY_GET(signal->samples, uint64_t, i);
+        OWF_HOST64(val.u64);
+        OWF_ARRAY_PUT(signal->samples, double, i, val.f64);
     }
 
     return true;
