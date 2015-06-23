@@ -124,7 +124,7 @@ bool owf_binary_length_unwrap_top(owf_binary_reader_t *binary, owf_binary_reader
 
     /* Verify alignment */
     if (OWF_NOEXPECT(length % sizeof(uint32_t) != 0)) {
-        OWF_READER_ERRF(binary->reader, "length was not %zu-byte aligned (got " OWF_PRINT_U32 " bytes)", sizeof(uint32_t), length);
+        OWF_READER_ERRF(binary->reader, "length was not " OWF_PRINT_SIZE "-byte aligned (got " OWF_PRINT_U32 " bytes)", sizeof(uint32_t), length);
         return false;
     }
 
@@ -144,7 +144,7 @@ bool owf_binary_length_unwrap_top(owf_binary_reader_t *binary, owf_binary_reader
 
     /* Ensure we have no trailing bytes */
     if (OWF_NOEXPECT(binary->segment_length > 0)) {
-        OWF_READER_ERRF(binary->reader, "trailing data when reading segment: (" OWF_PRINT_U32 " bytes)", binary->segment_length);
+        OWF_READER_ERRF(binary->reader, "trailing data when reading segment: " OWF_PRINT_U32 " bytes", binary->segment_length);
         return false;
     }
 

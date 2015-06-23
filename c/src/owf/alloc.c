@@ -13,7 +13,7 @@ void *owf_malloc(owf_alloc_t *alloc, owf_error_t *error, size_t size) {
         OWF_ERR_SET(*error, "can't allocate zero bytes");
         return NULL;
     } else if (OWF_NOEXPECT(size > alloc->max_alloc)) {
-        OWF_ERR_SETF(*error, "allocated size was greater than max (%zu > %zu)", size, alloc->max_alloc);
+        OWF_ERR_SETF(*error, "allocated size was greater than max (" OWF_PRINT_SIZE " > " OWF_PRINT_SIZE ")", size, alloc->max_alloc);
         return NULL;
     } else {
         void *ret = alloc->malloc(size);

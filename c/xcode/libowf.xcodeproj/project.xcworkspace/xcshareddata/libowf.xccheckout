@@ -14,7 +14,7 @@
 		<string>mic.github.com:medicalinformaticscorp/open-waveform-format.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>c/macos/libowf.xcodeproj</string>
+	<string>c/xcode/libowf.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>4204BB83BFC5F76275DADE87D8CC1308FE473E36</key>
