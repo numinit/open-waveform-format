@@ -22,11 +22,11 @@ const char *owf_reader_strerror(owf_reader_t *reader) {
 
 bool owf_reader_materialize_cb(owf_reader_t *reader, owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *ptr) {
     owf_t *owf = &ctx->owf;
+    owf_channel_t *channel;
+    owf_namespace_t *ns;
     bool ret = true;
 
     switch (type) {
-        owf_channel_t *channel;
-        owf_namespace_t *ns;
         case OWF_READ_CHANNEL:
             owf_array_push(&owf->channels, reader->alloc, &reader->error, &ctx->channel, sizeof(owf_channel_t));
             break;
