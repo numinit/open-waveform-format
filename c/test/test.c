@@ -197,7 +197,7 @@ static int owf_test_binary_visitor_buffer_execute(const char *filename, bool res
     owf_binary_reader_t reader;
     owf_buffer_t buf;
 
-    if (!owf_test_binary_read_file(filename, &reader, &alloc, &buf, NULL)) {
+    if (!owf_test_binary_read_file(filename, &reader, &alloc, &buf, owf_test_visitor)) {
         OWF_TEST_FAIL("error reading file");
     }
 
