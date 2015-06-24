@@ -10,19 +10,14 @@ namespace OWF.DTO
     /// </summary>
     public class Alarm
     {
-        public Alarm(DateTime time, string data)
+        public Alarm(DateTime time, TimeSpan duration, byte level, byte volume, string type, string message)
         {
-            this.data = data;
             this.startTime = time;
-        }
-        
-        readonly protected string data;
-        public string Data
-        {
-            get
-            {
-                return data;
-            }
+            this.duration = duration;
+            this.message = message;
+            this.msgType = type;
+            this.level = level;
+            this.volume = volume;
         }
 
         readonly protected DateTime startTime;
@@ -34,15 +29,71 @@ namespace OWF.DTO
             }
         }
 
+        readonly protected TimeSpan duration;
+        public TimeSpan Duration
+        {
+            get
+            {
+                return duration;
+            }
+        }
+
+        readonly protected byte level;
+        public byte Level
+        {
+            get
+            {
+                return level;
+            }
+        }
+
+        readonly protected byte volume;
+        public byte Volume
+        {
+            get
+            {
+                return volume;
+            }
+        }
+        
+        readonly protected string message;
+        public string Message
+        {
+            get
+            {
+                return message;
+            }
+        }
+
+        readonly protected string msgType;
+        public string Type
+        {
+            get
+            {
+                return msgType;
+            }
+        }
+
         public UInt32 getSizeInBytes()
         {
             checked
             {
                 UInt32 timeSize = sizeof(Int64);
-                UInt32 stringSizeSize = sizeof(UInt32);
-                UInt32 stringSize = (UInt32)(System.Text.Encoding.UTF8.GetByteCount(data));
-                UInt32 paddingSize = stringSize % 4;
-                return timeSize + stringSizeSize + stringSize + paddingSize;
+                UInt32 durationSize = sizeof(UInt64);
+                UInt32 levelSize = sizeof(byte);
+                UInt32 volumeSize = sizeof(byte);
+                UInt32 paddingSize = 2 * sizeof(byte); // 2 extra unsued bytes after level and volume
+                UInt32 typeStringSizeSize = sizeof(UInt32);                
+                UInt32 typeStringSize = (UInt32)(System.Text.Encoding.UTF8.GetByteCount(msgType));
+                UInt32 typeStringpaddingSize = typeStringSize % 4;
+                UInt32 messageStringSizeSize = sizeof(UInt32);
+                UInt32 messageStringSize = (UInt32)(System.Text.Encoding.UTF8.GetByteCount(message));
+                UInt32 messageStringpaddingSize = messageStringSize % 4;
+
+                return timeSize + durationSize
+                        + levelSize + volumeSize + paddingSize
+                        + typeStringSizeSize + typeStringSize + typeStringpaddingSize
+                        + messageStringSizeSize + messageStringSize + messageStringpaddingSize;
             }
         }
 
@@ -59,7 +110,11 @@ namespace OWF.DTO
                 return false;
             }
 
-            return other.data == data &&
+            return other.msgType == msgType &&
+                    other.duration.Equals(duration) &&
+                    other.message == message &&
+                    other.level == level &&
+                    other.volume == volume &&
                     other.startTime.Equals(startTime);
         }
 
@@ -70,7 +125,11 @@ namespace OWF.DTO
                 return false;
             }
 
-            return other.data == data &&
+            return other.msgType == msgType &&
+                    other.duration.Equals(duration) &&
+                    other.message == message &&
+                    other.level == level &&
+                    other.volume == volume &&
                     other.startTime.Equals(startTime);
         }
 
@@ -80,7 +139,11 @@ namespace OWF.DTO
             {
                 // based on FNV
                 int hash = (int)2166136261;
-                hash = (hash * 16777619) ^ data.GetHashCode();
+                hash = (hash * 16777619) ^ message.GetHashCode();
+                hash = (hash * 16777619) ^ msgType.GetHashCode();
+                hash = (hash * 16777619) ^ level;
+                hash = (hash * 16777619) ^ volume;
+                hash = (hash * 16777619) ^ duration.GetHashCode();
                 hash = (hash * 16777619) ^ startTime.GetHashCode();
                 return hash;
             }

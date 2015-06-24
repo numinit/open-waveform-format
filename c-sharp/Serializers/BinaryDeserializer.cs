@@ -32,8 +32,15 @@ namespace OWF.Serializers
         public static Alarm readAlarm(BinaryReader br)
         {
             DateTime time = readOWFTimestamp(br);
-            string data = readOWFString(br);
-            return new Alarm(time, data);
+            TimeSpan duration = new TimeSpan(checked((long)readU64(br)));
+            byte level = br.ReadByte();
+            byte volume = br.ReadByte();
+            br.ReadBytes(2); // skip padding
+
+            string msgType = readOWFString(br);
+            string message = readOWFString(br);
+
+            return new Alarm(time, duration, level, volume, msgType, message);
         }
 
         public static Event readEvent(BinaryReader br)

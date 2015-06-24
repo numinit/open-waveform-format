@@ -198,7 +198,13 @@ namespace OWF.Serializers
         public static void writeAlarm(BinaryWriter bw, Alarm alarm)
         {
             writeOWFTimestamp(bw, alarm.Time);
-            writeOWFString(bw, alarm.Data);
+            writeU64(bw, (UInt64) alarm.Duration.Ticks);
+            bw.Write(alarm.Level);
+            bw.Write(alarm.Volume);
+            bw.Write((byte) 0);
+            bw.Write((byte) 0);
+            writeOWFString(bw, alarm.Type);
+            writeOWFString(bw, alarm.Message);
         }
 
         public static void writeEvent(BinaryWriter bw, Event evt)
