@@ -19,9 +19,9 @@ namespace OWF.Serializers
                 UInt32 fullSize = checked((strsize + padding));
                 writeU32(bw, fullSize);
 
-
-                // write string (this works becuase the Binary Writer is UTF8 encoded)
-                bw.Write(str);
+                // write string
+                bw.Write(System.Text.Encoding.UTF8.GetBytes(str));
+                bw.Write((byte)0);
 
                 // write any padding
                 while (padding > 0)

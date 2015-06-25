@@ -46,13 +46,13 @@ namespace OWF.DTO
             checked
             {
                 UInt32 idStringSizeSize = sizeof(UInt32);
-                UInt32 idStringSize = (UInt32)(System.Text.Encoding.UTF8.GetByteCount(id));
-                UInt32 idStringPaddingSize = idStringSize % 4;
+                UInt32 idStringSize = (id.Length == 0) ? (0) : ((UInt32)(System.Text.Encoding.UTF8.GetByteCount(id)) + 1);
+                UInt32 idStringPaddingSize = (idStringSize % 4 == 0) ? (0) : (4 - (idStringSize % 4));
                 UInt32 idSize = idStringPaddingSize + idStringSize + idStringSizeSize;
-
+               
                 UInt32 unitStringSizeSize = sizeof(UInt32);
-                UInt32 unitStringSize = (UInt32)(System.Text.Encoding.UTF8.GetByteCount(unit));
-                UInt32 unitStringPaddingSize = unitStringSize % 4;
+                UInt32 unitStringSize = (unit.Length == 0) ? (0) : ((UInt32)(System.Text.Encoding.UTF8.GetByteCount(unit)) + 1);
+                UInt32 unitStringPaddingSize = (unitStringSize % 4 == 0) ? (0) : (4 - (unitStringSize % 4));
                 UInt32 unitSize = unitStringSizeSize + unitStringSize + unitStringPaddingSize;
 
                 UInt32 samplesSizeSize = sizeof(UInt32);

@@ -77,8 +77,8 @@ namespace OWF.DTO
             checked
             {
                 UInt32 idStringSizeSize = sizeof(UInt32);
-                UInt32 idStringSize = (UInt32)(System.Text.Encoding.UTF8.GetByteCount(id));
-                UInt32 idStringPaddingSize = idStringSize % 4;
+                UInt32 idStringSize = (id.Length == 0) ? (0) : ((UInt32)(System.Text.Encoding.UTF8.GetByteCount(id)) + 1);
+                UInt32 idStringPaddingSize = (idStringSize % 4 == 0) ? (0) : (4 - (idStringSize % 4));                
                 UInt32 idSize = idStringPaddingSize + idStringSize + idStringSizeSize;
 
                 UInt32 signalsSize = sizeof(UInt32); // length of signals
