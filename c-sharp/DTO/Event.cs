@@ -40,8 +40,8 @@ namespace OWF.DTO
             {
                 UInt32 timeSize = sizeof(Int64);
                 UInt32 stringSizeSize = sizeof(UInt32);
-                UInt32 stringSize = (UInt32)(System.Text.Encoding.UTF8.GetByteCount(data));
-                UInt32 paddingSize = stringSize % 4;
+                UInt32 stringSize = (data.Length == 0) ? (0) : ((UInt32)(System.Text.Encoding.UTF8.GetByteCount(data)) + 1);
+                UInt32 paddingSize = (stringSize % 4 == 0) ? (0) : ( 4 - (stringSize % 4));
                 return timeSize + stringSizeSize + stringSize + paddingSize;
             }
         }

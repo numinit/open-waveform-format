@@ -45,27 +45,26 @@ namespace OWF_test.DTO
         [TestMethod]
         public void EventSizeWorks()
         {
-            var message = "";
             var time = new DateTime(1983, 7, 1, 3, 4, 5, DateTimeKind.Utc);
-
+            var message = "";            
             var evt = new Event(time, message);
-            Assert.AreEqual(evt.getSizeInBytes(), 12u, "Events with no data should have length 12");
+            Assert.AreEqual(evt.getSizeInBytes(), 12u, "Events with no data should have length 8");
 
             var message2 = "1";
             var evt2= new Event(time, message2);
-            Assert.AreEqual(evt.getSizeInBytes(), 12u, "Events with length 1 data should have aligned length 12");
+            Assert.AreEqual(evt2.getSizeInBytes(), 16u, "Events with length 1 data should have aligned length 16");
 
             var message3 = "12";
             var evt3 = new Event(time, message3);
-            Assert.AreEqual(evt.getSizeInBytes(), 12u, "Events with length 2 data should have aligned length 12");
+            Assert.AreEqual(evt3.getSizeInBytes(), 16u, "Events with length 2 data should have aligned length 16");
 
             var message4 = "123";
             var evt4 = new Event(time, message4);
-            Assert.AreEqual(evt.getSizeInBytes(), 12u, "Events with length 3 data should have aligned length 12");
+            Assert.AreEqual(evt4.getSizeInBytes(), 16u, "Events with length 3 data should have aligned length 16");
 
             var message5 = "1234";
             var evt5 = new Event(time, message5);
-            Assert.AreEqual(evt.getSizeInBytes(), 12u, "Events with length 4 data should have aligned length 16");
+            Assert.AreEqual(evt5.getSizeInBytes(), 20u, "Events with length 4 data should have aligned length 24");
         }
     }
 }

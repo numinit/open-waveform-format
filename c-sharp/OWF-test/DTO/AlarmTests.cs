@@ -65,5 +65,32 @@ namespace OWFTests
             Assert.AreEqual(alarm, alarm2, "Two equivalent alarms should be equal");
             Assert.AreNotEqual(alarm, alarm3, "Two different alarms should not be equal");
         }
+        
+        [TestMethod]
+        public void AlarmSizeWorks()
+        {
+            
+            var message = "";
+            var type = "";
+            var dur = new TimeSpan(5, 15, 10);
+            byte level = 12;
+            byte volume = 4;
+            var time = new DateTime(1969, 7, 1, 3, 4, 5, DateTimeKind.Utc);            
+            var alarm = new Alarm(time, dur, level, volume, type, message);
+            var alarmSize = alarm.getSizeInBytes();
+            Assert.AreEqual(alarmSize, 28u, "Alarms with message length 0 and type length 0 should have aligned length 28");
+
+            var message2 = "12";
+            var type2 = "1";
+            var alarm2 = new Alarm(time, dur, level, volume, type2, message2);
+            var alarm2Size = alarm2.getSizeInBytes();
+            Assert.AreEqual(alarm2Size, 36u, "Alarms with message length 2 and type length 1 should have aligned length 36");
+            
+            var message3 = "1234";
+            var type3 = "12345";
+            var alarm3 = new Alarm(time, dur, level, volume, type3, message3);
+            var alarm3Size = alarm3.getSizeInBytes();
+            Assert.AreEqual(alarm3Size, 44u, "Alarms with message length 4 and type length 5 should have aligned length 44");
+        }
     }
 }
