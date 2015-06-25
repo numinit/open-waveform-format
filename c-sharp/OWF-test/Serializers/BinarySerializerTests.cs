@@ -38,8 +38,8 @@ namespace OWF_test.Serializers
         [TestMethod]
         public void GeneratesCorrectEmptyNamespaceObject()
         {
-            // TODO: This may be incorrect.
-            var t0 = new DateTime(2015, 6, 4, 16, 59, 4, 3018);
+            // XXX: Do ticks work like this?
+            var t0 = new DateTime(14334371443018100L);
             var dt = new TimeSpan(0, 0, 3);
 
             var n = new Namespace("GEWAVE", t0, dt, new List<Signal>(), new List<Event>(), new List<Alarm>());
