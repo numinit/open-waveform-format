@@ -13,9 +13,15 @@ module OWF
 
     # Pushes a string.
     # @param str The string to push.
-    def push_str str
+    def push_str str, null_pad=true
       raise ArgumentError, 'str must be a String' unless str.is_a? String
-      len = (str.bytesize % 4 == 0 ? str.bytesize : 4 * (str.bytesize / 4 + 1))
+
+      # Pad the length
+      offset = 4 - (str.bytesize % 4)
+      offset = 0 if offset == 4 and !null_pad
+      len = offset + str.bytesize
+      raise RuntimeError, 'effective length is not a multiple of 4'.freeze unless len % 4 == 0
+
       @fmt << 'L>'.freeze << "a#{len}".freeze
       @res << len << str.freeze
       self
@@ -121,15 +127,13 @@ module OWF
 
                 length_wrap {
                   namespace[:signals].each do |signal|
-                    length_wrap {
-                      push_str_strict signal[:id]
-                      push_str_strict signal[:units]
+                    push_str_strict signal[:id]
+                    push_str_strict signal[:units]
 
-                      length_wrap {
-                        signal[:data].each do |float|
-                          push_f64_strict float
-                        end
-                      }
+                    length_wrap {
+                      signal[:data].each do |float|
+                        push_f64_strict float
+                      end
                     }
                   end
                 }
@@ -179,7 +183,7 @@ module OWF
       # Restore the state and just push the packed buffer as a string
       str = pack
       @fmt, @res = fmt, res
-      push_str str
+      push_str str, false
 
       self
     end
