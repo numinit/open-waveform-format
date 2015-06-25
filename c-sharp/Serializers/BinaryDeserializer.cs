@@ -8,7 +8,7 @@ using System.IO;
 
 namespace OWF.Serializers
 {
-    class BinaryDeserializer
+    public static class BinaryDeserializer
     {
         public static string readOWFString(BinaryReader br)
         {
