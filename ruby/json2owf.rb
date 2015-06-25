@@ -6,13 +6,15 @@ $: << File.join(File.dirname(__FILE__), 'lib')
 
 require 'owf'
 
-input, output = File.open(ARGV[0], 'r'), File.open(ARGV[1], 'w')
+input, output = File.open(ARGV[0], 'r'), nil
 
 begin
-  output.write OWF::State.json(input.read)
+  json = OWF::State.json(input.read)
+  output = File.open(ARGV[1], 'w')
+  output.write json
 ensure
   input.close
-  output.close
+  output.close unless output.nil?
 end
 
 exit 0

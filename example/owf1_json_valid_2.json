@@ -1,0 +1,168 @@
+{
+    "channels": [
+        {
+            "id": "BED_42",
+            "namespaces": [
+                {
+                    "id": "GEWAVE",
+                    "t0": "2015-06-04T17:05:53.2608660",
+                    "dt": 1000.12345,
+                    "signals": [
+                        {
+                            "id": "ECG_LEAD_2",
+                            "units": "mV",
+                            "data": [
+                                "-Infinity",
+                                "-3.0",
+                                "-2.0",
+                                "-1.0",
+                                "0.0",
+                                "NaN",
+                                "0.0",
+                                "1.0",
+                                "2.0",
+                                "3.0",
+                                "Infinity"
+                            ]
+                        },
+                        {
+                            "id": "HR_SENSOR",
+                            "units": "bpm",
+                            "data": [
+                                "80",
+                                "82",
+                                "83",
+                                "81",
+                                "80",
+                                "0",
+                                "0"
+                            ]
+                        }
+                    ],
+                    "events": [
+                        {
+                            "t0": "2015-06-04T17:05:53.2608900",
+                            "message": "POST OK"
+                        },
+                        {
+                            "t0": "2015-06-04T17:05:53.2608950",
+                            "message": "PING"
+                        }
+                    ],
+                    "alarms": [
+                        {
+                            "t0": "2015-06-04T11:59:04.3018450",
+                            "dt": 2000.12345,
+                            "level": 0,
+                            "volume": 255,
+                            "type": "SPO2 LO",
+                            "message": "43"
+                        },
+                        {
+                            "t0": "2015-06-04T12:05:53.2609050",
+                            "dt": 3000.12345,
+                            "level": 255,
+                            "volume": 255,
+                            "type": "ASYSTOLE",
+                            "message": ""
+                        }
+                    ]
+                },
+                {
+                    "id": "DRAGER_VENT",
+                    "t0": "2015-06-04T17:05:53.2609110",
+                    "dt": 4000.12345,
+                    "signals": [],
+                    "events": [
+                        {
+                            "t0": "2015-06-04T17:05:53.2609150",
+                            "message": "POWER_GOOD"
+                        },
+                        {
+                            "t0": "2015-06-04T17:05:53.2609200",
+                            "message": "PING"
+                        }
+                    ],
+                    "alarms": []
+                }
+            ]
+        },
+        {
+            "id": "BED_43",
+            "namespaces": [
+                {
+                    "id": "DRAGER_VENT",
+                    "t0": "2015-07-04T12:43:00.123",
+                    "dt": 5000.12345,
+                    "signals": [],
+                    "events": [
+                        {
+                            "t0": "2015-07-04T12:43:03",
+                            "message": "VENT PHONE HOME"
+                        },
+                        {
+                            "t0": "2015-07-04T12:44:03",
+                            "message": "POWER GOOD"
+                        }
+                    ],
+                    "alarms": []
+                }
+            ]
+        },
+        {
+            "id": "RICE_RESEARCH_RPI_2",
+            "namespaces": [
+                {
+                    "id": "Audio Sensor",
+                    "t0": "2015-07-04T12:42:00.123",
+                    "dt": 6000.12345,
+                    "signals": [
+                        {
+                            "id": "left_channel",
+                            "units": "dB",
+                            "data": [
+                                "-20.5",
+                                "-18.5",
+                                "-3.2",
+                                "-14"
+                            ]
+                        },
+                        {
+                            "id": "right_channel",
+                            "units": "dB",
+                            "data": [
+                                "-20.5",
+                                "-18.5",
+                                "-3.2",
+                                "-14"
+                            ]
+                        }
+                    ],
+                    "events": [
+                        {
+                            "t0": "2015-07-04T12:44:03",
+                            "message": "{\"msg\" : \"ping\"}"
+                        }
+                    ],
+                    "alarms": []
+                },
+                {
+                    "id": "Pressure Sensor",
+                    "t0": "2015-07-04T12:1:00.123",
+                    "dt": 7000.12345,
+                    "signals": [
+                        {
+                            "id": "pressure",
+                            "units": "pa",
+                            "data": [
+                                "20.5"
+                            ]
+                        }
+                    ],
+                    "events": [],
+                    "alarms": []
+                }
+            ]
+        }
+    ]
+}
