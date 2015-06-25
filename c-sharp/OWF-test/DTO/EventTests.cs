@@ -41,5 +41,31 @@ namespace OWF_test.DTO
             Assert.AreEqual(evt, evt2, "Two equivalent events should be equal");
             Assert.AreNotEqual(evt, evt3, "Two different events should not be equal");
         }
+
+        [TestMethod]
+        public void EventSizeWorks()
+        {
+            var message = "";
+            var time = new DateTime(1983, 7, 1, 3, 4, 5, DateTimeKind.Utc);
+
+            var evt = new Event(time, message);
+            Assert.AreEqual(evt.getSizeInBytes(), 12u, "Events with no data should have length 12");
+
+            var message2 = "1";
+            var evt2= new Event(time, message2);
+            Assert.AreEqual(evt.getSizeInBytes(), 12u, "Events with length 1 data should have aligned length 12");
+
+            var message3 = "12";
+            var evt3 = new Event(time, message3);
+            Assert.AreEqual(evt.getSizeInBytes(), 12u, "Events with length 2 data should have aligned length 12");
+
+            var message4 = "123";
+            var evt4 = new Event(time, message4);
+            Assert.AreEqual(evt.getSizeInBytes(), 12u, "Events with length 3 data should have aligned length 12");
+
+            var message5 = "1234";
+            var evt5 = new Event(time, message5);
+            Assert.AreEqual(evt.getSizeInBytes(), 12u, "Events with length 4 data should have aligned length 16");
+        }
     }
 }
