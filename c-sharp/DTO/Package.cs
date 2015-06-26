@@ -33,6 +33,7 @@ namespace OWF.DTO
                 foreach (var channel in channels)
                 {
                     packageSize += channel.getSizeInBytes();
+                    packageSize += sizeof(UInt32);
                 }
 
                 return packageSize;

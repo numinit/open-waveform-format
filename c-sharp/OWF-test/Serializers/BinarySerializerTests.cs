@@ -39,7 +39,7 @@ namespace OWF_test.Serializers
         public void GeneratesCorrectEmptyNamespaceObject()
         {
             // XXX: Do ticks work like this?
-            var t0 = new DateTime(14334371443018100L);
+            var t0 = DateTime.FromFileTimeUtc(14334371443018100L);
             var dt = new TimeSpan(0, 0, 3);
 
             var n = new Namespace("GEWAVE", t0, dt, new List<Signal>(), new List<Event>(), new List<Alarm>());

@@ -27,5 +27,12 @@ namespace OWF_test.DTO
             CollectionAssert.AreEqual(ns.Events, new List<Event>(), "Namespace should have its events set correctly.");
             CollectionAssert.AreEqual(ns.Alarms, new List<Alarm>(), "Namespace should have its alarms set correctly.");
         }
+
+        [TestMethod]
+        public void NamespaceSizeWorks()
+        {
+            var ns = new Namespace("GEWAVE", new DateTime(2015, 6, 8, 5, 30, 22), new TimeSpan(0, 0, 3), new List<Signal>(), new List<Event>(), new List<Alarm>());
+            Assert.AreEqual(0x28U, ns.getSizeInBytes());
+        }
     }
 }

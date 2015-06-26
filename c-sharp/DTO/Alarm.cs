@@ -84,16 +84,16 @@ namespace OWF.DTO
                 UInt32 volumeSize = sizeof(byte);
                 UInt32 paddingSize = 2 * sizeof(byte); // 2 extra unsued bytes after level and volume
                 UInt32 typeStringSizeSize = sizeof(UInt32);                
-                UInt32 typeStringSize = (msgType.Length == 0 ) ? (0) : ((UInt32)(System.Text.Encoding.UTF8.GetByteCount(msgType)) + 1 );
-                UInt32 typeStringpaddingSize = (typeStringSize % 4 ==0) ? (0) : (4 - (typeStringSize % 4));
+                UInt32 typeStringSize = (msgType.Length == 0) ? (0) : ((UInt32)(System.Text.Encoding.UTF8.GetByteCount(msgType)) + 1);
+                UInt32 typeStringPaddingSize = (typeStringSize % 4 == 0) ? (0) : (4 - (typeStringSize % 4));
                 UInt32 messageStringSizeSize = sizeof(UInt32);
-                UInt32 messageStringSize = (message.Length == 0 ) ? (0) : ((UInt32)(System.Text.Encoding.UTF8.GetByteCount(message)) + 1);
-                UInt32 messageStringpaddingSize = (messageStringSize % 4 ==0)? (0) : (4 - (messageStringSize % 4));
+                UInt32 messageStringSize = (message.Length == 0) ? (0) : ((UInt32)(System.Text.Encoding.UTF8.GetByteCount(message)) + 1);
+                UInt32 messageStringPaddingSize = (messageStringSize % 4 == 0) ? (0) : (4 - (messageStringSize % 4));
 
                 return timeSize + durationSize
                         + levelSize + volumeSize + paddingSize
-                        + typeStringSizeSize + typeStringSize + typeStringpaddingSize
-                        + messageStringSizeSize + messageStringSize + messageStringpaddingSize;
+                        + typeStringSizeSize + typeStringSize + typeStringPaddingSize
+                        + messageStringSizeSize + messageStringSize + messageStringPaddingSize;
             }
         }
 

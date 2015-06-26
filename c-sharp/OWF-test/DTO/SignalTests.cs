@@ -25,5 +25,15 @@ namespace OWF_test.DTO
                             new double[] { 1, 2, 3, 4, 5, double.NaN, double.PositiveInfinity, double.NegativeInfinity, 0 },
                             "Signal should have samples set properly.");
         }
+
+        [TestMethod]
+        public void SignalLengthWorks()
+        {
+            var id = "ECG_LEAD_2";
+            var units = "mV";
+            double[] data = new double[] { double.NegativeInfinity, -3.0, -2.0, -1.0, 0.0, double.NaN, 0.0, 1.0, 2.0, 3.0, double.PositiveInfinity };
+            var sig = new Signal(id, units, data);
+            Assert.AreEqual(0x74U, sig.getSizeInBytes());
+        }
     }
 }

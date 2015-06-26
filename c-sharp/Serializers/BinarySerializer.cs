@@ -12,16 +12,18 @@ namespace OWF.Serializers
         {
             checked
             {
-                UInt32 strsize = (UInt32)(System.Text.Encoding.UTF8.GetByteCount(str));
-                UInt32 padding = strsize % 4;
+                UInt32 strsize = (str.Length == 0) ? (0) : ((UInt32)(System.Text.Encoding.UTF8.GetByteCount(str)) + 1);
+                UInt32 padding = strsize == 0 ? 0 : (4 - (strsize % 4));
 
                 // write length
                 UInt32 fullSize = checked((strsize + padding));
                 writeU32(bw, fullSize);
 
                 // write string
-                bw.Write(System.Text.Encoding.UTF8.GetBytes(str));
-                bw.Write((byte)0);
+                if (strsize > 0)
+                {
+                    bw.Write(System.Text.Encoding.UTF8.GetBytes(str));
+                }
 
                 // write any padding
                 while (padding > 0)
@@ -32,7 +34,7 @@ namespace OWF.Serializers
             }
         }
 
-        public static void writeOWFDoubles( BinaryWriter bw, double [] values )
+        public static void writeOWFDoubles(BinaryWriter bw, double [] values )
         {            
             if (BitConverter.IsLittleEndian)
             {

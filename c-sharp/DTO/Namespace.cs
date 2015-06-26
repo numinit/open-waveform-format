@@ -80,6 +80,7 @@ namespace OWF.DTO
                 UInt32 idStringSize = (id.Length == 0) ? (0) : ((UInt32)(System.Text.Encoding.UTF8.GetByteCount(id)) + 1);
                 UInt32 idStringPaddingSize = (idStringSize % 4 == 0) ? (0) : (4 - (idStringSize % 4));                
                 UInt32 idSize = idStringPaddingSize + idStringSize + idStringSizeSize;
+                UInt32 staticSize = sizeof(UInt64) * 2;
 
                 UInt32 signalsSize = sizeof(UInt32); // length of signals
                 foreach (var signal in signals)
@@ -102,7 +103,8 @@ namespace OWF.DTO
                 return idSize
                        + signalsSize
                        + alarmsSize
-                       + eventsSize;
+                       + eventsSize
+                       + staticSize;
             }
         }
 
