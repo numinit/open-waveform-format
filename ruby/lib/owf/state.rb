@@ -11,19 +11,39 @@ module OWF
   class State
     V1_MAGIC ||= 0x4f574631
 
+    # Pushes an aligned buffer.
+    # @param length The buffer's (padded) length
+    # @param buffer The buffer to push
+    def push_buffer length, buffer
+      raise ArgumentError, 'buffer must be a String'.freeze unless buffer.is_a? String
+      raise ArgumentError, 'length is not a multiple of 4'.freeze unless length % 4 == 0
+      raise ArgumentError, 'length of buffer must not exceed passed length' unless buffer.bytesize <= length
+
+      # Write the length
+      push_u32_strict length
+
+      # Write the buffer
+      if length > 0
+        @fmt << "a#{length}".freeze
+        @res << buffer.freeze
+      end
+
+      self
+    end
+
     # Pushes a string.
     # @param str The string to push.
-    def push_str str, null_pad=true
-      raise ArgumentError, 'str must be a String' unless str.is_a? String
+    def push_str str
+      raise ArgumentError, 'str must be a String'.freeze unless str.is_a? String
+      raise ArgumentError, 'str %s must not contain null bytes'.freeze % str.inspect if !str.empty? and str.each_byte.any? {|b| b == 0}
 
-      # Pad the length
-      offset = 4 - (str.bytesize % 4)
-      offset = 0 if offset == 4 and !null_pad
-      len = offset + str.bytesize
-      raise RuntimeError, 'effective length is not a multiple of 4'.freeze unless len % 4 == 0
+      # Pad the length, including a null-terminator if one was requested.
+      length = str.bytesize + 1
+      offset = (length % 4 == 0) ? 0 : 4 - (length % 4)
 
-      @fmt << 'L>'.freeze << "a#{len}".freeze
-      @res << len << str.freeze
+      # Calculate the total length to write, and write it
+      push_buffer length + offset, str
+
       self
     end
     alias :push_str_strict :push_str
@@ -31,8 +51,8 @@ module OWF
     # Pushes an 8-bit int.
     # @param u8 The 8-bit int to push
     def push_u8 u8
-      raise ArgumentError, 'u8 must be an Integer' unless u8.is_a? Integer
-      raise ArgumentError, 'u8 out of range' unless u8 >= 0x00 and u8 <= 0xff
+      raise ArgumentError, 'u8 must be an Integer'.freeze unless u8.is_a? Integer
+      raise ArgumentError, 'u8 out of range'.freeze unless u8 >= 0x00 and u8 <= 0xff
       @fmt << 'C'.freeze
       @res << u8
       self
@@ -42,8 +62,8 @@ module OWF
     # Pushes a 16-bit int.
     # @param u16 The 16-bit int to push
     def push_u16 u16
-      raise ArgumentError, 'u16 must be an Integer' unless u16.is_a? Integer
-      raise ArgumentError, 'u16 out of range' unless u16 >= 0x0000 and u16 <= 0xffff
+      raise ArgumentError, 'u16 must be an Integer'.freeze unless u16.is_a? Integer
+      raise ArgumentError, 'u16 out of range'.freeze unless u16 >= 0x0000 and u16 <= 0xffff
       @fmt << 'S>'.freeze
       @res << u16
       self
@@ -53,8 +73,8 @@ module OWF
     # Pushes a 32-bit int.
     # @param u32 The u32 to push.
     def push_u32 u32
-      raise ArgumentError, 'u32 must be an Integer' unless u32.is_a? Integer
-      raise ArgumentError, 'u32 out of range' unless u32 >= 0x00000000 and u32 <= 0xffffffff
+      raise ArgumentError, 'u32 must be an Integer'.freeze unless u32.is_a? Integer
+      raise ArgumentError, 'u32 out of range'.freeze unless u32 >= 0x00000000 and u32 <= 0xffffffff
       @fmt << 'L>'.freeze
       @res << u32
       self
@@ -64,8 +84,8 @@ module OWF
     # Pushes a signed 64-bit int.
     # @param s64 The s64 to push.
     def push_s64 s64
-      raise ArgumentError, 's64 must be an Integer' unless s64.is_a? Integer
-      raise ArgumentError, 's64 out of range' unless s64 >= -0x8000000000000000 && s64 <= 0x7fffffffffffffff
+      raise ArgumentError, 's64 must be an Integer'.freeze unless s64.is_a? Integer
+      raise ArgumentError, 's64 out of range'.freeze unless s64 >= -0x8000000000000000 && s64 <= 0x7fffffffffffffff
       @fmt << 'q!>'.freeze
       @res << s64
       self
@@ -75,8 +95,8 @@ module OWF
     # Pushes a 64-bit int.
     # @param u64 The u64 to push.
     def push_u64 u64
-      raise ArgumentError, 'u64 must be an Integer' unless u64.is_a? Integer
-      raise ArgumentError, 'u64 out of range' unless u64 >= 0x0000000000000000 and u64 <= 0xffffffffffffffff
+      raise ArgumentError, 'u64 must be an Integer'.freeze unless u64.is_a? Integer
+      raise ArgumentError, 'u64 out of range'.freeze unless u64 >= 0x0000000000000000 and u64 <= 0xffffffffffffffff
       @fmt << 'Q>'.freeze
       @res << u64
       self
@@ -100,12 +120,13 @@ module OWF
     # This method performs a strict conversion based on the OWF JSON spec.
     # @param f64 A f64 encoded in a String.
     def push_f64_strict f64
-      raise ArgumentError, 'f64 must be a String' unless f64.is_a? String
-      if f64 == 'Infinity'.freeze
+      raise ArgumentError, 'f64 must be a String'.freeze unless f64.is_a? String
+      case f64
+      when 'Infinity'.freeze
         f64 = Float::INFINITY
-      elsif f64 == '-Infinity'.freeze
+      when '-Infinity'.freeze
         f64 = -Float::INFINITY
-      elsif f64 == 'NaN'.freeze
+      when 'NaN'.freeze
         f64 = Float::NAN
       else
         f64 = Float(f64)
@@ -125,7 +146,7 @@ module OWF
       elsif t64.is_a? String
         push_t64_strict t64
       else
-        raise ArgumentError, 't64 must be an Integer or String'
+        raise ArgumentError, 't64 must be an Integer or String'.freeze
       end
 
       self
@@ -134,7 +155,7 @@ module OWF
     # Pushes a 64-bit timestamp, encoded as a String.
     # This method performs a strict conversion based on the OWF JSON spec.
     def push_t64_strict t64
-      raise ArgumentError, 't64 must be a String' unless t64.is_a? String
+      raise ArgumentError, 't64 must be a String'.freeze unless t64.is_a? String
       t = DateTime.parse(t64).to_time
       val = t.tv_sec * 10_000_000 + t.tv_nsec / 100
       push_s64 val
@@ -219,7 +240,7 @@ module OWF
 
     # Wraps a block, prefixing it with that block's length.
     def length_wrap &block
-      raise ArgumentError, 'must provide block' unless block_given?
+      raise ArgumentError, 'must provide block'.freeze unless block_given?
 
       # Save the last item on the stack
       fmt, res = @fmt, @res
@@ -231,9 +252,9 @@ module OWF
       yield
 
       # Restore the state and just push the packed buffer as a string
-      str = pack
+      buf = pack
       @fmt, @res = fmt, res
-      push_str str, false
+      push_buffer buf.bytesize, buf
 
       self
     end
