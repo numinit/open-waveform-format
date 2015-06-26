@@ -13,22 +13,23 @@ namespace OWF.Serializers
             checked
             {
                 UInt32 strsize = (str.Length == 0) ? (0) : ((UInt32)(System.Text.Encoding.UTF8.GetByteCount(str)) + 1);
-                UInt32 padding = strsize == 0 ? 0 : (4 - (strsize % 4));
+                UInt32 padding = strsize % 4 == 0 ? 0 : (4 - (strsize % 4));
 
                 // write length
                 UInt32 fullSize = checked((strsize + padding));
                 writeU32(bw, fullSize);
 
-                // write string
+                // write string and null-terminator
                 if (strsize > 0)
                 {
                     bw.Write(System.Text.Encoding.UTF8.GetBytes(str));
+                    bw.Write((byte)0);
                 }
 
                 // write any padding
                 while (padding > 0)
                 {
-                    bw.Write( (byte) 0 );
+                    bw.Write((byte)0);
                     padding--;
                 }
             }
