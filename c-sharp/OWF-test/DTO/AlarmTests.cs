@@ -2,14 +2,11 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OWF.DTO;
 
-namespace OWFTests
-{
+namespace OWFTests {
     [TestClass]
-    public class AlarmTests
-    {
+    public class AlarmTests {
         [TestMethod]
-        public void AlarmConstructorAndGettersWork()
-        {            
+        public void AlarmConstructorAndGettersWork() {
             var message = "ALARM IS ON";
             var type = "TEST ALARM";
             var time = new DateTime(1969, 7, 1, 3, 4, 5, DateTimeKind.Utc);
@@ -17,19 +14,19 @@ namespace OWFTests
             byte level = 12;
             byte volume = 85;
 
-            var alarm = new Alarm(time, duration, level, volume, type, message );
+            var alarm = new OWFAlarm(time, duration, level, volume, type, message);
 
-            Assert.AreEqual(alarm.Duration, duration, "Alarm should have same duration it started with.");
-            Assert.AreEqual(alarm.Message, message, "Alarm should have same message it started with.");
-            Assert.AreEqual(alarm.Level, level, "Alarm should have same level it started with.");
-            Assert.AreEqual(alarm.Volume, volume, "Alarm should have same volume it started with.");
-            Assert.AreEqual(alarm.Type, type, "Alarm should have the same type it started with.");
-            Assert.AreEqual(alarm.Time, new DateTime(1969, 7, 1, 3, 4, 5, DateTimeKind.Utc), "Alarm should have same time it started with.");
+            Assert.AreEqual(new DateTime(1969, 7, 1, 3, 4, 5, DateTimeKind.Utc), alarm.Time,
+                "Alarm should have same time it started with.");
+            Assert.AreEqual(duration, alarm.Duration, "Alarm should have same duration it started with.");
+            Assert.AreEqual(type, alarm.Type.Value, "Alarm should have the same type it started with.");
+            Assert.AreEqual(message, alarm.Message.Value, "Alarm should have same message it started with.");
+            Assert.AreEqual(level, alarm.Level, "Alarm should have same level it started with.");
+            Assert.AreEqual(volume, alarm.Volume, "Alarm should have same volume it started with.");
         }
 
         [TestMethod]
-        public void AlarmEqualsWorks()
-        {
+        public void AlarmEqualsWorks() {
             // we're going to try out some different combinations, and force different source refs
             var message = "duck";
             var message2 = "duck";
@@ -55,42 +52,43 @@ namespace OWFTests
             var time2 = new DateTime(1969, 7, 1, 3, 4, 5, DateTimeKind.Utc);
             var time3 = new DateTime(2015, 7, 1, 3, 4, 5, DateTimeKind.Utc);
 
-            var alarm = new Alarm(time, dur, level, volume, type, message);
-            var alarm2 = new Alarm(time2, dur2, level2, volume2, type2, message2);
-            var alarm3 = new Alarm(time3, dur3, level3, volume3, type3, message3);
+            var alarm = new OWFAlarm(time, dur, level, volume, type, message);
+            var alarm2 = new OWFAlarm(time2, dur2, level2, volume2, type2, message2);
+            var alarm3 = new OWFAlarm(time3, dur3, level3, volume3, type3, message3);
 
-            Assert.AreNotEqual(alarm, null, "An alarm should never equal generic null");
-            Assert.AreNotEqual(alarm, (Alarm)null, "An alarm should never equal alarm null");
+            Assert.AreNotEqual(null, alarm, "An alarm should never equal generic null");
+            Assert.AreNotEqual((OWFAlarm)null, alarm, "An alarm should never equal alarm null");
 
             Assert.AreEqual(alarm, alarm2, "Two equivalent alarms should be equal");
             Assert.AreNotEqual(alarm, alarm3, "Two different alarms should not be equal");
         }
-        
+
         [TestMethod]
-        public void AlarmSizeWorks()
-        {
-            
+        public void AlarmSizeWorks() {
             var message = "";
             var type = "";
             var dur = new TimeSpan(5, 15, 10);
             byte level = 12;
             byte volume = 4;
-            var time = new DateTime(1969, 7, 1, 3, 4, 5, DateTimeKind.Utc);            
-            var alarm = new Alarm(time, dur, level, volume, type, message);
-            var alarmSize = alarm.getSizeInBytes();
-            Assert.AreEqual(alarmSize, 28u, "Alarms with message length 0 and type length 0 should have aligned length 28");
+            var time = new DateTime(1969, 7, 1, 3, 4, 5, DateTimeKind.Utc);
+            var alarm = new OWFAlarm(time, dur, level, volume, type, message);
+            var alarmSize = alarm.GetSizeInBytes();
+            Assert.AreEqual(28u, alarmSize,
+                "Alarms with message length 0 and type length 0 should have aligned length 28");
 
             var message2 = "12";
             var type2 = "1";
-            var alarm2 = new Alarm(time, dur, level, volume, type2, message2);
-            var alarm2Size = alarm2.getSizeInBytes();
-            Assert.AreEqual(alarm2Size, 36u, "Alarms with message length 2 and type length 1 should have aligned length 36");
-            
+            var alarm2 = new OWFAlarm(time, dur, level, volume, type2, message2);
+            var alarm2Size = alarm2.GetSizeInBytes();
+            Assert.AreEqual(36u, alarm2Size,
+                "Alarms with message length 2 and type length 1 should have aligned length 36");
+
             var message3 = "1234";
             var type3 = "12345";
-            var alarm3 = new Alarm(time, dur, level, volume, type3, message3);
-            var alarm3Size = alarm3.getSizeInBytes();
-            Assert.AreEqual(alarm3Size, 44u, "Alarms with message length 4 and type length 5 should have aligned length 44");
+            var alarm3 = new OWFAlarm(time, dur, level, volume, type3, message3);
+            var alarm3Size = alarm3.GetSizeInBytes();
+            Assert.AreEqual(44u, alarm3Size,
+                "Alarms with message length 4 and type length 5 should have aligned length 44");
         }
     }
 }

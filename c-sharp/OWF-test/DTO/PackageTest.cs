@@ -1,22 +1,16 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OWF.DTO;
-using System.Collections.Generic;
 
-
-namespace OWF_test.DTO
-{
+namespace OWF_test.DTO {
     [TestClass]
-    public class PackageTest
-    {
+    public class PackageTest {
         [TestMethod]
-        public void PackageConstructorAndGettersWork()
-        {
-            var channels = new List<Channel>();
-
-            var package = new Package(channels);
-
-            CollectionAssert.AreEqual(package.Channels, new List<Channel>(), "Package should have the same channels it was made with.");
+        public void PackageConstructorAndGettersWork() {
+            var channels = new List<OWFChannel>();
+            var package = new OWFPackage(channels);
+            CollectionAssert.AreEqual(new List<OWFChannel>(), package.Channels,
+                "Package should have the same channels it was made with.");
         }
     }
 }
