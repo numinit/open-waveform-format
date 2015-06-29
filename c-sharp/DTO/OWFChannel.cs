@@ -11,10 +11,13 @@ namespace OWF.DTO {
         private readonly OWFString _id;
         private readonly List<OWFNamespace> _namespaces;
 
-        public OWFChannel(string id, List<OWFNamespace> namespaces) {
-            this._id = new OWFString(id);
+        public OWFChannel(OWFString id, List<OWFNamespace> namespaces) {
+            this._id = id;
             this._namespaces = namespaces;
         }
+
+        public OWFChannel(string id, List<OWFNamespace> namespaces)
+            : this(new OWFString(id), namespaces) {}
 
         public OWFString Id
         {
@@ -26,7 +29,7 @@ namespace OWF.DTO {
             get { return this._namespaces; }
         }
 
-        public uint GetSizeInBytes() {
+        public UInt32 GetSizeInBytes() {
             checked {
                 var idSize = this.Id.GetSizeInBytes();
                 var namespaceSize = this.Namespaces.Aggregate<OWFNamespace, uint>(0, (current, ns) => current + ns.GetSizeInBytes());

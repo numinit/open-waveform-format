@@ -6,22 +6,30 @@ namespace OWF.DTO {
     ///     Event is a way of reporting a non-alarm event from a device.
     /// </summary>
     public class OWFEvent {
-        private readonly DateTime _startTime;
+        private readonly Int64 _t0;
         private readonly OWFString _message;
 
-        public OWFEvent(DateTime time, string data) {
-            this._message = new OWFString(data);
-            this._startTime = time;
+        public OWFEvent(OWFString message, Int64 t0) {
+            this._t0 = t0;
+            this._message = message;
         }
+
+        public OWFEvent(string message, DateTime time)
+            : this(new OWFString(message), OWFTime.FromDateTime(time)) {}
 
         public OWFString Message
         {
             get { return this._message; }
         }
 
-        public DateTime Time
+        public Int64 T0
         {
-            get { return this._startTime; }
+            get { return this._t0; }
+        }
+
+        public DateTime DateTime
+        {
+            get { return OWFTime.ToDateTime(this._t0); }
         }
 
         public uint GetSizeInBytes() {
@@ -43,8 +51,8 @@ namespace OWF.DTO {
                 return false;
             }
 
-            return other.Message.Equals(this.Message) &&
-                   other.Time.Equals(this.Time);
+            return other.T0 == this.T0 &&
+                   other.Message.Equals(this.Message);
         }
 
         public override int GetHashCode() {
@@ -52,7 +60,7 @@ namespace OWF.DTO {
                 // based on FNV
                 var hash = (int)2166136261;
                 hash = (hash * 16777619) ^ this.Message.GetHashCode();
-                hash = (hash * 16777619) ^ this.Time.GetHashCode();
+                hash = (hash * 16777619) ^ this.T0.GetHashCode();
                 return hash;
             }
         }

@@ -33,13 +33,13 @@ namespace OWF.Serializers {
             var msgType = ReadOWFString(br);
             var message = ReadOWFString(br);
 
-            return new OWFAlarm(time, duration, level, volume, msgType, message);
+            return new OWFAlarm(msgType, message, time, duration, level, volume);
         }
 
         public static OWFEvent ReadEvent(BinaryReader br) {
             var time = ReadOWFTimestamp(br);
             var data = ReadOWFString(br);
-            return new OWFEvent(time, data);
+            return new OWFEvent(data, time);
         }
 
         public static OWFSignal ReadSignal(BinaryReader br) {

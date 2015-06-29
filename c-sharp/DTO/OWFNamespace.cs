@@ -5,22 +5,44 @@ using System.Text;
 
 namespace OWF.DTO {
     public class OWFNamespace {
-        private readonly DateTime _t0;
-        private readonly TimeSpan _dt;
+        private readonly Int64 _t0;
+        private readonly UInt64 _dt;
         private readonly OWFString _id;
         
         private readonly List<OWFSignal> _signals;
         private readonly List<OWFEvent> _events;
         private readonly List<OWFAlarm> _alarms;
 
-        public OWFNamespace(string id, DateTime start, TimeSpan dt, List<OWFSignal> signals, List<OWFEvent> events,
-            List<OWFAlarm> alarms) {
-            this._id = new OWFString(id);
+        public OWFNamespace(OWFString id, Int64 t0, UInt64 dt, List<OWFSignal> signals, List<OWFEvent> events, List<OWFAlarm> alarms) {
+            this._t0 = t0;
             this._dt = dt;
-            this._t0 = start;
-            this._alarms = alarms;
-            this._events = events;
+            this._id = id;
             this._signals = signals;
+            this._events = events;
+            this._alarms = alarms;
+        }
+
+        public OWFNamespace(string id, DateTime t0, TimeSpan dt, List<OWFSignal> signals, List<OWFEvent> events, List<OWFAlarm> alarms)
+                : this(new OWFString(id), OWFTime.FromDateTime(t0), OWFTime.FromTimeSpan(dt), signals, events, alarms) {}
+
+        public Int64 T0
+        {
+            get { return this._t0; }
+        }
+
+        public UInt64 Dt
+        {
+            get { return this._dt; }
+        }
+
+        public DateTime DateTime
+        {
+            get { return OWFTime.ToDateTime(this._t0); }
+        }
+
+        public TimeSpan TimeSpan
+        {
+            get { return OWFTime.ToTimeSpan(this._dt); }
         }
 
         public OWFString Id
@@ -43,23 +65,13 @@ namespace OWF.DTO {
             get { return this._events; }
         }
 
-        public DateTime T0
-        {
-            get { return this._t0; }
-        }
-
-        public TimeSpan Dt
-        {
-            get { return this._dt; }
-        }
-
         public UInt32 GetSizeInBytes() {
             checked {
                 const UInt32 timeSize = sizeof(UInt64) * 2;
                 var idSize = this.Id.GetSizeInBytes();
-                var signalsSize = this.Signals.Aggregate<OWFSignal, uint>(sizeof(UInt32), (current, signal) => current + signal.GetSizeInBytes());
-                var eventsSize = this.Events.Aggregate<OWFEvent, uint>(sizeof(UInt32), (current, evt) => current + evt.GetSizeInBytes());
-                var alarmsSize = this.Alarms.Aggregate<OWFAlarm, uint>(sizeof(UInt32), (current, alarm) => current + alarm.GetSizeInBytes());
+                var signalsSize = this.Signals.Aggregate<OWFSignal, UInt32>(sizeof(UInt32), (current, signal) => current + signal.GetSizeInBytes());
+                var eventsSize = this.Events.Aggregate<OWFEvent, UInt32>(sizeof(UInt32), (current, evt) => current + evt.GetSizeInBytes());
+                var alarmsSize = this.Alarms.Aggregate<OWFAlarm, UInt32>(sizeof(UInt32), (current, alarm) => current + alarm.GetSizeInBytes());
 
                 return sizeof(UInt32) + timeSize + idSize + signalsSize + eventsSize + alarmsSize;
             }

@@ -48,15 +48,6 @@ namespace OWF.Serializers {
             }
         }
 
-        public static void WriteOWFTimestamp(BinaryWriter bw, DateTime time) {
-            // filetime is 100ns increments from 1601...we use a different epoch, so we offset.
-            var unixEpochOffset = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).ToFileTime();
-            var time64 = time.ToFileTime();
-            var adjTime = time64 - unixEpochOffset;
-
-            WriteS64(bw, adjTime);
-        }
-
         public static void WriteU64(BinaryWriter bw, UInt64 val) {
             if (BitConverter.IsLittleEndian) {
                 var valueBytes = BitConverter.GetBytes(val);
@@ -116,8 +107,8 @@ namespace OWF.Serializers {
 
         public static void WriteNamespace(BinaryWriter bw, OWFNamespace ns) {
             WriteU32(bw, checked(ns.GetSizeInBytes() - sizeof(UInt32)));
-            WriteOWFTimestamp(bw, ns.T0);
-            WriteU64(bw, (UInt64)ns.Dt.Ticks);
+            WriteS64(bw, ns.T0);
+            WriteU64(bw, ns.Dt);
             WriteOWFString(bw, ns.Id);
 
             UInt32 alarmsLength = ns.Signals.Aggregate(0U, (current, sig) => checked(current + sig.GetSizeInBytes()));
@@ -150,8 +141,8 @@ namespace OWF.Serializers {
         }
 
         public static void WriteAlarm(BinaryWriter bw, OWFAlarm alarm) {
-            WriteOWFTimestamp(bw, alarm.Time);
-            WriteU64(bw, (UInt64)alarm.Duration.Ticks);
+            WriteS64(bw, alarm.T0);
+            WriteU64(bw, (UInt64)alarm.TimeSpan.Ticks);
             bw.Write(alarm.Level);
             bw.Write(alarm.Volume);
             bw.Write((UInt16)0);
@@ -160,7 +151,7 @@ namespace OWF.Serializers {
         }
 
         public static void WriteEvent(BinaryWriter bw, OWFEvent evt) {
-            WriteOWFTimestamp(bw, evt.Time);
+            WriteS64(bw, evt.T0);
             WriteOWFString(bw, evt.Message);
         }
 

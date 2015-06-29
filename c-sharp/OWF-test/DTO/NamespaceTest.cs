@@ -9,7 +9,7 @@ namespace OWF_test.DTO {
         [TestMethod]
         public void NamespaceConstructorAndGettersWork() {
             var id = "test namespace";
-            var t0 = new DateTime(2015, 6, 8, 5, 30, 22);
+            var t0 = new DateTime(2015, 6, 8, 5, 30, 22, DateTimeKind.Utc);
             var span = new TimeSpan(1, 2, 3);
             var signals = new List<OWFSignal>();
             var events = new List<OWFEvent>();
@@ -18,9 +18,9 @@ namespace OWF_test.DTO {
             var ns = new OWFNamespace(id, t0, span, signals, events, alarms);
 
             Assert.AreEqual("test namespace", ns.Id.Value, "Namespace should have its id set correctly.");
-            Assert.AreEqual(new DateTime(2015, 6, 8, 5, 30, 22), ns.T0, 
+            Assert.AreEqual(new DateTime(2015, 6, 8, 5, 30, 22, DateTimeKind.Utc), ns.DateTime, 
                 "Namespace should have its start time set correctly.");
-            Assert.AreEqual(new TimeSpan(1, 2, 3), ns.Dt, "Namespace should have its duration set correctly.");
+            Assert.AreEqual(new TimeSpan(1, 2, 3), ns.TimeSpan, "Namespace should have its duration set correctly.");
             CollectionAssert.AreEqual(new List<OWFSignal>(), ns.Signals,
                 "Namespace should have its signals set correctly.");
             CollectionAssert.AreEqual(new List<OWFEvent>(), ns.Events, "Namespace should have its events set correctly.");

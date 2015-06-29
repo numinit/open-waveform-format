@@ -50,6 +50,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="DTO\TimeTests.cs" />
     <Compile Include="DTO\AlarmTests.cs" />
     <Compile Include="DTO\EventTests.cs" />
     <Compile Include="DTO\SignalTests.cs" />

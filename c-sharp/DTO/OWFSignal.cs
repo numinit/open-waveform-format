@@ -8,11 +8,14 @@ namespace OWF.DTO {
         private readonly OWFString _unit;
         private readonly double[] _samples;
 
-        public OWFSignal(string id, string unit, double[] samples) {
-            this._id = new OWFString(id);
-            this._unit = new OWFString(unit);
+        public OWFSignal(OWFString id, OWFString unit, double[] samples) {
+            this._id = id;
+            this._unit = unit;
             this._samples = samples;
         }
+
+        public OWFSignal(string id, string unit, double[] samples)
+            : this(new OWFString(id), new OWFString(unit), samples) {} 
 
         public OWFString Id
         {

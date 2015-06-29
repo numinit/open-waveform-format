@@ -5,30 +5,43 @@ namespace OWF.DTO {
     ///     Alarm represents a device alarm, such as "SPO2 LO" or "LEAD FAIL".
     /// </summary>
     public class OWFAlarm {
-        private readonly DateTime _startTime;
-        private readonly TimeSpan _duration;
+        private readonly Int64 _t0;
+        private readonly UInt64 _dt;
         private readonly byte _level;
         private readonly byte _volume;
-        private readonly OWFString _message;
         private readonly OWFString _msgType;
+        private readonly OWFString _message;
 
-        public OWFAlarm(DateTime time, TimeSpan duration, byte level, byte volume, string type, string message) {
-            this._startTime = time;
-            this._duration = duration;
-            this._message = new OWFString(message);
-            this._msgType = new OWFString(type);
+        public OWFAlarm(OWFString type, OWFString message, Int64 t0, UInt64 dt, byte level, byte volume) {
+            this._t0 = t0;
+            this._dt = dt;
             this._level = level;
             this._volume = volume;
+            this._msgType = type;
+            this._message = message;
         }
 
-        public DateTime Time
+        public OWFAlarm(string type, string message, DateTime t0, TimeSpan dt, byte level, byte volume) :
+            this(new OWFString(type), new OWFString(message), OWFTime.FromDateTime(t0), OWFTime.FromTimeSpan(dt), level, volume) {}
+
+        public Int64 T0
         {
-            get { return this._startTime; }
+            get { return this._t0; }
         }
 
-        public TimeSpan Duration
+        public UInt64 Dt
         {
-            get { return this._duration; }
+            get { return this._dt; }
+        }
+
+        public DateTime DateTime
+        {
+            get { return OWFTime.ToDateTime(this._t0); }
+        }
+
+        public TimeSpan TimeSpan
+        {
+            get { return OWFTime.ToTimeSpan(this._dt); }
         }
 
         public byte Level
@@ -78,12 +91,12 @@ namespace OWF.DTO {
                 return false;
             }
 
-            return other.Type.Equals(this.Type) &&
-                   other.Duration.Equals(this.Duration) &&
+            return other.T0 == this.T0 &&
+                   other.Dt == this.Dt &&
+                   other.Type.Equals(this.Type) &&
                    other.Message.Equals(this.Message) &&
                    other.Level == this.Level &&
-                   other.Volume == this.Volume &&
-                   other.Time.Equals(this.Time);
+                   other.Volume == this.Volume;
         }
 
         public override int GetHashCode() {
@@ -94,8 +107,8 @@ namespace OWF.DTO {
                 hash = (hash * 16777619) ^ this.Type.GetHashCode();
                 hash = (hash * 16777619) ^ this.Level.GetHashCode();
                 hash = (hash * 16777619) ^ this.Volume.GetHashCode();
-                hash = (hash * 16777619) ^ this.Duration.GetHashCode();
-                hash = (hash * 16777619) ^ this.Time.GetHashCode();
+                hash = (hash * 16777619) ^ this.TimeSpan.GetHashCode();
+                hash = (hash * 16777619) ^ this.T0.GetHashCode();
                 return hash;
             }
         }
