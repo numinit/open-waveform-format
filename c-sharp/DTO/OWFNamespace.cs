@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 
 namespace OWF.DTO {
-    public class OWFNamespace {
+    public class OWFNamespace : OWFObject {
         private readonly Int64 _t0;
         private readonly UInt64 _dt;
         private readonly OWFString _id;
@@ -65,7 +65,7 @@ namespace OWF.DTO {
             get { return this._events; }
         }
 
-        public UInt32 GetSizeInBytes() {
+        protected override UInt32 ComputeSizeInBytes() {
             checked {
                 const UInt32 timeSize = sizeof(UInt64) * 2;
                 var idSize = this.Id.GetSizeInBytes();

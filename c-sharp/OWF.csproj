@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DTO\OWFAlarm.cs" />
+    <Compile Include="DTO\OWFObject.cs" />
     <Compile Include="DTO\OWFString.cs" />
     <Compile Include="DTO\OWFEvent.cs" />
     <Compile Include="DTO\OWFChannel.cs" />

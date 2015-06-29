@@ -5,7 +5,7 @@ namespace OWF.DTO {
     /// <summary>
     ///     Event is a way of reporting a non-alarm event from a device.
     /// </summary>
-    public class OWFEvent {
+    public class OWFEvent : OWFObject {
         private readonly Int64 _t0;
         private readonly OWFString _message;
 
@@ -32,7 +32,7 @@ namespace OWF.DTO {
             get { return OWFTime.ToDateTime(this._t0); }
         }
 
-        public uint GetSizeInBytes() {
+        protected override UInt32 ComputeSizeInBytes() {
             checked {
                 return sizeof(UInt64) + this.Message.GetSizeInBytes();
             }

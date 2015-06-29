@@ -2,7 +2,7 @@
 using System.Text;
 
 namespace OWF.DTO {
-    public class OWFString {
+    public class OWFString : OWFObject {
         private readonly string _str;
 
         public OWFString(string str) {
@@ -24,7 +24,7 @@ namespace OWF.DTO {
             return tmp == 0 ? 0 : 4 - tmp;
         }
 
-        public UInt32 GetSizeInBytes() {
+        protected override UInt32 ComputeSizeInBytes() {
             var stringSize = this.GetStringSizeInBytes();
             var paddingSize = this.GetPaddingSizeInBytes();
             return sizeof(UInt32) + stringSize + paddingSize;

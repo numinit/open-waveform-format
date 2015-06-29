@@ -3,7 +3,7 @@ using System.Linq;
 using System.Text;
 
 namespace OWF.DTO {
-    public class OWFSignal {
+    public class OWFSignal : OWFObject {
         private readonly OWFString _id;
         private readonly OWFString _unit;
         private readonly double[] _samples;
@@ -32,7 +32,7 @@ namespace OWF.DTO {
             get { return this._samples; }
         }
 
-        public uint GetSizeInBytes() {
+        protected override UInt32 ComputeSizeInBytes() {
             checked {
                 var idSize = this.Id.GetSizeInBytes();
                 var unitSize = this.Unit.GetSizeInBytes();

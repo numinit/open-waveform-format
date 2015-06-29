@@ -4,7 +4,7 @@ namespace OWF.DTO {
     /// <summary>
     ///     Alarm represents a device alarm, such as "SPO2 LO" or "LEAD FAIL".
     /// </summary>
-    public class OWFAlarm {
+    public class OWFAlarm : OWFObject {
         private readonly Int64 _t0;
         private readonly UInt64 _dt;
         private readonly byte _level;
@@ -64,7 +64,7 @@ namespace OWF.DTO {
             get { return this._msgType; }
         }
 
-        public uint GetSizeInBytes() {
+        protected override UInt32 ComputeSizeInBytes() {
             checked {
                 const uint timeSize = sizeof(Int64);
                 const uint durationSize = sizeof(UInt64);

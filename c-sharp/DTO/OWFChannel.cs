@@ -7,7 +7,7 @@ namespace OWF.DTO {
     /// <summary>
     ///     OWFChannel contains the devices broadcasting on a particular data source, like a patient bed.
     /// </summary>
-    public class OWFChannel {
+    public class OWFChannel : OWFObject {
         private readonly OWFString _id;
         private readonly List<OWFNamespace> _namespaces;
 
@@ -29,7 +29,7 @@ namespace OWF.DTO {
             get { return this._namespaces; }
         }
 
-        public UInt32 GetSizeInBytes() {
+        protected override UInt32 ComputeSizeInBytes() {
             checked {
                 var idSize = this.Id.GetSizeInBytes();
                 var namespaceSize = this.Namespaces.Aggregate<OWFNamespace, uint>(0, (current, ns) => current + ns.GetSizeInBytes());

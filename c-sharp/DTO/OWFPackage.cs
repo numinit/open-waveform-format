@@ -6,7 +6,7 @@ namespace OWF.DTO {
     /// <summary>
     ///     OWFPackage is a class which contains the waveform data for some number of channels.
     /// </summary>
-    public class OWFPackage {
+    public class OWFPackage : OWFObject {
         private readonly List<OWFChannel> _channels;
 
         public OWFPackage(List<OWFChannel> channels) {
@@ -18,7 +18,7 @@ namespace OWF.DTO {
             get { return this._channels; }
         } 
 
-        public uint GetSizeInBytes() {
+        protected override UInt32 ComputeSizeInBytes() {
             checked {
                 var packageSize = this.Channels.Aggregate<OWFChannel, uint>(0, (current, channel) => current + channel.GetSizeInBytes());
                 return sizeof(UInt32) + packageSize;
