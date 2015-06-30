@@ -40,5 +40,20 @@ namespace OWFTests {
             Int64 t = OWFTime.ToFileTime(0L);
             Assert.AreEqual(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).ToFileTimeUtc(), t);
         }
+
+        [TestMethod]
+        public void TestFromString() {
+            Assert.AreEqual(0L, OWFTime.FromString("1970-01-01T00:00:00Z"));
+        }
+
+        [TestMethod]
+        public void TestToStringLong() {
+            Assert.AreEqual("1970-01-01T00:00:00Z", OWFTime.ToString(0L));
+        }
+
+        [TestMethod]
+        public void TestToStringDateTime() {
+            Assert.AreEqual("1970-01-01T00:00:00Z", OWFTime.ToString(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)));
+        }
     }
 }

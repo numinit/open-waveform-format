@@ -6,8 +6,6 @@ using OWF.DTO;
 
 namespace OWF.Serializers {
     public static class BinarySerializer {
-        public static byte[] Magic = { 0x4f, 0x57, 0x46, 0x31 };
-
         public static void WriteOWFString(BinaryWriter bw, OWFString str) {
             checked {
                 var fullSize = str.GetSizeInBytes() - sizeof(UInt32);
@@ -93,7 +91,7 @@ namespace OWF.Serializers {
         }
 
         public static void WriteHeader(BinaryWriter bw, UInt32 length) {
-            bw.Write(Magic);
+            bw.Write(OWFObject.Magic);
             WriteU32(bw, length);
         }
 
@@ -111,9 +109,9 @@ namespace OWF.Serializers {
             WriteU64(bw, ns.Dt);
             WriteOWFString(bw, ns.Id);
 
-            UInt32 alarmsLength = ns.Signals.Aggregate(0U, (current, sig) => checked(current + sig.GetSizeInBytes()));
-            UInt32 eventsLength = ns.Alarms.Aggregate(0U, (current, alarm) => checked(current + alarm.GetSizeInBytes()));
-            UInt32 signalsLength = ns.Events.Aggregate(0U, (current, evt) => checked(current + evt.GetSizeInBytes()));
+            UInt32 signalsLength = ns.Signals.Aggregate(0U, (current, sig) => checked(current + sig.GetSizeInBytes()));
+            UInt32 eventsLength = ns.Events.Aggregate(0U, (current, evt) => checked(current + evt.GetSizeInBytes()));
+            UInt32 alarmsLength = ns.Alarms.Aggregate(0U, (current, alarm) => checked(current + alarm.GetSizeInBytes()));
 
             WriteU32(bw, signalsLength);
             foreach (var sig in ns.Signals) {

@@ -26,8 +26,7 @@ namespace OWF_test.DTO {
             var id = "ECG_LEAD_2";
             var units = "mV";
             double[] data = {
-                double.NegativeInfinity, -3.0, -2.0, -1.0, 0.0, double.NaN, 0.0, 1.0, 2.0, 3.0,
-                double.PositiveInfinity
+                double.NegativeInfinity, -3.0, -2.0, -1.0, 0.0, double.NaN, 0.0, 1.0, 2.0, 3.0, double.PositiveInfinity
             };
             var sig = new OWFSignal(id, units, data);
             Assert.AreEqual(0x74U, sig.GetSizeInBytes());

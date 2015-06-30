@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Xml;
 
 namespace OWF.DTO {
     public static class OWFTime {
@@ -26,6 +27,18 @@ namespace OWF.DTO {
 
         public static Int64 ToFileTime(Int64 unixTime) {
             return checked(unixTime + EpochOffset);
+        }
+
+        public static Int64 FromString(string str) {
+            return FromDateTime(XmlConvert.ToDateTime(str, XmlDateTimeSerializationMode.Utc));
+        }
+
+        public static string ToString(DateTime time) {
+            return XmlConvert.ToString(time, XmlDateTimeSerializationMode.Utc);
+        }
+
+        public static string ToString(Int64 unixTime) {
+            return ToString(ToDateTime(unixTime));
         }
 
         public static Int64 Now() {

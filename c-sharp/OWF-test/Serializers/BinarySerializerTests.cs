@@ -31,7 +31,6 @@ namespace OWF_test.Serializers {
 
         [TestMethod]
         public void GeneratesCorrectEmptyNamespaceObject() {
-            // XXX: Do ticks work like this?
             var t0 = OWFTime.ToDateTime(14334371443018100L);
             var dt = new TimeSpan(0, 0, 3);
 
@@ -40,7 +39,23 @@ namespace OWF_test.Serializers {
             var p = new OWFPackage(new List<OWFChannel>(new[] {c}));
             var buffer = BinarySerializer.Convert(p);
             var expected = this.ReadOWF("binary_valid_empty_namespace");
-            CollectionAssert.AreEqual(buffer, expected, "Incorrect empty namespace");
+            CollectionAssert.AreEqual(expected, buffer, "Incorrect empty namespace");
+        }
+
+        [TestMethod]
+        public void GeneratesCorrectOWF1() {
+            double[] data = {
+                double.NegativeInfinity, -3.0, -2.0, -1.0, 0.0, double.NaN, 0.0, 1.0, 2.0, 3.0, double.PositiveInfinity
+            };
+            var signals = new List<OWFSignal>(new OWFSignal[] {new OWFSignal("ECG_LEAD_2", "mv", data)});
+            var alarms = new List<OWFAlarm>(new OWFAlarm[] {new OWFAlarm(new OWFString("SPO2 LO"), new OWFString("43"), OWFTime.FromString("2015-06-04T16:59:04.3018100"), 30000000UL, 0, 255)});
+            var events = new List<OWFEvent>(new OWFEvent[] {new OWFEvent(new OWFString("POST OK"), OWFTime.FromString("2015-06-04T16:59:04.3018350"))});
+            var ns = new List<OWFNamespace>(new OWFNamespace[] {new OWFNamespace(new OWFString("GEWAVE"), OWFTime.FromString("2015-06-04T16:59:04.3018100"), 30000000UL, signals, events, alarms)});
+            var channels = new List<OWFChannel>(new OWFChannel[] {new OWFChannel("BED_42", ns)});
+            var package = new OWFPackage(channels);
+            var buffer = BinarySerializer.Convert(package);
+            var expected = this.ReadOWF("binary_valid_1");
+            CollectionAssert.AreEqual(expected, buffer, "Incorrect binary_valid_1");
         }
     }
 }
