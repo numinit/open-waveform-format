@@ -2,6 +2,7 @@
 
 *.c text
 *.h text
+*.rb text
 *.cs text
 *.json text
 *.owf binary
