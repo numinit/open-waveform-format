@@ -38,7 +38,7 @@ module OWF
       raise ArgumentError, 'str %s must not contain null bytes'.freeze % str.inspect if !str.empty? and str.each_byte.any? {|b| b == 0}
 
       # Pad the length, including a null-terminator if one was requested.
-      length = str.bytesize + 1
+      length = str.bytesize == 0 ? 0 : str.bytesize + 1
       offset = (length % 4 == 0) ? 0 : 4 - (length % 4)
 
       # Calculate the total length to write, and write it
