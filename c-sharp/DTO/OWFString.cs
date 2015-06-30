@@ -3,9 +3,16 @@ using System.Text;
 
 namespace OWF.DTO {
     public class OWFString : OWFObject {
+        private UInt32 _stringSize, _paddingSize;
         private readonly string _str;
 
+        public OWFString() {
+            this._stringSize = this._paddingSize = UInt32.MaxValue;
+            this._str = "";
+        }
+
         public OWFString(string str) {
+            this._stringSize = this._paddingSize = UInt32.MaxValue;
             this._str = str;
         }
 
@@ -15,13 +22,20 @@ namespace OWF.DTO {
         }
 
         public UInt32 GetStringSizeInBytes() {
-            return (this.Value.Length == 0) ? 0 : ((uint)(Encoding.UTF8.GetByteCount(this.Value)) + 1);
+            if (this._stringSize == UInt32.MaxValue) {
+                this._stringSize = (this.Value.Length == 0) ? 0 : ((uint)(Encoding.UTF8.GetByteCount(this.Value)) + 1);
+            }
+            return this._stringSize;
         }
 
         public UInt32 GetPaddingSizeInBytes() {
-            var stringSize = this.GetStringSizeInBytes();
-            var tmp = stringSize % 4;
-            return tmp == 0 ? 0 : 4 - tmp;
+            if (this._paddingSize == UInt32.MaxValue) {
+                var stringSize = this.GetStringSizeInBytes();
+                var tmp = stringSize % 4;
+                this._paddingSize = tmp == 0 ? 0 : 4 - tmp;
+            }
+
+            return this._paddingSize;
         }
 
         protected override UInt32 ComputeSizeInBytes() {
