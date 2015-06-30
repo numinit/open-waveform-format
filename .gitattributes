@@ -1,0 +1,7 @@
+* text=auto
+
+*.c text
+*.h text
+*.cs text
+*.json text
+*.owf binary
