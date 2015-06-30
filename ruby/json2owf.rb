@@ -6,11 +6,21 @@ $: << File.join(File.dirname(__FILE__), 'lib')
 
 require 'owf'
 
-input, output = File.open(ARGV[0], 'r'), nil
+in_file = ARGV[0]
+if ARGV[1].nil?
+  dir = File.dirname in_file
+  ext = File.extname in_file
+  base = File.basename in_file, ext
+  out_file = File.join dir, "#{base.gsub(/json/, 'binary')}.owf"
+else
+  out_file = ARGV[1]
+end
+puts "#{in_file} => #{out_file}"
+input, output = File.open(in_file, 'r'), nil
 
 begin
   json = OWF::State.json(input.read)
-  output = File.open(ARGV[1], 'w')
+  output = File.open(out_file, 'w')
   output.write json
 ensure
   input.close
