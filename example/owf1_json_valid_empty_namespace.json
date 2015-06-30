@@ -1,0 +1,17 @@
+{
+   "channels": [
+      {
+         "id": "BED_42",
+         "namespaces": [
+            {
+               "id": "GEWAVE",
+               "t0": "2015-06-04T16:59:04.3018100",
+               "dt": 3000,
+               "signals": [],
+               "events": [],
+               "alarms": []
+            }
+         ]
+      }
+   ]
+}
