@@ -7,7 +7,7 @@
 #ifndef OWF_ERROR_H
 #define OWF_ERROR_H
 
-#define OWF_ERROR_BUF_SIZE 128
+#define OWF_ERROR_BUF_SIZE 256
 
 typedef struct owf_error {
     /** Buffer to store error strings */

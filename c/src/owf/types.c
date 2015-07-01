@@ -58,6 +58,11 @@ void owf_namespace_destroy(owf_namespace_t *ns, owf_alloc_t *allocator) {
     owf_array_destroy(&ns->alarms, allocator);
 }
 
+bool owf_namespace_covers(owf_namespace_t *ns, owf_time_t timestamp) {
+    register owf_time_t start = ns->t0, end = start + ns->dt;
+    return timestamp >= start && timestamp < end;
+}
+
 void owf_signal_init(owf_signal_t *signal) {
     owf_str_init(&signal->id);
     owf_str_init(&signal->unit);

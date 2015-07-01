@@ -211,6 +211,8 @@
 #define OWF_PRINT_S32 "%"PRId32
 #define OWF_PRINT_U64 "%"PRIu64
 #define OWF_PRINT_S64 "%"PRId64
+#define OWF_PRINT_TIME OWF_PRINT_S64
+
 #if OWF_PLATFORM_IS_GNU
     #define OWF_PRINT_SIZE  "%zu"
     #define OWF_PRINT_SSIZE "%zd"

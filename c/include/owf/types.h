@@ -60,6 +60,7 @@ void owf_channel_init(owf_channel_t *channel);
 void owf_channel_destroy(owf_channel_t *channel, owf_alloc_t *allocator);
 void owf_namespace_init(owf_namespace_t *ns);
 void owf_namespace_destroy(owf_namespace_t *ns, owf_alloc_t *allocator);
+bool owf_namespace_covers(owf_namespace_t *ns, owf_time_t timestamp);
 void owf_signal_init(owf_signal_t *signal);
 void owf_signal_destroy(owf_signal_t *signal, owf_alloc_t *allocator);
 void owf_event_init(owf_event_t *event);

@@ -35,21 +35,25 @@
     do { \
         uint32_t effective_length = len; \
         OWF_BINARY_SAFE_ADD32(binary, effective_length, padding); \
-        if (!owf_array_reserve_exactly((&(arr)), binary->reader.alloc, &binary->reader.error, effective_length, 1)) { \
-            return false; \
-        } \
-        (&(arr))->length = effective_length / (elem_size); \
         \
-        if (OWF_NOEXPECT(!binary->reader.read((&(arr))->ptr, len, binary->reader.data))) { \
-            OWF_READER_ERRF(binary->reader, "variable read error (" OWF_PRINT_U32 " bytes into buffer of length " OWF_PRINT_U32 ")", (uint32_t)len, (uint32_t)effective_length); \
-            owf_array_destroy((&(arr)), binary->reader.alloc); \
-            return false; \
-        } else { \
-            binary->segment_length = owf_arith_safe_sub32(binary->segment_length, len, &binary->reader.error); \
-            if (OWF_NOEXPECT(owf_reader_is_error(&binary->reader))) { \
-                OWF_READER_ERRF(binary->reader, "out-of-bounds length (" OWF_PRINT_U32 " bytes for segment length " OWF_PRINT_U32 ")", (uint32_t)len, binary->segment_length); \
+        /* Length of zero is a no-op */ \
+        if (effective_length > 0) { \
+            if (!owf_array_reserve_exactly((&(arr)), binary->reader.alloc, &binary->reader.error, effective_length, 1)) { \
+                return false; \
+            } \
+            (&(arr))->length = effective_length / (elem_size); \
+            \
+            if (OWF_NOEXPECT(!binary->reader.read((&(arr))->ptr, len, binary->reader.data))) { \
+                OWF_READER_ERRF(binary->reader, "variable read error (" OWF_PRINT_U32 " bytes into buffer of length " OWF_PRINT_U32 ")", (uint32_t)len, (uint32_t)effective_length); \
                 owf_array_destroy((&(arr)), binary->reader.alloc); \
                 return false; \
+            } else { \
+                binary->segment_length = owf_arith_safe_sub32(binary->segment_length, len, &binary->reader.error); \
+                if (OWF_NOEXPECT(owf_reader_is_error(&binary->reader))) { \
+                    OWF_READER_ERRF(binary->reader, "out-of-bounds length (" OWF_PRINT_U32 " bytes for segment length " OWF_PRINT_U32 ")", (uint32_t)len, binary->segment_length); \
+                    owf_array_destroy((&(arr)), binary->reader.alloc); \
+                    return false; \
+                } \
             } \
         } \
     } while (0)
@@ -181,17 +185,21 @@ bool owf_binary_read_str(owf_binary_reader_t *binary, void *ptr) {
      * Read the actual string.
      * The string's length is currently saved in binary->segment_length if this call is wrapped.
      */
-    if (!owf_str_reserve(str, binary->reader.alloc, &binary->reader.error, binary->segment_length + 1)) {
+    if (!owf_str_reserve(str, binary->reader.alloc, &binary->reader.error, binary->segment_length)) {
         return false;
     } else {
-        OWF_BINARY_SAFE_VARIABLE_READ(binary, str->bytes, binary->segment_length, 1, 1);
+        OWF_BINARY_SAFE_VARIABLE_READ(binary, str->bytes, binary->segment_length, sizeof(uint8_t), 0);
     }
 
     /*
      * If we got here, the variable read succeeded and we have a buffer of size
-     * str->length + 1 with the string in it. NULL-terminate it, just in case someone forgot.
+     * str->length with the string in it. Make sure it's NULL-terminated.
      */
-    ((uint8_t *)str->bytes.ptr)[str->bytes.length - 1] = 0;
+    if (OWF_ARRAY_LEN(str->bytes) > 0 && OWF_ARRAY_GET(str->bytes, uint8_t, OWF_ARRAY_LEN(str->bytes) - 1) != 0) {
+        OWF_READER_ERR(binary->reader, "string was not NULL-terminated");
+        owf_str_destroy(str, binary->reader.alloc);
+        return false;
+    }
     return true;
 }
 
@@ -248,6 +256,14 @@ bool owf_binary_read_event(owf_binary_reader_t *binary, void *ptr) {
     OWF_BINARY_SAFE_READ(binary, &event->t0, sizeof(event->t0));
     OWF_HOST64(event->t0);
 
+    /* Ensure that the timestamp is in range */
+    if (!owf_namespace_covers(&binary->reader.ctx.ns, event->t0)) {
+        OWF_READER_ERRF(binary->reader, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_TIME " did not cover event at " OWF_PRINT_TIME,
+            OWF_STR_PTR(binary->reader.ctx.ns.id),
+            binary->reader.ctx.ns.t0, binary->reader.ctx.ns.t0 + binary->reader.ctx.ns.dt, binary->reader.ctx.ns.dt, event->t0);
+        return false;
+    }
+
     /* Read the data */
     if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, &event->message))) {
         return false;
@@ -265,6 +281,14 @@ bool owf_binary_read_alarm(owf_binary_reader_t *binary, void *ptr) {
     /* Read the timestamp */
     OWF_BINARY_SAFE_READ(binary, &alarm->t0, sizeof(alarm->t0));
     OWF_HOST64(alarm->t0);
+
+    /* Ensure that the timestamp is in range */
+    if (!owf_namespace_covers(&binary->reader.ctx.ns, alarm->t0)) {
+        OWF_READER_ERRF(binary->reader, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_TIME " did not cover alarm at " OWF_PRINT_TIME,
+            OWF_STR_PTR(binary->reader.ctx.ns.id),
+            binary->reader.ctx.ns.t0, binary->reader.ctx.ns.t0 + binary->reader.ctx.ns.dt, binary->reader.ctx.ns.dt, alarm->t0);
+        return false;
+    }
 
     /* Read the duration */
     OWF_BINARY_SAFE_READ(binary, &alarm->dt, sizeof(alarm->dt));
