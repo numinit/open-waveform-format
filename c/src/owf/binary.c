@@ -103,11 +103,11 @@ const char *owf_binary_reader_strerror(owf_binary_reader_t *binary) {
     return binary->reader.error.error;
 }
 
-bool owf_binary_length_unwrap(owf_binary_reader_t *binary, owf_binary_reader_cb_t cb, void *ptr) {
+bool owf_binary_unwrap(owf_binary_reader_t *binary, owf_binary_reader_cb_t cb, void *ptr) {
     uint32_t length, old_length = binary->segment_length;
 
     /* Run the unwrap */
-    if (OWF_NOEXPECT(!owf_binary_length_unwrap_top(binary, cb, &length, ptr))) {
+    if (OWF_NOEXPECT(!owf_binary_unwrap_top(binary, cb, &length, ptr))) {
         /* Just restore it */
         binary->segment_length = old_length;
         return false;
@@ -119,7 +119,7 @@ bool owf_binary_length_unwrap(owf_binary_reader_t *binary, owf_binary_reader_cb_
     }
 }
 
-bool owf_binary_length_unwrap_top(owf_binary_reader_t *binary, owf_binary_reader_cb_t cb, uint32_t *length_ptr, void *ptr) {
+bool owf_binary_unwrap_top(owf_binary_reader_t *binary, owf_binary_reader_cb_t cb, uint32_t *length_ptr, void *ptr) {
     uint32_t length;
 
     /* Read the length header */
@@ -157,18 +157,16 @@ bool owf_binary_length_unwrap_top(owf_binary_reader_t *binary, owf_binary_reader
     return true;
 }
 
-bool owf_binary_length_unwrap_nested_multi(owf_binary_reader_t *binary, void *ptr) {
-    owf_binary_reader_cb_t cb = (owf_binary_reader_cb_t)ptr;
+bool owf_binary_unwrap_nested_multi(owf_binary_reader_t *binary, owf_binary_reader_cb_t cb) {
     while (binary->segment_length > 0) {
-        if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, cb, NULL))) {
+        if (OWF_NOEXPECT(!owf_binary_unwrap(binary, cb, NULL))) {
             return false;
         }
     }
     return true;
 }
 
-bool owf_binary_length_unwrap_multi(owf_binary_reader_t *binary, void *ptr) {
-    owf_binary_reader_cb_t cb = (owf_binary_reader_cb_t)ptr;
+bool owf_binary_unwrap_multi(owf_binary_reader_t *binary, owf_binary_reader_cb_t cb) {
     while (binary->segment_length > 0) {
         if (OWF_NOEXPECT(!cb(binary, NULL))) {
             return false;
@@ -237,15 +235,19 @@ bool owf_binary_read_signal(owf_binary_reader_t *binary, void *ptr) {
     owf_signal_t *signal = &binary->reader.ctx.signal;
     owf_signal_init(signal);
 
-    if (!owf_binary_length_unwrap(binary, owf_binary_read_str, &signal->id) ||
-            !owf_binary_length_unwrap(binary, owf_binary_read_str, &signal->unit) ||
-            !owf_binary_length_unwrap(binary, owf_binary_read_samples, signal)) {
+    if (!owf_binary_unwrap(binary, owf_binary_read_str, &signal->id) ||
+            !owf_binary_unwrap(binary, owf_binary_read_str, &signal->unit) ||
+            !owf_binary_unwrap(binary, owf_binary_read_samples, NULL)) {
         return false;
     }
 
     /* Call the visitor */
     OWF_BINARY_READER_VISIT(binary, OWF_READ_SIGNAL);
     return true;
+}
+
+bool owf_binary_read_signals(owf_binary_reader_t *binary, void *ptr) {
+    return owf_binary_unwrap_multi(binary, owf_binary_read_signal);
 }
 
 bool owf_binary_read_event(owf_binary_reader_t *binary, void *ptr) {
@@ -265,13 +267,17 @@ bool owf_binary_read_event(owf_binary_reader_t *binary, void *ptr) {
     }
 
     /* Read the data */
-    if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, &event->message))) {
+    if (OWF_NOEXPECT(!owf_binary_unwrap(binary, owf_binary_read_str, &event->message))) {
         return false;
     }
 
     /* Call the visitor */
     OWF_BINARY_READER_VISIT(binary, OWF_READ_EVENT);
     return true;
+}
+
+bool owf_binary_read_events(owf_binary_reader_t *binary, void *ptr) {
+    return owf_binary_unwrap_multi(binary, owf_binary_read_event);
 }
 
 bool owf_binary_read_alarm(owf_binary_reader_t *binary, void *ptr) {
@@ -298,18 +304,22 @@ bool owf_binary_read_alarm(owf_binary_reader_t *binary, void *ptr) {
     OWF_BINARY_SAFE_READ(binary, &alarm->details, sizeof(alarm->details));
 
     /* Read the type */
-    if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, &alarm->type))) {
+    if (OWF_NOEXPECT(!owf_binary_unwrap(binary, owf_binary_read_str, &alarm->type))) {
         return false;
     }
 
     /* Read the data */
-    if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, &alarm->message))) {
+    if (OWF_NOEXPECT(!owf_binary_unwrap(binary, owf_binary_read_str, &alarm->message))) {
         return false;
     }
 
     /* Call the visitor */
     OWF_BINARY_READER_VISIT(binary, OWF_READ_ALARM);
     return true;
+}
+
+bool owf_binary_read_alarms(owf_binary_reader_t *binary, void *ptr) {
+    return owf_binary_unwrap_multi(binary, owf_binary_read_alarm);
 }
 
 bool owf_binary_read_namespace(owf_binary_reader_t *binary, void *ptr) {
@@ -323,7 +333,7 @@ bool owf_binary_read_namespace(owf_binary_reader_t *binary, void *ptr) {
     OWF_HOST64(ns->dt);
 
     /* Read the ID */
-    if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, ns))) {
+    if (OWF_NOEXPECT(!owf_binary_unwrap(binary, owf_binary_read_str, &ns->id))) {
         return false;
     }
 
@@ -332,9 +342,9 @@ bool owf_binary_read_namespace(owf_binary_reader_t *binary, void *ptr) {
 
     /* Read children */
     return
-        owf_binary_length_unwrap(binary, owf_binary_length_unwrap_multi, owf_binary_read_signal) &&
-        owf_binary_length_unwrap(binary, owf_binary_length_unwrap_multi, owf_binary_read_event) &&
-        owf_binary_length_unwrap(binary, owf_binary_length_unwrap_multi, owf_binary_read_alarm);
+        owf_binary_unwrap(binary, owf_binary_read_signals, NULL) &&
+        owf_binary_unwrap(binary, owf_binary_read_events, NULL) &&
+        owf_binary_unwrap(binary, owf_binary_read_alarms, NULL);
 }
 
 bool owf_binary_read_channel(owf_binary_reader_t *binary, void *ptr) {
@@ -342,7 +352,7 @@ bool owf_binary_read_channel(owf_binary_reader_t *binary, void *ptr) {
     owf_channel_init(channel);
 
     /* Read the channel id */
-    if (OWF_NOEXPECT(!owf_binary_length_unwrap(binary, owf_binary_read_str, &channel->id))) {
+    if (OWF_NOEXPECT(!owf_binary_unwrap(binary, owf_binary_read_str, &channel->id))) {
         return false;
     }
 
@@ -350,7 +360,11 @@ bool owf_binary_read_channel(owf_binary_reader_t *binary, void *ptr) {
     OWF_BINARY_READER_VISIT(binary, OWF_READ_CHANNEL);
 
     /* Read children */
-    return owf_binary_length_unwrap_nested_multi(binary, owf_binary_read_namespace);
+    return owf_binary_unwrap_nested_multi(binary, owf_binary_read_namespace);
+}
+
+bool owf_binary_read_channels(owf_binary_reader_t *binary, void *ptr) {
+    return owf_binary_unwrap_nested_multi(binary, owf_binary_read_channel);
 }
 
 bool owf_binary_read(owf_binary_reader_t *binary) {
@@ -373,7 +387,7 @@ bool owf_binary_read(owf_binary_reader_t *binary) {
 
     /* Reset the segment length again, and start walking the tree */
     binary->segment_length = sizeof(length);
-    return owf_binary_length_unwrap_top(binary, owf_binary_length_unwrap_nested_multi, &length, owf_binary_read_channel);
+    return owf_binary_unwrap_top(binary, owf_binary_read_channels, &length, NULL);
 }
 
 owf_t *owf_binary_materialize(owf_binary_reader_t *binary) {

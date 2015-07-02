@@ -49,10 +49,6 @@ bool owf_reader_materialize_cb(owf_reader_t *reader, owf_reader_ctx_t *ctx, owf_
             ns = OWF_ARRAY_PTR(channel->namespaces, owf_namespace_t, OWF_ARRAY_LEN(channel->namespaces) - 1);
             owf_array_push(&ns->alarms, reader->alloc, &reader->error, &ctx->alarm, sizeof(owf_alarm_t));
             break;
-        default:
-            OWF_READER_ERR(*reader, "unknown callback type");
-            ret = false;
-            break;
     }
     return ret;
 }

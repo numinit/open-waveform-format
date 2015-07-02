@@ -26,17 +26,21 @@ void owf_binary_reader_init_buffer(owf_binary_reader_t *binary, owf_buffer_t *bu
 
 const char *owf_binary_reader_strerror(owf_binary_reader_t *binary);
 
-bool owf_binary_length_unwrap(owf_binary_reader_t *binary, owf_binary_reader_cb_t cb, void *ptr);
-bool owf_binary_length_unwrap_top(owf_binary_reader_t *binary, owf_binary_reader_cb_t cb, uint32_t *length_ptr, void *ptr);
-bool owf_binary_length_unwrap_nested_multi(owf_binary_reader_t *binary, void *ptr);
-bool owf_binary_length_unwrap_multi(owf_binary_reader_t *binary, void *ptr);
+bool owf_binary_unwrap(owf_binary_reader_t *binary, owf_binary_reader_cb_t cb, void *ptr);
+bool owf_binary_unwrap_top(owf_binary_reader_t *binary, owf_binary_reader_cb_t cb, uint32_t *length_ptr, void *ptr);
+bool owf_binary_unwrap_nested_multi(owf_binary_reader_t *binary, owf_binary_reader_cb_t cb);
+bool owf_binary_unwrap_multi(owf_binary_reader_t *binary, owf_binary_reader_cb_t cb);
 bool owf_binary_read_str(owf_binary_reader_t *binary, void *ptr);
 bool owf_binary_read_samples(owf_binary_reader_t *binary, void *ptr);
 bool owf_binary_read_signal(owf_binary_reader_t *binary, void *ptr);
+bool owf_binary_read_signals(owf_binary_reader_t *binary, void *ptr);
 bool owf_binary_read_event(owf_binary_reader_t *binary, void *ptr);
+bool owf_binary_read_events(owf_binary_reader_t *binary, void *ptr);
 bool owf_binary_read_alarm(owf_binary_reader_t *binary, void *ptr);
+bool owf_binary_read_alarms(owf_binary_reader_t *binary, void *ptr);
 bool owf_binary_read_namespace(owf_binary_reader_t *binary, void *ptr);
 bool owf_binary_read_channel(owf_binary_reader_t *binary, void *ptr);
+bool owf_binary_read_channels(owf_binary_reader_t *binary, void *ptr);
 bool owf_binary_read(owf_binary_reader_t *binary);
 owf_t *owf_binary_materialize(owf_binary_reader_t *binary);
 
