@@ -38,7 +38,7 @@ namespace OWF.DTO {
                 return false;
             }
 
-            return other.Channels.Equals(this.Channels);
+            return other.Channels.SequenceEqual(this.Channels);
         }
 
         public override int GetHashCode() {

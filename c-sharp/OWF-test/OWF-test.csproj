@@ -58,8 +58,9 @@
     <Compile Include="DTO\PackageTest.cs" />
     <Compile Include="DTO\NamespaceTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Serializers\BinaryDeserializerTests.cs" />
-    <Compile Include="Serializers\BinarySerializerTests.cs" />
+    <Compile Include="Serializers\BinaryUnpackerTests.cs" />
+    <Compile Include="Serializers\BinaryPackerTests.cs" />
+    <Compile Include="Serializers\RoundTripTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\OWF.csproj">

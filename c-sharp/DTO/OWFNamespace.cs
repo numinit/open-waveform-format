@@ -111,5 +111,10 @@ namespace OWF.DTO {
                 return hash;
             }
         }
+
+        public bool Covers(Int64 timestamp) {
+            Int64 start = this.T0, end = start + (Int64)this.Dt;
+            return timestamp >= start && timestamp < end;
+        }
     }
 }

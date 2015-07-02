@@ -2,7 +2,7 @@
 
 namespace OWF.DTO {
     public abstract class OWFObject {
-        public static byte[] Magic = { 0x4f, 0x57, 0x46, 0x31 };
+        public const UInt32 Magic = 0x4f574631U;
 
         private UInt32 _size;
 
