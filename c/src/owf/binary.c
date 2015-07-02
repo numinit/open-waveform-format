@@ -37,7 +37,7 @@
         OWF_BINARY_SAFE_ADD32(binary, effective_length, padding); \
         \
         /* Length of zero is a no-op */ \
-        if (effective_length > 0) { \
+        if (OWF_EXPECT(effective_length > 0)) { \
             if (!owf_array_reserve_exactly((&(arr)), binary->reader.alloc, &binary->reader.error, effective_length, 1)) { \
                 return false; \
             } \
@@ -84,7 +84,7 @@ void owf_binary_reader_init_file(owf_binary_reader_t *binary, FILE *file, owf_al
 static bool owf_binary_reader_buffer_read_cb(void *dest, size_t size, void *data) {
     owf_buffer_t *ptr = (owf_buffer_t *)data;
     size_t new_position = ptr->position + size;
-    if (new_position > ptr->length) {
+    if (OWF_NOEXPECT(new_position > ptr->length)) {
         /* Attempted to read more bytes than this buffer has */
         return false;
     }
@@ -183,7 +183,7 @@ bool owf_binary_read_str(owf_binary_reader_t *binary, void *ptr) {
      * Read the actual string.
      * The string's length is currently saved in binary->segment_length if this call is wrapped.
      */
-    if (!owf_str_reserve(str, binary->reader.alloc, &binary->reader.error, binary->segment_length)) {
+    if (OWF_NOEXPECT(!owf_str_reserve(str, binary->reader.alloc, &binary->reader.error, binary->segment_length))) {
         return false;
     } else {
         OWF_BINARY_SAFE_VARIABLE_READ(binary, str->bytes, binary->segment_length, sizeof(uint8_t), 0);
@@ -193,7 +193,7 @@ bool owf_binary_read_str(owf_binary_reader_t *binary, void *ptr) {
      * If we got here, the variable read succeeded and we have a buffer of size
      * str->length with the string in it. Make sure it's NULL-terminated.
      */
-    if (OWF_ARRAY_LEN(str->bytes) > 0 && OWF_ARRAY_GET(str->bytes, uint8_t, OWF_ARRAY_LEN(str->bytes) - 1) != 0) {
+    if (OWF_NOEXPECT(OWF_ARRAY_LEN(str->bytes) > 0 && OWF_ARRAY_GET(str->bytes, uint8_t, OWF_ARRAY_LEN(str->bytes) - 1) != 0)) {
         OWF_READER_ERR(binary->reader, "string was not NULL-terminated");
         owf_str_destroy(str, binary->reader.alloc);
         return false;
@@ -235,9 +235,9 @@ bool owf_binary_read_signal(owf_binary_reader_t *binary, void *ptr) {
     owf_signal_t *signal = &binary->reader.ctx.signal;
     owf_signal_init(signal);
 
-    if (!owf_binary_unwrap(binary, owf_binary_read_str, &signal->id) ||
+    if (OWF_NOEXPECT(!owf_binary_unwrap(binary, owf_binary_read_str, &signal->id) ||
             !owf_binary_unwrap(binary, owf_binary_read_str, &signal->unit) ||
-            !owf_binary_unwrap(binary, owf_binary_read_samples, NULL)) {
+            !owf_binary_unwrap(binary, owf_binary_read_samples, NULL))) {
         return false;
     }
 
@@ -259,7 +259,7 @@ bool owf_binary_read_event(owf_binary_reader_t *binary, void *ptr) {
     OWF_HOST64(event->t0);
 
     /* Ensure that the timestamp is in range */
-    if (!owf_namespace_covers(&binary->reader.ctx.ns, event->t0)) {
+    if (OWF_NOEXPECT(!owf_namespace_covers(&binary->reader.ctx.ns, event->t0))) {
         OWF_READER_ERRF(binary->reader, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_TIME " did not cover event at " OWF_PRINT_TIME,
             OWF_STR_PTR(binary->reader.ctx.ns.id),
             binary->reader.ctx.ns.t0, binary->reader.ctx.ns.t0 + binary->reader.ctx.ns.dt, binary->reader.ctx.ns.dt, event->t0);
@@ -289,7 +289,7 @@ bool owf_binary_read_alarm(owf_binary_reader_t *binary, void *ptr) {
     OWF_HOST64(alarm->t0);
 
     /* Ensure that the timestamp is in range */
-    if (!owf_namespace_covers(&binary->reader.ctx.ns, alarm->t0)) {
+    if (OWF_NOEXPECT(!owf_namespace_covers(&binary->reader.ctx.ns, alarm->t0))) {
         OWF_READER_ERRF(binary->reader, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_TIME " did not cover alarm at " OWF_PRINT_TIME,
             OWF_STR_PTR(binary->reader.ctx.ns.id),
             binary->reader.ctx.ns.t0, binary->reader.ctx.ns.t0 + binary->reader.ctx.ns.dt, binary->reader.ctx.ns.dt, alarm->t0);
@@ -341,10 +341,10 @@ bool owf_binary_read_namespace(owf_binary_reader_t *binary, void *ptr) {
     OWF_BINARY_READER_VISIT(binary, OWF_READ_NAMESPACE);
 
     /* Read children */
-    return
+    return OWF_EXPECT(
         owf_binary_unwrap(binary, owf_binary_read_signals, NULL) &&
         owf_binary_unwrap(binary, owf_binary_read_events, NULL) &&
-        owf_binary_unwrap(binary, owf_binary_read_alarms, NULL);
+        owf_binary_unwrap(binary, owf_binary_read_alarms, NULL));
 }
 
 bool owf_binary_read_channel(owf_binary_reader_t *binary, void *ptr) {
@@ -393,7 +393,7 @@ bool owf_binary_read(owf_binary_reader_t *binary) {
 owf_t *owf_binary_materialize(owf_binary_reader_t *binary) {
     owf_reader_visit_cb_t old_cb = binary->reader.visit;
     binary->reader.visit = owf_reader_materialize_cb;
-    if (!owf_binary_read(binary)) {
+    if (OWF_NOEXPECT(!owf_binary_read(binary))) {
         return NULL;
     }
     binary->reader.visit = old_cb;
