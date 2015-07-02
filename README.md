@@ -1,20 +1,21 @@
-# Open Waveform Format 
+# Open Waveform Format
 
 ## Introduction
 
 The Open Waveform Format (OWF) is a new format for transmitting captured waveforms, alarms, and events from devices.
 
-Features:
+### Features
+
 * HTTP transport (with MIME types)
 * JSON format for development and prototyping
 * Binary format for speed
-* Designed to transmit measurements 
+* Designed to transmit measurements
 * Designed to optionally transmist device alarms and events in free text
 * Support for batch updates for multiple data sources, multiple data acquisition devices, and multiple acquisition channels
 
 Read more on our [wiki](https://github.com/medicalinformaticscorp/open-waveform-format/wiki)
 
-**Supported Languages**
+### Supported languages
 |Language| JSON | Binary |
 |--------|------|--------|
 | C | planned | planned |
@@ -24,10 +25,19 @@ Read more on our [wiki](https://github.com/medicalinformaticscorp/open-waveform-
 | Ruby | planned | Serialize only |
 | Elixir | planned | planned |
 
+|Language|JSON|Binary|
+|:-------|:---|:-----|
+|C|Planned|**Deserialize only (serializer in progress)**|
+|C++|Planned|Planned|
+|C#|Planned|**Complete**|
+|JS (NodeJS)|Planned|Planned|
+|Ruby|Planned|**Convert from JSON only**|
+|Elixir|Planned|Planned|
 
 ## Contributing
 
 ### Workflow:
+
 1. Open an issue.
 2. Fork the repository on Github.
 3. Commit work.
@@ -35,6 +45,7 @@ Read more on our [wiki](https://github.com/medicalinformaticscorp/open-waveform-
 5. We'll review and merge the pull request, perhaps including discussion and changes.
 
 ### Licensing
+
 Please explicitly enumerate any 3rd-party libraries you depend on in your code changes, either opening a new dependencies file or updating an existing one.
 
 *We are unable to accept any code licensed under or requiring copyleft licenses (GPL, AGPL, etc.).*
