@@ -2,7 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OWF.DTO;
 
-namespace OWFTests {
+namespace OWFTest.DTO {
     [TestClass]
     public class TimeTests {
         [TestMethod]

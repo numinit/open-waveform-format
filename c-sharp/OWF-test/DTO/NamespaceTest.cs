@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OWF.DTO;
 
-namespace OWF_test.DTO {
+namespace OWFTest.DTO {
     [TestClass]
     public class NamespaceTest {
         [TestMethod]

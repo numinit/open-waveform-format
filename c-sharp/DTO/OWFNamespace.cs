@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 
 namespace OWF.DTO {
+    /// <summary>
+    /// A namespace represents a collection of signals, events, and alarms from a device on a channel.
+    /// </summary>
     public class OWFNamespace : OWFObject {
         private readonly Int64 _t0;
         private readonly UInt64 _dt;
@@ -13,6 +16,15 @@ namespace OWF.DTO {
         private readonly List<OWFEvent> _events;
         private readonly List<OWFAlarm> _alarms;
 
+        /// <summary>
+        /// Initializes this OWFNamespace.
+        /// </summary>
+        /// <param name="id">The namespace ID.</param>
+        /// <param name="t0">The timestamp at which this measurement starts.</param>
+        /// <param name="dt">The length that this measurement goes on for.</param>
+        /// <param name="signals">An array of signals.</param>
+        /// <param name="events">An array of events.</param>
+        /// <param name="alarms">An array of alarms.</param>
         public OWFNamespace(OWFString id, Int64 t0, UInt64 dt, List<OWFSignal> signals, List<OWFEvent> events, List<OWFAlarm> alarms) {
             this._t0 = t0;
             this._dt = dt;
@@ -25,41 +37,65 @@ namespace OWF.DTO {
         public OWFNamespace(string id, DateTime t0, TimeSpan dt, List<OWFSignal> signals, List<OWFEvent> events, List<OWFAlarm> alarms)
                 : this(new OWFString(id), OWFTime.FromDateTime(t0), OWFTime.FromTimeSpan(dt), signals, events, alarms) {}
 
+        /// <summary>
+        /// Gets the time of measurement as an Int64.
+        /// </summary>
         public Int64 T0
         {
             get { return this._t0; }
         }
 
+        /// <summary>
+        /// Gets the total duration as a UInt64.
+        /// </summary>
         public UInt64 Dt
         {
             get { return this._dt; }
         }
 
+        /// <summary>
+        /// Gets the time of measurement as a DateTime.
+        /// </summary>
         public DateTime DateTime
         {
             get { return OWFTime.ToDateTime(this._t0); }
         }
 
+        /// <summary>
+        /// Gets the total duration as a TimeSpan.
+        /// </summary>
         public TimeSpan TimeSpan
         {
             get { return OWFTime.ToTimeSpan(this._dt); }
         }
 
+        /// <summary>
+        /// Gets the namespace ID.
+        /// </summary>
         public OWFString Id
         {
             get { return this._id; }
         }
 
+        /// <summary>
+        /// Gets the list of signals.
+        /// </summary>
         public List<OWFSignal> Signals
         {
             get { return this._signals; }
         }
 
+        /// <summary>
+        /// Gets the list of alarms.
+        /// </summary>
         public List<OWFAlarm> Alarms
         {
             get { return this._alarms; }
         }
 
+        /// <summary>
+        /// Gets the list of events.
+        /// </summary>
         public List<OWFEvent> Events
         {
             get { return this._events; }
@@ -111,7 +147,14 @@ namespace OWF.DTO {
                 return hash;
             }
         }
-
+        
+        /// <summary>
+        /// Returns true if this namespace covers the given timestamp.
+        /// That is: if the passed timestamp falls in the open interval [T0, T0 + Dt),
+        /// this method will return true.
+        /// </summary>
+        /// <param name="timestamp">The timestamp to test</param>
+        /// <returns>True if the namespace covers the timestamp, false otherwise.</returns>
         public bool Covers(Int64 timestamp) {
             Int64 start = this.T0, end = start + (Int64)this.Dt;
             return timestamp >= start && timestamp < end;

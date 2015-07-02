@@ -3,11 +3,20 @@ using System.Linq;
 using System.Text;
 
 namespace OWF.DTO {
+    /// <summary>
+    /// A signal is a collection of measurements from a sensor on a device.
+    /// </summary>
     public class OWFSignal : OWFObject {
         private readonly OWFString _id;
         private readonly OWFString _unit;
         private readonly double[] _samples;
-
+        
+        /// <summary>
+        /// Initializes this OWFSignal.
+        /// </summary>
+        /// <param name="id">The signal ID.</param>
+        /// <param name="unit">The units that the signal is measured in.</param>
+        /// <param name="samples">An array of double-precision samples.</param>
         public OWFSignal(OWFString id, OWFString unit, double[] samples) {
             this._id = id;
             this._unit = unit;
@@ -17,16 +26,25 @@ namespace OWF.DTO {
         public OWFSignal(string id, string unit, double[] samples)
             : this(new OWFString(id), new OWFString(unit), samples) {} 
 
+        /// <summary>
+        /// Gets the ID of this signal.
+        /// </summary>
         public OWFString Id
         {
             get { return this._id; }
         }
 
+        /// <summary>
+        /// Gets the units for this signal.
+        /// </summary>
         public OWFString Unit
         {
             get { return this._unit; }
         }
 
+        /// <summary>
+        /// Gets the sample array for this signal.
+        /// </summary>
         public double[] Samples
         {
             get { return this._samples; }

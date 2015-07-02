@@ -3,12 +3,18 @@ using System.Text;
 
 namespace OWF.DTO {
     /// <summary>
-    ///     Event is a way of reporting a non-alarm event from a device.
+    /// An event is an object representing an instant in time that something happens,
+    /// as opposed to an ongoing alarm.
     /// </summary>
     public class OWFEvent : OWFObject {
         private readonly Int64 _t0;
         private readonly OWFString _message;
 
+        /// <summary>
+        /// Initializes this OWFEvent.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        /// <param name="t0">The time that this event happened.</param>
         public OWFEvent(OWFString message, Int64 t0) {
             this._t0 = t0;
             this._message = message;
@@ -17,16 +23,25 @@ namespace OWF.DTO {
         public OWFEvent(string message, DateTime time)
             : this(new OWFString(message), OWFTime.FromDateTime(time)) {}
 
+        /// <summary>
+        /// Gets the message for this event.
+        /// </summary>
         public OWFString Message
         {
             get { return this._message; }
         }
 
+        /// <summary>
+        /// Gets the timestamp for this event.
+        /// </summary>
         public Int64 T0
         {
             get { return this._t0; }
         }
 
+        /// <summary>
+        /// Gets the timestamp for this event as a DateTime object.
+        /// </summary>
         public DateTime DateTime
         {
             get { return OWFTime.ToDateTime(this._t0); }

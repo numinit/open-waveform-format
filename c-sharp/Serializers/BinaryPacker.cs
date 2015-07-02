@@ -5,9 +5,19 @@ using System.Text;
 using OWF.DTO;
 
 namespace OWF.Serializers {
+    /// <summary>
+    /// A class representing state for packing OWF data.
+    /// </summary>
     public class BinaryPacker {
+        /// <summary>
+        /// A BinaryWriter to write to.
+        /// </summary>
         private BinaryWriter _bw;
 
+        /// <summary>
+        /// Writes an OWFString to the BinaryWriter.
+        /// </summary>
+        /// <param name="str">The string to write.</param>
         private void WriteOWFString(OWFString str) {
             checked {
                 var fullSize = str.GetSizeInBytes() - sizeof(UInt32);
@@ -34,6 +44,10 @@ namespace OWF.Serializers {
             }
         }
 
+        /// <summary>
+        /// Writes an array of OWF doubles to the BinaryWriter.
+        /// </summary>
+        /// <param name="values">The values to write</param>
         private void WriteOWFDoubles(double[] values) {
             if (BitConverter.IsLittleEndian) {
                 foreach (var valueBytes in values.Select(BitConverter.GetBytes)) {
@@ -48,6 +62,10 @@ namespace OWF.Serializers {
             }
         }
 
+        /// <summary>
+        /// Writes an unsigned 64-bit integer to the BinaryWriter.
+        /// </summary>
+        /// <param name="val">The value to write</param>
         private void WriteU64(UInt64 val) {
             if (BitConverter.IsLittleEndian) {
                 var valueBytes = BitConverter.GetBytes(val);
@@ -59,6 +77,10 @@ namespace OWF.Serializers {
             }
         }
 
+        /// <summary>
+        /// Writes a signed 64-bit integer to the BinaryWriter.
+        /// </summary>
+        /// <param name="val">The value to write</param>
         private void WriteS64(Int64 val) {
             if (BitConverter.IsLittleEndian) {
                 var valueBytes = BitConverter.GetBytes(val);
@@ -70,6 +92,10 @@ namespace OWF.Serializers {
             }
         }
 
+        /// <summary>
+        /// Writes a length (32-bit multiple of 4) to the BinaryWriter.
+        /// </summary>
+        /// <param name="length">The length to write</param>
         private void WriteLength(UInt32 length) {
             if (length % sizeof(UInt32) != 0) {
                 throw new PackError("length `{0}` was not a multiple of {1} bytes", length, sizeof(UInt32));
@@ -77,6 +103,10 @@ namespace OWF.Serializers {
             this.WriteU32(length);
         }
 
+        /// <summary>
+        /// Writes a 32-bit value to the BinaryWriter.
+        /// </summary>
+        /// <param name="val">The value to write</param>
         private void WriteU32(UInt32 val) {
             if (BitConverter.IsLittleEndian) {
                 var valueBytes = BitConverter.GetBytes(val);
@@ -88,11 +118,19 @@ namespace OWF.Serializers {
             }
         }
 
+        /// <summary>
+        /// Writes the OWF header.
+        /// </summary>
+        /// <param name="length">The length</param>
         private void WriteHeader(UInt32 length) {
             this.WriteU32(OWFObject.Magic);
             this.WriteLength(length);
         }
 
+        /// <summary>
+        /// Writes an OWFChannel to the BinaryWriter.
+        /// </summary>
+        /// <param name="channel">The channel</param>
         private void WriteChannel(OWFChannel channel) {
             this.WriteLength(checked(channel.GetSizeInBytes() - sizeof(UInt32)));
             this.WriteOWFString(channel.Id);
@@ -101,6 +139,10 @@ namespace OWF.Serializers {
             }
         }
 
+        /// <summary>
+        /// Writes an OWFNamespace to the BinaryWriter.
+        /// </summary>
+        /// <param name="ns">The namespace</param>
         private void WriteNamespace(OWFNamespace ns) {
             this.WriteLength(checked(ns.GetSizeInBytes() - sizeof(UInt32)));
             this.WriteS64(ns.T0);
@@ -127,6 +169,11 @@ namespace OWF.Serializers {
             }
         }
 
+        /// <summary>
+        /// Writes an OWFSignal to the BinaryWriter
+        /// </summary>
+        /// <param name="ns">The enclosing namespace</param>
+        /// <param name="sig">The signal</param>
         private void WriteSignal(OWFNamespace ns, OWFSignal sig) {
             this.WriteOWFString(sig.Id);
             this.WriteOWFString(sig.Unit);
@@ -136,6 +183,25 @@ namespace OWF.Serializers {
             this.WriteOWFDoubles(sig.Samples);
         }
 
+        /// <summary>
+        /// Writes an OWFEvent to the BinaryWriter
+        /// </summary>
+        /// <param name="ns">The enclosing namespace</param>
+        /// <param name="evt">The event</param>
+        private void WriteEvent(OWFNamespace ns, OWFEvent evt) {
+            if (!ns.Covers(evt.T0)) {
+                throw new PackError("time interval for namespace `{0}` [{1}, {2}):{3} did not cover event at {4}",
+                    ns.Id, ns.T0, ns.T0 + (Int64)ns.Dt, ns.Dt, evt.T0);
+            }
+            this.WriteS64(evt.T0);
+            this.WriteOWFString(evt.Message);
+        }
+
+        /// <summary>
+        /// Writes an OWFAlarm to the BinaryWriter
+        /// </summary>
+        /// <param name="ns">The enclosing namespace</param>
+        /// <param name="alarm">The alarm</param>
         private void WriteAlarm(OWFNamespace ns, OWFAlarm alarm) {
             if (!ns.Covers(alarm.T0)) {
                 throw new PackError("time interval for namespace `{0}` [{1}, {2}):{3} did not cover alarm at {4}",
@@ -150,15 +216,12 @@ namespace OWF.Serializers {
             this.WriteOWFString(alarm.Message);
         }
 
-        private void WriteEvent(OWFNamespace ns, OWFEvent evt) {
-            if (!ns.Covers(evt.T0)) {
-                throw new PackError("time interval for namespace `{0}` [{1}, {2}):{3} did not cover event at {4}",
-                    ns.Id, ns.T0, ns.T0 + (Int64)ns.Dt, ns.Dt, evt.T0);
-            }
-            this.WriteS64(evt.T0);
-            this.WriteOWFString(evt.Message);
-        }
-
+        /// <summary>
+        /// Converts an OWFPackage, writing its serialized form to the provided Stream.
+        /// Throws a PackError if there's a problem.
+        /// </summary>
+        /// <param name="package">The package</param>
+        /// <param name="stream">The stream</param>
         public void Convert(OWFPackage package, Stream stream) {
             lock (this) {
                 using (this._bw = new BinaryWriter(stream, Encoding.UTF8)) {
@@ -170,6 +233,12 @@ namespace OWF.Serializers {
             }
         }
 
+        /// <summary>
+        /// Converts an OWFPackage, materializing it in memory and returning it as a byte array.
+        /// Throws a PackError if there's a problem.
+        /// </summary>
+        /// <param name="package">The package</param>
+        /// <returns>A byte array filled with OWF data</returns>
         public byte[] Convert(OWFPackage package) {
             using (var mem = new MemoryStream()) {
                 this.Convert(package, mem);
@@ -177,10 +246,33 @@ namespace OWF.Serializers {
             }
         }
 
+        /// <summary>
+        /// Converts an OWFPackage, writing its serialized form to the provided Stream.
+        /// Throws a PackError if there's a problem.
+        /// </summary>
+        /// <param name="package">The package</param>
+        /// <param name="stream">The stream</param>
+        public static void Pack(OWFPackage package, Stream stream) {
+            new BinaryPacker().Convert(package, stream);
+        }
+
+        /// <summary>
+        /// Converts an OWFPackage, materializing it in memory and returning it as a byte array.
+        /// Throws a PackError if there's a problem.
+        /// </summary>
+        /// <param name="package">The package</param>
+        /// <returns>A byte array filled with OWF data</returns>
+        public static byte[] Pack(OWFPackage package) {
+            return new BinaryPacker().Convert(package);
+        }
+
+        /// <summary>
+        /// An error thrown if there is a problem packing the OWF.
+        /// </summary>
         [Serializable]
         public class PackError : Exception {
             public PackError(String message, params Object[] args) : base(String.Format(message, args)) {}
-            public PackError(String message, Exception cause, params Object[] args) : base(String.Format(message, args), cause) { }
+            public PackError(String message, Exception cause, params Object[] args) : base(String.Format(message, args), cause) {}
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace OWF.DTO {
     /// <summary>
-    ///     Alarm represents a device alarm, such as "SPO2 LO" or "LEAD FAIL".
+    /// An OWFAlarm represents an ongoing device alarm measured at a particular point in time.
     /// </summary>
     public class OWFAlarm : OWFObject {
         private readonly Int64 _t0;
@@ -12,6 +12,15 @@ namespace OWF.DTO {
         private readonly OWFString _msgType;
         private readonly OWFString _message;
 
+        /// <summary>
+        /// Initializes this OWFAlarm.
+        /// </summary>
+        /// <param name="type">The type of the alarm.</param>
+        /// <param name="message">The alarm message.</param>
+        /// <param name="t0">The time at which this alarm was measured.</param>
+        /// <param name="dt">The total time this alarm has been ongoing. Subtracting this from t0 will get the start time of the alarm.</param>
+        /// <param name="level">The importance level of this alarm, in 00 to ff. User-defined.</param>
+        /// <param name="volume">The volume, or "loudness," of this alarm, in 00 to ff. User-defined</param>
         public OWFAlarm(OWFString type, OWFString message, Int64 t0, UInt64 dt, byte level, byte volume) {
             this._t0 = t0;
             this._dt = dt;
@@ -24,41 +33,65 @@ namespace OWF.DTO {
         public OWFAlarm(string type, string message, DateTime t0, TimeSpan dt, byte level, byte volume) :
             this(new OWFString(type), new OWFString(message), OWFTime.FromDateTime(t0), OWFTime.FromTimeSpan(dt), level, volume) {}
 
+        /// <summary>
+        /// Gets the time of measurement as an Int64.
+        /// </summary>
         public Int64 T0
         {
             get { return this._t0; }
         }
 
+        /// <summary>
+        /// Gets the total duration as a UInt64.
+        /// </summary>
         public UInt64 Dt
         {
             get { return this._dt; }
         }
 
+        /// <summary>
+        /// Gets the time of measurement as a DateTime.
+        /// </summary>
         public DateTime DateTime
         {
             get { return OWFTime.ToDateTime(this._t0); }
         }
 
+        /// <summary>
+        /// Gets the total duration as a TimeSpan.
+        /// </summary>
         public TimeSpan TimeSpan
         {
             get { return OWFTime.ToTimeSpan(this._dt); }
         }
 
+        /// <summary>
+        /// Gets the alarm level.
+        /// </summary>
         public byte Level
         {
             get { return this._level; }
         }
 
+        /// <summary>
+        /// Gets the alarm volume.
+        /// </summary>
         public byte Volume
         {
             get { return this._volume; }
         }
 
+        /// <summary>
+        /// Gets the alarm message.
+        /// </summary>
         public OWFString Message
         {
             get { return this._message; }
         }
 
+        /// <summary>
+        /// Gets the alarm type.
+        /// </summary>
         public OWFString Type
         {
             get { return this._msgType; }

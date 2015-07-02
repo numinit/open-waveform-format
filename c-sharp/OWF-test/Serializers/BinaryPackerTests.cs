@@ -5,7 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OWF.DTO;
 using OWF.Serializers;
 
-namespace OWF_test.Serializers {
+namespace OWFTest.Serializers {
     [TestClass]
     public class BinaryPackerTests {
         private byte[] ReadOWF(string filename) {
@@ -15,7 +15,7 @@ namespace OWF_test.Serializers {
         [TestMethod]
         public void PacksCorrectEmptyObject() {
             var p = new OWFPackage(new List<OWFChannel>());
-            var buffer = new BinaryPacker().Convert(p);
+            var buffer = BinaryPacker.Pack(p);
             var expected = this.ReadOWF("binary_valid_empty");
             CollectionAssert.AreEqual(buffer, expected, "Incorrect empty object");
         }
@@ -24,7 +24,7 @@ namespace OWF_test.Serializers {
         public void PacksCorrectEmptyChannelObject() {
             var c = new OWFChannel("BED_42", new List<OWFNamespace>());
             var p = new OWFPackage(new List<OWFChannel>(new[] {c}));
-            var buffer = new BinaryPacker().Convert(p);
+            var buffer = BinaryPacker.Pack(p);
             var expected = this.ReadOWF("binary_valid_empty_channel");
             CollectionAssert.AreEqual(buffer, expected, "Incorrect empty channel");
         }
@@ -37,7 +37,7 @@ namespace OWF_test.Serializers {
             var n = new OWFNamespace("GEWAVE", t0, dt, new List<OWFSignal>(), new List<OWFEvent>(), new List<OWFAlarm>());
             var c = new OWFChannel("BED_42", new List<OWFNamespace>(new[] {n}));
             var p = new OWFPackage(new List<OWFChannel>(new[] {c}));
-            var buffer = new BinaryPacker().Convert(p);
+            var buffer = BinaryPacker.Pack(p);
             var expected = this.ReadOWF("binary_valid_empty_namespace");
             CollectionAssert.AreEqual(expected, buffer, "Incorrect empty namespace");
         }
@@ -63,7 +63,7 @@ namespace OWF_test.Serializers {
                 new OWFChannel("BED_42", ns)
             });
             var package = new OWFPackage(channels);
-            var buffer = new BinaryPacker().Convert(package);
+            var buffer = BinaryPacker.Pack(package);
             var expected = this.ReadOWF("binary_valid_1");
             CollectionAssert.AreEqual(expected, buffer, "Incorrect binary_valid_1");
         }
@@ -150,7 +150,7 @@ namespace OWF_test.Serializers {
 
             /* PACKAGE */
             var package = new OWFPackage(new List<OWFChannel>(new[] {bed42, bed43, rpi}));
-            var buffer = new BinaryPacker().Convert(package);
+            var buffer = BinaryPacker.Pack(package);
             var expected = this.ReadOWF("binary_valid_2");
             CollectionAssert.AreEqual(expected, buffer, "Incorrect binary_valid_2");
         }

@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OWF.DTO;
 using OWF.Serializers;
 
-namespace OWF_test.Serializers {
+namespace OWFTest.Serializers {
     [TestClass]
     public class RoundTripTests {
         private byte[] ReadOWF(string filename) {
@@ -13,11 +13,10 @@ namespace OWF_test.Serializers {
 
         private void RoundTrip(string file) {
             byte[] expected = this.ReadOWF(file);
-            OWFPackage unpacked = new BinaryUnpacker().Convert(expected);
-            byte[] repacked = new BinaryPacker().Convert(unpacked);
-            OWFPackage reUnpacked = new BinaryUnpacker().Convert(repacked);
-            byte[] rerepacked = new BinaryPacker().Convert(reUnpacked);
-            //File.WriteAllBytes("repacked.owf", repacked);
+            OWFPackage unpacked = BinaryUnpacker.Unpack(expected);
+            byte[] repacked = BinaryPacker.Pack(unpacked);
+            OWFPackage reUnpacked = BinaryUnpacker.Unpack(repacked);
+            byte[] rerepacked = BinaryPacker.Pack(reUnpacked);
 
             CollectionAssert.AreEqual(expected, repacked);
             Assert.AreEqual(true, unpacked.Equals(reUnpacked));

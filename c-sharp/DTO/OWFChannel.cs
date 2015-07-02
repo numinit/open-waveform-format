@@ -5,12 +5,17 @@ using System.Text;
 
 namespace OWF.DTO {
     /// <summary>
-    ///     OWFChannel contains the devices broadcasting on a particular data source, like a patient bed.
+    /// An OWFChannel contains devices broadcasting on a particular data source.
     /// </summary>
     public class OWFChannel : OWFObject {
         private readonly OWFString _id;
         private readonly List<OWFNamespace> _namespaces;
 
+        /// <summary>
+        /// Initializes this OWFChannel.
+        /// </summary>
+        /// <param name="id">The id</param>
+        /// <param name="namespaces">A list of namespaces</param>
         public OWFChannel(OWFString id, List<OWFNamespace> namespaces) {
             this._id = id;
             this._namespaces = namespaces;
@@ -19,11 +24,17 @@ namespace OWF.DTO {
         public OWFChannel(string id, List<OWFNamespace> namespaces)
             : this(new OWFString(id), namespaces) {}
 
+        /// <summary>
+        /// Gets the ID of this channel.
+        /// </summary>
         public OWFString Id
         {
             get { return this._id; }
         }
 
+        /// <summary>
+        /// Gets a list of namespaces.
+        /// </summary>
         public List<OWFNamespace> Namespaces
         {
             get { return this._namespaces; }

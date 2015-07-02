@@ -4,15 +4,22 @@ using System.Linq;
 
 namespace OWF.DTO {
     /// <summary>
-    ///     OWFPackage is a class which contains the waveform data for some number of channels.
+    /// An OWFPackage contains waveform data for a number of channels.
     /// </summary>
     public class OWFPackage : OWFObject {
         private readonly List<OWFChannel> _channels;
 
+        /// <summary>
+        /// Initializes this OWFPackage with a list of channels.
+        /// </summary>
+        /// <param name="channels"></param>
         public OWFPackage(List<OWFChannel> channels) {
             this._channels = channels;
         }
 
+        /// <summary>
+        /// Gets the list of channels.
+        /// </summary>
         public List<OWFChannel> Channels
         {
             get { return this._channels; }
