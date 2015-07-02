@@ -7,12 +7,53 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6559B8F11B44DB5E007CE142 /* owf1_binary_valid_1.owf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6559B8E11B44DB5E007CE142 /* owf1_binary_valid_1.owf */; };
+		6559B8F21B44DB5E007CE142 /* owf1_binary_valid_2.owf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6559B8E21B44DB5E007CE142 /* owf1_binary_valid_2.owf */; };
+		6559B8F31B44DB5E007CE142 /* owf1_binary_valid_3.owf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6559B8E31B44DB5E007CE142 /* owf1_binary_valid_3.owf */; };
+		6559B8F41B44DB5E007CE142 /* owf1_binary_valid_empty_all.owf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6559B8E41B44DB5E007CE142 /* owf1_binary_valid_empty_all.owf */; };
+		6559B8F51B44DB5E007CE142 /* owf1_binary_valid_empty_channel.owf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6559B8E51B44DB5E007CE142 /* owf1_binary_valid_empty_channel.owf */; };
+		6559B8F61B44DB5E007CE142 /* owf1_binary_valid_empty_namespace.owf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6559B8E61B44DB5E007CE142 /* owf1_binary_valid_empty_namespace.owf */; };
+		6559B8F71B44DB5E007CE142 /* owf1_binary_valid_empty_nan.owf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6559B8E71B44DB5E007CE142 /* owf1_binary_valid_empty_nan.owf */; };
+		6559B8F81B44DB5E007CE142 /* owf1_binary_valid_empty.owf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6559B8E81B44DB5E007CE142 /* owf1_binary_valid_empty.owf */; };
+		6559B8F91B44DB5E007CE142 /* owf1_json_valid_1.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6559B8E91B44DB5E007CE142 /* owf1_json_valid_1.json */; };
+		6559B8FA1B44DB5E007CE142 /* owf1_json_valid_2.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6559B8EA1B44DB5E007CE142 /* owf1_json_valid_2.json */; };
+		6559B8FB1B44DB5E007CE142 /* owf1_json_valid_3.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6559B8EB1B44DB5E007CE142 /* owf1_json_valid_3.json */; };
+		6559B8FC1B44DB5E007CE142 /* owf1_json_valid_empty_all.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6559B8EC1B44DB5E007CE142 /* owf1_json_valid_empty_all.json */; };
+		6559B8FD1B44DB5E007CE142 /* owf1_json_valid_empty_channel.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6559B8ED1B44DB5E007CE142 /* owf1_json_valid_empty_channel.json */; };
+		6559B8FE1B44DB5E007CE142 /* owf1_json_valid_empty_namespace.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6559B8EE1B44DB5E007CE142 /* owf1_json_valid_empty_namespace.json */; };
+		6559B8FF1B44DB5E007CE142 /* owf1_json_valid_empty_nan.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6559B8EF1B44DB5E007CE142 /* owf1_json_valid_empty_nan.json */; };
+		6559B9001B44DB5E007CE142 /* owf1_json_valid_empty.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6559B8F01B44DB5E007CE142 /* owf1_json_valid_empty.json */; };
 		BF1720191B39C3620019D98E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1720181B39C3620019D98E /* CoreFoundation.framework */; };
 		BF459D5E1B39BFE000BB7117 /* test.c in Sources */ = {isa = PBXBuildFile; fileRef = BF459D5D1B39BFE000BB7117 /* test.c */; };
 		BF459D671B39C00900BB7117 /* libowf.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459D661B39C00900BB7117 /* libowf.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		6559B8E01B44DA9F007CE142 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = ../example;
+			dstSubfolderSpec = 16;
+			files = (
+				6559B8F11B44DB5E007CE142 /* owf1_binary_valid_1.owf in CopyFiles */,
+				6559B8F21B44DB5E007CE142 /* owf1_binary_valid_2.owf in CopyFiles */,
+				6559B8F31B44DB5E007CE142 /* owf1_binary_valid_3.owf in CopyFiles */,
+				6559B8F41B44DB5E007CE142 /* owf1_binary_valid_empty_all.owf in CopyFiles */,
+				6559B8F51B44DB5E007CE142 /* owf1_binary_valid_empty_channel.owf in CopyFiles */,
+				6559B8F61B44DB5E007CE142 /* owf1_binary_valid_empty_namespace.owf in CopyFiles */,
+				6559B8F71B44DB5E007CE142 /* owf1_binary_valid_empty_nan.owf in CopyFiles */,
+				6559B8F81B44DB5E007CE142 /* owf1_binary_valid_empty.owf in CopyFiles */,
+				6559B8F91B44DB5E007CE142 /* owf1_json_valid_1.json in CopyFiles */,
+				6559B8FA1B44DB5E007CE142 /* owf1_json_valid_2.json in CopyFiles */,
+				6559B8FB1B44DB5E007CE142 /* owf1_json_valid_3.json in CopyFiles */,
+				6559B8FC1B44DB5E007CE142 /* owf1_json_valid_empty_all.json in CopyFiles */,
+				6559B8FD1B44DB5E007CE142 /* owf1_json_valid_empty_channel.json in CopyFiles */,
+				6559B8FE1B44DB5E007CE142 /* owf1_json_valid_empty_namespace.json in CopyFiles */,
+				6559B8FF1B44DB5E007CE142 /* owf1_json_valid_empty_nan.json in CopyFiles */,
+				6559B9001B44DB5E007CE142 /* owf1_json_valid_empty.json in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BF54FDDF1B39BFC300760CAE /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -25,6 +66,22 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		6559B8E11B44DB5E007CE142 /* owf1_binary_valid_1.owf */ = {isa = PBXFileReference; lastKnownFileType = file; name = owf1_binary_valid_1.owf; path = ../../example/owf1_binary_valid_1.owf; sourceTree = "<group>"; };
+		6559B8E21B44DB5E007CE142 /* owf1_binary_valid_2.owf */ = {isa = PBXFileReference; lastKnownFileType = file; name = owf1_binary_valid_2.owf; path = ../../example/owf1_binary_valid_2.owf; sourceTree = "<group>"; };
+		6559B8E31B44DB5E007CE142 /* owf1_binary_valid_3.owf */ = {isa = PBXFileReference; lastKnownFileType = file; name = owf1_binary_valid_3.owf; path = ../../example/owf1_binary_valid_3.owf; sourceTree = "<group>"; };
+		6559B8E41B44DB5E007CE142 /* owf1_binary_valid_empty_all.owf */ = {isa = PBXFileReference; lastKnownFileType = file; name = owf1_binary_valid_empty_all.owf; path = ../../example/owf1_binary_valid_empty_all.owf; sourceTree = "<group>"; };
+		6559B8E51B44DB5E007CE142 /* owf1_binary_valid_empty_channel.owf */ = {isa = PBXFileReference; lastKnownFileType = file; name = owf1_binary_valid_empty_channel.owf; path = ../../example/owf1_binary_valid_empty_channel.owf; sourceTree = "<group>"; };
+		6559B8E61B44DB5E007CE142 /* owf1_binary_valid_empty_namespace.owf */ = {isa = PBXFileReference; lastKnownFileType = file; name = owf1_binary_valid_empty_namespace.owf; path = ../../example/owf1_binary_valid_empty_namespace.owf; sourceTree = "<group>"; };
+		6559B8E71B44DB5E007CE142 /* owf1_binary_valid_empty_nan.owf */ = {isa = PBXFileReference; lastKnownFileType = file; name = owf1_binary_valid_empty_nan.owf; path = ../../example/owf1_binary_valid_empty_nan.owf; sourceTree = "<group>"; };
+		6559B8E81B44DB5E007CE142 /* owf1_binary_valid_empty.owf */ = {isa = PBXFileReference; lastKnownFileType = file; name = owf1_binary_valid_empty.owf; path = ../../example/owf1_binary_valid_empty.owf; sourceTree = "<group>"; };
+		6559B8E91B44DB5E007CE142 /* owf1_json_valid_1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = owf1_json_valid_1.json; path = ../../example/owf1_json_valid_1.json; sourceTree = "<group>"; };
+		6559B8EA1B44DB5E007CE142 /* owf1_json_valid_2.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = owf1_json_valid_2.json; path = ../../example/owf1_json_valid_2.json; sourceTree = "<group>"; };
+		6559B8EB1B44DB5E007CE142 /* owf1_json_valid_3.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = owf1_json_valid_3.json; path = ../../example/owf1_json_valid_3.json; sourceTree = "<group>"; };
+		6559B8EC1B44DB5E007CE142 /* owf1_json_valid_empty_all.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = owf1_json_valid_empty_all.json; path = ../../example/owf1_json_valid_empty_all.json; sourceTree = "<group>"; };
+		6559B8ED1B44DB5E007CE142 /* owf1_json_valid_empty_channel.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = owf1_json_valid_empty_channel.json; path = ../../example/owf1_json_valid_empty_channel.json; sourceTree = "<group>"; };
+		6559B8EE1B44DB5E007CE142 /* owf1_json_valid_empty_namespace.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = owf1_json_valid_empty_namespace.json; path = ../../example/owf1_json_valid_empty_namespace.json; sourceTree = "<group>"; };
+		6559B8EF1B44DB5E007CE142 /* owf1_json_valid_empty_nan.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = owf1_json_valid_empty_nan.json; path = ../../example/owf1_json_valid_empty_nan.json; sourceTree = "<group>"; };
+		6559B8F01B44DB5E007CE142 /* owf1_json_valid_empty.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = owf1_json_valid_empty.json; path = ../../example/owf1_json_valid_empty.json; sourceTree = "<group>"; };
 		BF1720181B39C3620019D98E /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		BF459D5D1B39BFE000BB7117 /* test.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = test.c; sourceTree = "<group>"; };
 		BF459D661B39C00900BB7117 /* libowf.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libowf.dylib; path = "../../../../../Users/numinit/Library/Developer/Xcode/DerivedData/libowf-bncwbbozneuxmqbksnfnfvbgwesh/Build/Products/Debug/libowf.dylib"; sourceTree = "<group>"; };
@@ -44,6 +101,29 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		6559B9011B44DB83007CE142 /* example */ = {
+			isa = PBXGroup;
+			children = (
+				6559B8E11B44DB5E007CE142 /* owf1_binary_valid_1.owf */,
+				6559B8E21B44DB5E007CE142 /* owf1_binary_valid_2.owf */,
+				6559B8E31B44DB5E007CE142 /* owf1_binary_valid_3.owf */,
+				6559B8E41B44DB5E007CE142 /* owf1_binary_valid_empty_all.owf */,
+				6559B8E51B44DB5E007CE142 /* owf1_binary_valid_empty_channel.owf */,
+				6559B8E61B44DB5E007CE142 /* owf1_binary_valid_empty_namespace.owf */,
+				6559B8E71B44DB5E007CE142 /* owf1_binary_valid_empty_nan.owf */,
+				6559B8E81B44DB5E007CE142 /* owf1_binary_valid_empty.owf */,
+				6559B8E91B44DB5E007CE142 /* owf1_json_valid_1.json */,
+				6559B8EA1B44DB5E007CE142 /* owf1_json_valid_2.json */,
+				6559B8EB1B44DB5E007CE142 /* owf1_json_valid_3.json */,
+				6559B8EC1B44DB5E007CE142 /* owf1_json_valid_empty_all.json */,
+				6559B8ED1B44DB5E007CE142 /* owf1_json_valid_empty_channel.json */,
+				6559B8EE1B44DB5E007CE142 /* owf1_json_valid_empty_namespace.json */,
+				6559B8EF1B44DB5E007CE142 /* owf1_json_valid_empty_nan.json */,
+				6559B8F01B44DB5E007CE142 /* owf1_json_valid_empty.json */,
+			);
+			name = example;
+			sourceTree = "<group>";
+		};
 		BF459D5C1B39BFE000BB7117 /* test */ = {
 			isa = PBXGroup;
 			children = (
@@ -56,6 +136,7 @@
 		BF54FDD81B39BFC300760CAE = {
 			isa = PBXGroup;
 			children = (
+				6559B9011B44DB83007CE142 /* example */,
 				BF1720181B39C3620019D98E /* CoreFoundation.framework */,
 				BF459D661B39C00900BB7117 /* libowf.dylib */,
 				BF459D5C1B39BFE000BB7117 /* test */,
@@ -81,6 +162,7 @@
 				BF54FDDD1B39BFC300760CAE /* Sources */,
 				BF54FDDE1B39BFC300760CAE /* Frameworks */,
 				BF54FDDF1B39BFC300760CAE /* CopyFiles */,
+				6559B8E01B44DA9F007CE142 /* CopyFiles */,
 			);
 			buildRules = (
 			);
