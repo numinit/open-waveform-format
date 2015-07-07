@@ -16,6 +16,14 @@ The Open Waveform Format (OWF) is a new format for transmitting captured wavefor
 Read more on our [wiki](https://github.com/medicalinformaticscorp/open-waveform-format/wiki)
 
 ### Supported languages
+|Language| JSON | Binary |
+|--------|------|--------|
+| C | planned | planned |
+| C++ | planned | planned |
+| C# | planned | Serialize only|
+| JS (NodeJS) | planned | planned |
+| Ruby | planned | Serialize only |
+| Elixir | planned | planned |
 
 |Language|JSON|Binary|
 |:-------|:---|:-----|
@@ -43,6 +51,7 @@ Please explicitly enumerate any 3rd-party libraries you depend on in your code c
 *We are unable to accept any code licensed under or requiring copyleft licenses (GPL, AGPL, etc.).*
 
 *All code submitted (excluding supporting libraries) is considered as being relicensable under the Apache License 2.0.* If this is not acceptable, please do not submit code.
+
 
 ## Scripting utilities
 
