@@ -78,30 +78,35 @@ int owf_compare(owf_t *lhs, owf_t *rhs);
 bool owf_size(owf_t *owf, owf_error_t *error, uint32_t *output_size);
 
 void owf_channel_init(owf_channel_t *channel);
-int owf_channel_compare(owf_channel_t *lhs, owf_channel_t *rhs);
 void owf_channel_destroy(owf_channel_t *channel, owf_alloc_t *allocator);
+int owf_channel_compare(owf_channel_t *lhs, owf_channel_t *rhs);
 bool owf_channel_size(owf_channel_t *channel, owf_error_t *error, uint32_t *output_size);
 
 void owf_namespace_init(owf_namespace_t *ns);
 void owf_namespace_destroy(owf_namespace_t *ns, owf_alloc_t *allocator);
+int owf_namespace_compare(owf_namespace_t *lhs, owf_namespace_t *rhs);
 bool owf_namespace_covers(owf_namespace_t *ns, owf_time_t timestamp);
 bool owf_namespace_size(owf_namespace_t *ns, owf_error_t *error, uint32_t *output_size);
 
 void owf_signal_init(owf_signal_t *signal);
 void owf_signal_destroy(owf_signal_t *signal, owf_alloc_t *allocator);
+int owf_signal_compare(owf_signal_t *lhs, owf_signal_t *rhs);
 bool owf_signal_size(owf_signal_t *signal, owf_error_t *error, uint32_t *output_size);
 
 void owf_event_init(owf_event_t *event);
 void owf_event_destroy(owf_event_t *event, owf_alloc_t *allocator);
+int owf_event_compare(owf_event_t *lhs, owf_event_t *rhs);
 bool owf_event_size(owf_event_t *event, owf_error_t *error, uint32_t *output_size);
 
 void owf_alarm_init(owf_alarm_t *alarm);
 void owf_alarm_destroy(owf_alarm_t *alarm, owf_alloc_t *allocator);
+int owf_alarm_compare(owf_alarm_t *lhs, owf_alarm_t *rhs);
 bool owf_alarm_size(owf_alarm_t *alarm, owf_error_t *error, uint32_t *output_size);
 
 void owf_str_init(owf_str_t *str);
 bool owf_str_reserve(owf_str_t *str, owf_alloc_t *allocator, owf_error_t *error, uint32_t length);
 void owf_str_destroy(owf_str_t *str, owf_alloc_t *allocator);
+int owf_str_compare(owf_str_t *lhs, owf_str_t *rhs);
 uint32_t owf_str_length(owf_str_t *str);
 uint32_t owf_str_padding(uint32_t length);
 bool owf_str_size(owf_str_t *str, owf_error_t *error, uint32_t *output_size);
@@ -115,12 +120,29 @@ uint32_t owf_memoize_cache(owf_memoize_t *memoize, uint32_t value);
 
 void owf_array_init(owf_array_t *arr);
 void owf_array_destroy(owf_array_t *arr, owf_alloc_t *allocator);
+int owf_array_binary_compare(owf_array_t *lhs, owf_array_t *rhs, uint32_t width);
 bool owf_array_reserve(owf_array_t *arr, owf_alloc_t *allocator, owf_error_t *error, uint32_t capacity, uint32_t width);
 bool owf_array_reserve_exactly(owf_array_t *arr, owf_alloc_t *allocator, owf_error_t *error, uint32_t capacity, uint32_t width);
 bool owf_array_push(owf_array_t *arr, owf_alloc_t *allocator, owf_error_t *error, void *obj, uint32_t width);
 bool owf_array_put(owf_array_t *arr, owf_error_t *error, void *obj, uint32_t idx, uint32_t width);
 void *owf_array_at(owf_array_t *arr, owf_error_t *error, uint32_t idx, uint32_t width);
 void *owf_array_ptr_for(owf_array_t *arr, owf_error_t *error, uint32_t idx, uint32_t width);
+
+#define OWF_ARRAY_SEMANTIC_COMPARE(_type, _lhs, _rhs, _element_fn) \
+    do { \
+        uint32_t lhs_len = OWF_ARRAY_LEN(_lhs), rhs_len = OWF_ARRAY_LEN(_rhs); \
+        if (lhs_len == rhs_len) { \
+            for (uint32_t i = 0; i < lhs_len; i++) { \
+                _type *lv = OWF_ARRAY_PTR(_lhs, _type, i), *rv = OWF_ARRAY_PTR(_rhs, _type, i); \
+                int ret = _element_fn(lv, rv); \
+                if (ret != 0) { \
+                    return ret; \
+                } \
+            } \
+        } else { \
+            return lhs_len < rhs_len ? -1 : 1; \
+        } \
+    } while (0)
 
 #define OWF_ARRAY_TYPED_PTR(arr, type) ((type *)((&(arr))->ptr))
 #define OWF_ARRAY_PTR(arr, type, idx) (&OWF_ARRAY_TYPED_PTR(arr, type)[idx])

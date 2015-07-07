@@ -16,7 +16,8 @@ void owf_destroy(owf_t *owf, owf_alloc_t *allocator) {
 }
 
 int owf_compare(owf_t *lhs, owf_t *rhs) {
-
+    OWF_ARRAY_SEMANTIC_COMPARE(owf_channel_t, lhs->channels, rhs->channels, owf_channel_compare);
+    return 0;
 }
 
 bool owf_size(owf_t *owf, owf_error_t *error, uint32_t *output_size) {
@@ -51,6 +52,16 @@ void owf_channel_destroy(owf_channel_t *channel, owf_alloc_t *allocator) {
         owf_namespace_destroy(OWF_ARRAY_PTR(channel->namespaces, owf_namespace_t, i), allocator);
     }
     owf_array_destroy(&channel->namespaces, allocator);
+}
+
+int owf_channel_compare(owf_channel_t *lhs, owf_channel_t *rhs) {
+    int ret;
+    if ((ret = owf_str_compare(&lhs->id, &rhs->id)) != 0) {
+        return ret;
+    } else {
+        OWF_ARRAY_SEMANTIC_COMPARE(owf_namespace_t, lhs->namespaces, rhs->namespaces, owf_namespace_compare);
+        return 0;
+    }
 }
 
 bool owf_channel_size(owf_channel_t *channel, owf_error_t *error, uint32_t *output_size) {
@@ -108,6 +119,18 @@ void owf_namespace_destroy(owf_namespace_t *ns, owf_alloc_t *allocator) {
         owf_alarm_destroy(OWF_ARRAY_PTR(ns->alarms, owf_alarm_t, i), allocator);
     }
     owf_array_destroy(&ns->alarms, allocator);
+}
+
+int owf_namespace_compare(owf_namespace_t *lhs, owf_namespace_t *rhs) {
+    if (lhs->t0 != rhs->t0) {
+        return lhs->t0 < rhs->t0 ? -1 : 1;
+    } else if (rhs->dt != lhs->dt) {
+        return lhs->dt < rhs->dt ? -1 : 1;
+    }
+    OWF_ARRAY_SEMANTIC_COMPARE(owf_signal_t, lhs->signals, rhs->signals, owf_signal_compare);
+    OWF_ARRAY_SEMANTIC_COMPARE(owf_event_t, lhs->events, rhs->events, owf_event_compare);
+    OWF_ARRAY_SEMANTIC_COMPARE(owf_alarm_t, lhs->alarms, rhs->alarms, owf_alarm_compare);
+    return 0;
 }
 
 bool owf_namespace_covers(owf_namespace_t *ns, owf_time_t timestamp) {
@@ -179,6 +202,17 @@ void owf_signal_destroy(owf_signal_t *signal, owf_alloc_t *allocator) {
     owf_array_destroy(&signal->samples, allocator);
 }
 
+int owf_signal_compare(owf_signal_t *lhs, owf_signal_t *rhs) {
+    int ret;
+    if ((ret = owf_str_compare(&lhs->id, &rhs->id)) != 0) {
+        return ret;
+    } else if ((ret = owf_str_compare(&lhs->unit, &rhs->unit)) != 0) {
+        return ret;
+    } else {
+        return owf_array_binary_compare(&lhs->samples, &rhs->samples, sizeof(double));
+    }
+}
+
 bool owf_signal_size(owf_signal_t *signal, owf_error_t *error, uint32_t *output_size) {
     if (owf_memoize_stale(&signal->memoize)) {
         uint32_t size = 0, component_size = 0;
@@ -220,6 +254,14 @@ void owf_event_destroy(owf_event_t *event, owf_alloc_t *allocator) {
     owf_str_destroy(&event->message, allocator);
 }
 
+int owf_event_compare(owf_event_t *lhs, owf_event_t *rhs) {
+    if (lhs->t0 != rhs->t0) {
+        return lhs->t0 < rhs->t0 ? -1 : 1;
+    } else {
+        return owf_str_compare(&lhs->message, &rhs->message);
+    }
+}
+
 bool owf_event_size(owf_event_t *event, owf_error_t *error, uint32_t *output_size) {
     if (owf_memoize_stale(&event->memoize)) {
         uint32_t size = sizeof(owf_time_t), message_size = 0;
@@ -248,6 +290,24 @@ void owf_alarm_init(owf_alarm_t *alarm) {
 void owf_alarm_destroy(owf_alarm_t *alarm, owf_alloc_t *allocator) {
     owf_str_destroy(&alarm->type, allocator);
     owf_str_destroy(&alarm->message, allocator);
+}
+
+int owf_alarm_compare(owf_alarm_t *lhs, owf_alarm_t *rhs) {
+    int ret;
+
+    if (lhs->t0 != rhs->t0) {
+        return lhs->t0 < rhs->t0 ? -1 : 1;
+    } else if (lhs->dt != rhs->dt) {
+        return lhs->dt < rhs->dt ? -1 : 1;
+    } else if (lhs->details.level != rhs->details.level) {
+        return lhs->details.level < rhs->details.level ? -1 : 1;
+    } else if (lhs->details.volume != rhs->details.volume) {
+        return lhs->details.volume < rhs->details.volume ? -1 : 1;
+    } else if ((ret = owf_str_compare(&lhs->type, &rhs->type)) != 0) {
+        return ret;
+    } else {
+        return owf_str_compare(&lhs->message, &rhs->message);
+    }
 }
 
 bool owf_alarm_size(owf_alarm_t *alarm, owf_error_t *error, uint32_t *output_size) {
@@ -297,6 +357,16 @@ bool owf_str_reserve(owf_str_t *str, owf_alloc_t *allocator, owf_error_t *error,
 
 void owf_str_destroy(owf_str_t *str, owf_alloc_t *allocator) {
     owf_array_destroy(&str->bytes, allocator);
+}
+
+int owf_str_compare(owf_str_t *lhs, owf_str_t *rhs) {
+    uint32_t lhs_len = owf_str_length(lhs), rhs_len = owf_str_length(rhs);
+    if (lhs_len == rhs_len) {
+        const char *p1 = OWF_STR_PTR(*lhs), *p2 = OWF_STR_PTR(*rhs);
+        return strncmp(p1, p2, lhs_len);
+    } else {
+        return lhs_len < rhs_len ? -1 : 1;
+    }
 }
 
 uint32_t owf_str_length(owf_str_t *str) {
@@ -355,12 +425,13 @@ void owf_array_destroy(owf_array_t *arr, owf_alloc_t *allocator) {
     owf_free(allocator, arr->ptr);
 }
 
-int owf_array_compare(owf_array_t *lhs, owf_array_t *rhs, uint32_t width) {
-    uint32_t lhs_length = OWF_ARRAY_LEN(*lhs), rhs_length = OWF_ARRAY_LEN(*rhs);
-    if (lhs_length == rhs_length) {
-        // Compare each object
+int owf_array_binary_compare(owf_array_t *lhs, owf_array_t *rhs, uint32_t width) {
+    uint32_t lhs_len = OWF_ARRAY_LEN(*lhs), rhs_len = OWF_ARRAY_LEN(*rhs);
+    if (lhs_len == rhs_len) {
+        uint32_t bytes = lhs_len * width;
+        return memcmp(lhs->ptr, rhs->ptr, bytes);
     } else {
-        return lhs_length < rhs_length ? -1 : 1;
+        return lhs_len < rhs_len ? -1 : 1;
     }
 }
 

@@ -25,7 +25,7 @@
 		6559B9001B44DB5E007CE142 /* owf1_json_valid_empty.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6559B8F01B44DB5E007CE142 /* owf1_json_valid_empty.json */; };
 		BF1720191B39C3620019D98E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1720181B39C3620019D98E /* CoreFoundation.framework */; };
 		BF459D5E1B39BFE000BB7117 /* test.c in Sources */ = {isa = PBXBuildFile; fileRef = BF459D5D1B39BFE000BB7117 /* test.c */; };
-		BF459D671B39C00900BB7117 /* libowf.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459D661B39C00900BB7117 /* libowf.dylib */; };
+		BF76FFA41B4C9AAB006076D2 /* libowf.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF76FFA31B4C9AAB006076D2 /* libowf.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -84,8 +84,8 @@
 		6559B8F01B44DB5E007CE142 /* owf1_json_valid_empty.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = owf1_json_valid_empty.json; path = ../../example/owf1_json_valid_empty.json; sourceTree = "<group>"; };
 		BF1720181B39C3620019D98E /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		BF459D5D1B39BFE000BB7117 /* test.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = test.c; sourceTree = "<group>"; };
-		BF459D661B39C00900BB7117 /* libowf.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libowf.dylib; path = "../../../../../Users/numinit/Library/Developer/Xcode/DerivedData/libowf-bncwbbozneuxmqbksnfnfvbgwesh/Build/Products/Debug/libowf.dylib"; sourceTree = "<group>"; };
 		BF54FDE11B39BFC300760CAE /* libowf-test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "libowf-test"; sourceTree = BUILT_PRODUCTS_DIR; };
+		BF76FFA31B4C9AAB006076D2 /* libowf.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libowf.dylib; path = build/Release/libowf.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,8 +93,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF76FFA41B4C9AAB006076D2 /* libowf.dylib in Frameworks */,
 				BF1720191B39C3620019D98E /* CoreFoundation.framework in Frameworks */,
-				BF459D671B39C00900BB7117 /* libowf.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -136,9 +136,9 @@
 		BF54FDD81B39BFC300760CAE = {
 			isa = PBXGroup;
 			children = (
+				BF76FFA31B4C9AAB006076D2 /* libowf.dylib */,
 				6559B9011B44DB83007CE142 /* example */,
 				BF1720181B39C3620019D98E /* CoreFoundation.framework */,
-				BF459D661B39C00900BB7117 /* libowf.dylib */,
 				BF459D5C1B39BFE000BB7117 /* test */,
 				BF54FDE21B39BFC300760CAE /* Products */,
 			);
@@ -304,6 +304,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/libowf-bncwbbozneuxmqbksnfnfvbgwesh/Build/Products/Debug",
+					"$(PROJECT_DIR)/build/Release",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -320,6 +321,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/libowf-bncwbbozneuxmqbksnfnfvbgwesh/Build/Products/Debug",
+					"$(PROJECT_DIR)/build/Release",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
