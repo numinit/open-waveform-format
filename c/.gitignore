@@ -1,0 +1,29 @@
+# Metadata
+.DS_Store
+*.swp
+*.swo
+
+# Generated files
+*.gem
+html
+
+# Compiled files
+*.o
+*.a
+*.lib
+*.out
+*.so
+*.dylib
+*.dll
+*.exe
+build/*
+msvc/build/*
+
+# Xcode userdata
+xcuserdata
+
+# MSVC userdata
+*.suo
+*.sdf
+*.opensdf
+*.v12

@@ -1,0 +1,383 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		BF54FDD11B39BF1800760CAE /* alloc.c in Sources */ = {isa = PBXBuildFile; fileRef = BF54FDCA1B39BF0900760CAE /* alloc.c */; };
+		BF54FDD21B39BF1800760CAE /* arith.c in Sources */ = {isa = PBXBuildFile; fileRef = BF54FDCB1B39BF0900760CAE /* arith.c */; };
+		BF54FDD31B39BF1800760CAE /* array.c in Sources */ = {isa = PBXBuildFile; fileRef = BF54FDCC1B39BF0900760CAE /* array.c */; };
+		BF54FDD51B39BF1800760CAE /* platform.c in Sources */ = {isa = PBXBuildFile; fileRef = BF54FDCE1B39BF0900760CAE /* platform.c */; };
+		BF54FDD61B39BF1800760CAE /* reader.c in Sources */ = {isa = PBXBuildFile; fileRef = BF54FDCF1B39BF0900760CAE /* reader.c */; };
+		BF54FDD71B39BF1800760CAE /* types.c in Sources */ = {isa = PBXBuildFile; fileRef = BF54FDD01B39BF0900760CAE /* types.c */; };
+		BFBA63761B45E5CB0066A119 /* binary.c in Sources */ = {isa = PBXBuildFile; fileRef = BFBA63751B45E5C60066A119 /* binary.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		BF459D641B39BFE900BB7117 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BF459D601B39BFE900BB7117 /* libowf-test.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = BF54FDE11B39BFC300760CAE;
+			remoteInfo = "libowf-test";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		BF459D601B39BFE900BB7117 /* libowf-test.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "libowf-test.xcodeproj"; sourceTree = "<group>"; };
+		BF54FDBE1B39BF0900760CAE /* alloc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = alloc.h; sourceTree = "<group>"; };
+		BF54FDBF1B39BF0900760CAE /* arith.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = arith.h; sourceTree = "<group>"; };
+		BF54FDC01B39BF0900760CAE /* array.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = array.h; sourceTree = "<group>"; };
+		BF54FDC21B39BF0900760CAE /* error.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = error.h; sourceTree = "<group>"; };
+		BF54FDC31B39BF0900760CAE /* platform.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = platform.h; sourceTree = "<group>"; };
+		BF54FDC41B39BF0900760CAE /* reader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = reader.h; sourceTree = "<group>"; };
+		BF54FDC51B39BF0900760CAE /* types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = "<group>"; };
+		BF54FDC61B39BF0900760CAE /* version.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = version.h; sourceTree = "<group>"; };
+		BF54FDC71B39BF0900760CAE /* owf.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = owf.h; sourceTree = "<group>"; };
+		BF54FDCA1B39BF0900760CAE /* alloc.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = alloc.c; sourceTree = "<group>"; };
+		BF54FDCB1B39BF0900760CAE /* arith.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = arith.c; sourceTree = "<group>"; };
+		BF54FDCC1B39BF0900760CAE /* array.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = array.c; sourceTree = "<group>"; };
+		BF54FDCE1B39BF0900760CAE /* platform.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = platform.c; sourceTree = "<group>"; };
+		BF54FDCF1B39BF0900760CAE /* reader.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = reader.c; sourceTree = "<group>"; };
+		BF54FDD01B39BF0900760CAE /* types.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = types.c; sourceTree = "<group>"; };
+		BFBA63731B45E5B80066A119 /* binary.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = binary.h; sourceTree = "<group>"; };
+		BFBA63751B45E5C60066A119 /* binary.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = binary.c; sourceTree = "<group>"; };
+		BFE790D31B39BE3900F4A24B /* libowf.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libowf.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		BFE790D01B39BE3900F4A24B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		BF459D611B39BFE900BB7117 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BF459D651B39BFE900BB7117 /* libowf-test */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BF54FDBC1B39BF0900760CAE /* include */ = {
+			isa = PBXGroup;
+			children = (
+				BF54FDBD1B39BF0900760CAE /* owf */,
+				BF54FDC71B39BF0900760CAE /* owf.h */,
+			);
+			name = include;
+			path = ../include;
+			sourceTree = "<group>";
+		};
+		BF54FDBD1B39BF0900760CAE /* owf */ = {
+			isa = PBXGroup;
+			children = (
+				BF54FDBE1B39BF0900760CAE /* alloc.h */,
+				BF54FDBF1B39BF0900760CAE /* arith.h */,
+				BF54FDC01B39BF0900760CAE /* array.h */,
+				BF54FDC21B39BF0900760CAE /* error.h */,
+				BF54FDC31B39BF0900760CAE /* platform.h */,
+				BF54FDC41B39BF0900760CAE /* reader.h */,
+				BFBA63721B45E5B80066A119 /* reader */,
+				BF54FDC51B39BF0900760CAE /* types.h */,
+				BF54FDC61B39BF0900760CAE /* version.h */,
+			);
+			path = owf;
+			sourceTree = "<group>";
+		};
+		BF54FDC81B39BF0900760CAE /* src */ = {
+			isa = PBXGroup;
+			children = (
+				BF54FDC91B39BF0900760CAE /* owf */,
+			);
+			name = src;
+			path = ../src;
+			sourceTree = "<group>";
+		};
+		BF54FDC91B39BF0900760CAE /* owf */ = {
+			isa = PBXGroup;
+			children = (
+				BF54FDCA1B39BF0900760CAE /* alloc.c */,
+				BF54FDCB1B39BF0900760CAE /* arith.c */,
+				BF54FDCC1B39BF0900760CAE /* array.c */,
+				BF54FDCE1B39BF0900760CAE /* platform.c */,
+				BF54FDCF1B39BF0900760CAE /* reader.c */,
+				BFBA63741B45E5C60066A119 /* reader */,
+				BF54FDD01B39BF0900760CAE /* types.c */,
+			);
+			path = owf;
+			sourceTree = "<group>";
+		};
+		BFBA63721B45E5B80066A119 /* reader */ = {
+			isa = PBXGroup;
+			children = (
+				BFBA63731B45E5B80066A119 /* binary.h */,
+			);
+			path = reader;
+			sourceTree = "<group>";
+		};
+		BFBA63741B45E5C60066A119 /* reader */ = {
+			isa = PBXGroup;
+			children = (
+				BFBA63751B45E5C60066A119 /* binary.c */,
+			);
+			path = reader;
+			sourceTree = "<group>";
+		};
+		BFE790CA1B39BE3900F4A24B = {
+			isa = PBXGroup;
+			children = (
+				BF459D601B39BFE900BB7117 /* libowf-test.xcodeproj */,
+				BF54FDBC1B39BF0900760CAE /* include */,
+				BF54FDC81B39BF0900760CAE /* src */,
+				BFE790D41B39BE3900F4A24B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		BFE790D41B39BE3900F4A24B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BFE790D31B39BE3900F4A24B /* libowf.dylib */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		BFE790D11B39BE3900F4A24B /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		BFE790D21B39BE3900F4A24B /* libowf */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BFE790D71B39BE3900F4A24B /* Build configuration list for PBXNativeTarget "libowf" */;
+			buildPhases = (
+				BFE790CF1B39BE3900F4A24B /* Sources */,
+				BFE790D01B39BE3900F4A24B /* Frameworks */,
+				BFE790D11B39BE3900F4A24B /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = libowf;
+			productName = libowf;
+			productReference = BFE790D31B39BE3900F4A24B /* libowf.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		BFE790CB1B39BE3900F4A24B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0630;
+				ORGANIZATIONNAME = "Medical Informatics Corp";
+				TargetAttributes = {
+					BFE790D21B39BE3900F4A24B = {
+						CreatedOnToolsVersion = 6.3.2;
+					};
+				};
+			};
+			buildConfigurationList = BFE790CE1B39BE3900F4A24B /* Build configuration list for PBXProject "libowf" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = BFE790CA1B39BE3900F4A24B;
+			productRefGroup = BFE790D41B39BE3900F4A24B /* Products */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = BF459D611B39BFE900BB7117 /* Products */;
+					ProjectRef = BF459D601B39BFE900BB7117 /* libowf-test.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				BFE790D21B39BE3900F4A24B /* libowf */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		BF459D651B39BFE900BB7117 /* libowf-test */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "libowf-test";
+			remoteRef = BF459D641B39BFE900BB7117 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXSourcesBuildPhase section */
+		BFE790CF1B39BE3900F4A24B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BF54FDD31B39BF1800760CAE /* array.c in Sources */,
+				BF54FDD71B39BF1800760CAE /* types.c in Sources */,
+				BFBA63761B45E5CB0066A119 /* binary.c in Sources */,
+				BF54FDD51B39BF1800760CAE /* platform.c in Sources */,
+				BF54FDD21B39BF1800760CAE /* arith.c in Sources */,
+				BF54FDD61B39BF1800760CAE /* reader.c in Sources */,
+				BF54FDD11B39BF1800760CAE /* alloc.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		BFE790D51B39BE3900F4A24B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		BFE790D61B39BE3900F4A24B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		BFE790D81B39BE3900F4A24B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = lib;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(PROJECT_DIR)/../include",
+				);
+				PRODUCT_NAME = owf;
+				PUBLIC_HEADERS_FOLDER_PATH = /usr/local/include;
+				USER_HEADER_SEARCH_PATHS = "";
+			};
+			name = Debug;
+		};
+		BFE790D91B39BE3900F4A24B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = lib;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(PROJECT_DIR)/../include",
+				);
+				PRODUCT_NAME = owf;
+				PUBLIC_HEADERS_FOLDER_PATH = /usr/local/include;
+				USER_HEADER_SEARCH_PATHS = "";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		BFE790CE1B39BE3900F4A24B /* Build configuration list for PBXProject "libowf" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BFE790D51B39BE3900F4A24B /* Debug */,
+				BFE790D61B39BE3900F4A24B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BFE790D71B39BE3900F4A24B /* Build configuration list for PBXNativeTarget "libowf" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BFE790D81B39BE3900F4A24B /* Debug */,
+				BFE790D91B39BE3900F4A24B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = BFE790CB1B39BE3900F4A24B /* Project object */;
+}
