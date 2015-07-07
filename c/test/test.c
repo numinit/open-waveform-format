@@ -111,7 +111,7 @@ static bool owf_test_binary_reader_visitor(owf_reader_t *reader, owf_reader_ctx_
     return true;
 }
 
-static bool owf_test_binary_reader_read_file(const char *filename, owf_binary_reader_t *binary, owf_alloc_t *alloc, owf_buffer_t *buf, owf_reader_visit_cb_t visitor) {
+static bool owf_test_binary_reader_read_file(const char *filename, owf_binary_reader_t *binary, owf_alloc_t *alloc, owf_buffer_t *buf, owf_visit_cb_t visitor) {
     FILE *f = fopen(filename, "rb");
     void *dest;
     size_t size;
@@ -165,7 +165,7 @@ static bool owf_test_binary_reader_read_file(const char *filename, owf_binary_re
     return true;
 }
 
-static bool owf_test_binary_reader_open(owf_binary_reader_t *reader, const char *filename, owf_alloc_t *alloc, owf_reader_visit_cb_t visitor) {
+static bool owf_test_binary_reader_open(owf_binary_reader_t *reader, const char *filename, owf_alloc_t *alloc, owf_visit_cb_t visitor) {
     FILE *f = fopen(filename, "rb");
     if (f == NULL) {
         return false;
@@ -355,6 +355,10 @@ static int owf_test_binary_reader_materialize_buffer_valid_empty(void) {
     return OWF_TEST_MATERIALIZE_BUFFER("binary_valid_empty", true);
 }
 
+static int owf_test_binary_writer_file_valid_empty(void) {
+    OWF_TEST_OK;
+}
+
 static owf_test_t tests[] = {
     {"binary_reader_visitor_file_valid_1", owf_test_binary_reader_visitor_file_valid_1},
     {"binary_reader_visitor_buffer_valid_1", owf_test_binary_reader_visitor_buffer_valid_1},
@@ -371,7 +375,8 @@ static owf_test_t tests[] = {
     {"binary_reader_materialize_file_valid_3", owf_test_binary_reader_materialize_file_valid_3},
     {"binary_reader_materialize_buffer_valid_3", owf_test_binary_reader_materialize_buffer_valid_3},
     {"binary_reader_materialize_file_valid_empty", owf_test_binary_reader_materialize_file_valid_empty},
-    {"binary_reader_materialize_buffer_valid_empty", owf_test_binary_reader_materialize_buffer_valid_empty}
+    {"binary_reader_materialize_buffer_valid_empty", owf_test_binary_reader_materialize_buffer_valid_empty},
+    { "binary_writer_file_valid_empty", owf_test_binary_writer_file_valid_empty }
 };
 
 static bool owf_test_opt(const char *opt, int argc, char **argv) {

@@ -173,23 +173,26 @@
   <ItemGroup>
     <ClCompile Include="..\src\owf\alloc.c" />
     <ClCompile Include="..\src\owf\arith.c" />
-    <ClCompile Include="..\src\owf\array.c" />
-    <ClCompile Include="..\src\owf\binary.c" />
     <ClCompile Include="..\src\owf\platform.c" />
     <ClCompile Include="..\src\owf\reader.c" />
+    <ClCompile Include="..\src\owf\reader\binary_reader.c" />
     <ClCompile Include="..\src\owf\types.c" />
+    <ClCompile Include="..\src\owf\version.c" />
+    <ClCompile Include="..\src\owf\writer.c" />
+    <ClCompile Include="..\src\owf\writer\binary_writer.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\owf.h" />
     <ClInclude Include="..\include\owf\alloc.h" />
     <ClInclude Include="..\include\owf\arith.h" />
-    <ClInclude Include="..\include\owf\array.h" />
-    <ClInclude Include="..\include\owf\binary.h" />
     <ClInclude Include="..\include\owf\error.h" />
     <ClInclude Include="..\include\owf\platform.h" />
     <ClInclude Include="..\include\owf\reader.h" />
+    <ClInclude Include="..\include\owf\reader\binary.h" />
     <ClInclude Include="..\include\owf\types.h" />
     <ClInclude Include="..\include\owf\version.h" />
+    <ClInclude Include="..\include\owf\writer.h" />
+    <ClInclude Include="..\include\owf\writer\binary.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

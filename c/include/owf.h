@@ -4,9 +4,17 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <assert.h>
+
+#ifndef _Bool
+#define _Bool int
+#endif
 
 #ifndef OWF_H
 #define OWF_H
+
+/** The OWF magic word */
+#define OWF_MAGIC 0x4f574631UL
 
 /**
  * Min/max

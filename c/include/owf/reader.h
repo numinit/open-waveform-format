@@ -31,8 +31,8 @@ typedef struct owf_reader_ctx {
 } owf_reader_ctx_t;
 
 typedef struct owf_reader owf_reader_t;
-typedef bool (*owf_reader_read_cb_t)(void *, size_t, void *);
-typedef bool (*owf_reader_visit_cb_t)(owf_reader_t *, owf_reader_ctx_t *, owf_reader_cb_type_t, void *);
+typedef bool (*owf_read_cb_t)(void *, const size_t, void *);
+typedef bool (*owf_visit_cb_t)(owf_reader_t *, owf_reader_ctx_t *, owf_reader_cb_type_t, void *);
 
 /**
  * Abstracts a reader.
@@ -49,14 +49,14 @@ struct owf_reader {
     owf_alloc_t *alloc;
 
     /** Callbacks */
-    owf_reader_read_cb_t read;
-    owf_reader_visit_cb_t visit;
+    owf_read_cb_t read;
+    owf_visit_cb_t visit;
 
     /** User data */
     void *data;
 };
 
-void owf_reader_init(owf_reader_t *reader, owf_alloc_t *alloc, owf_reader_read_cb_t read, owf_reader_visit_cb_t visitor, void *data);
+void owf_reader_init(owf_reader_t *reader, owf_alloc_t *alloc, owf_read_cb_t read, owf_visit_cb_t visitor, void *data);
 bool owf_reader_is_error(owf_reader_t *reader);
 const char *owf_reader_strerror(owf_reader_t *reader);
 bool owf_reader_materialize_cb(owf_reader_t *reader, owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *ptr);

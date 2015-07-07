@@ -1,25 +1,5 @@
 #include <owf/reader/binary.h>
 
-#define OWF_BINARY_SAFE_ADD32(binary, a, b) \
-    do { \
-        uint32_t tmp = owf_arith_safe_add32(a, b, &binary->reader.error); \
-        if (OWF_NOEXPECT(binary->reader.error.is_error)) { \
-            return false; \
-        } else { \
-            a = tmp; \
-        } \
-    } while (0)
-
-#define OWF_BINARY_SAFE_SUB32(binary, a, b) \
-    do { \
-        uint32_t tmp = owf_arith_safe_sub32(a, b, &binary->reader.error); \
-        if (OWF_NOEXPECT(binary->reader.error.is_error)) { \
-            return false; \
-        } else { \
-            a = tmp; \
-        } \
-    } while (0)
-
 #define OWF_BINARY_SAFE_READ(binary, ptr, length) \
     do { \
         /* Length of zero is a no-op */ \
@@ -27,14 +7,14 @@
             OWF_READER_ERRF(binary->reader, "read error (" OWF_PRINT_U32 " bytes)", (uint32_t)length); \
             return false; \
         } else { \
-            OWF_BINARY_SAFE_SUB32(binary, binary->segment_length, length); \
+            OWF_ARITH_SAFE_SUB32(binary->reader.error, binary->segment_length, length); \
         } \
     } while (0)
 
 #define OWF_BINARY_SAFE_VARIABLE_READ(binary, arr, len, elem_size, padding) \
     do { \
         uint32_t effective_length = len; \
-        OWF_BINARY_SAFE_ADD32(binary, effective_length, padding); \
+        OWF_ARITH_SAFE_ADD32(binary->reader.error, effective_length, padding); \
         \
         /* Length of zero is a no-op */ \
         if (OWF_EXPECT(effective_length > 0)) { \
@@ -67,21 +47,21 @@
         } \
     } while (0)
 
-void owf_binary_reader_init(owf_binary_reader_t *binary, owf_alloc_t *alloc, owf_reader_read_cb_t read, owf_reader_visit_cb_t visitor, void *data) {
+void owf_binary_reader_init(owf_binary_reader_t *binary, owf_alloc_t *alloc, owf_read_cb_t read, owf_visit_cb_t visitor, void *data) {
     owf_reader_init(&binary->reader, alloc, read, visitor, data);
     binary->segment_length = binary->skip_length = 0;
 }
 
-static bool owf_binary_reader_file_read_cb(void *dest, size_t size, void *data) {
+static bool owf_binary_reader_file_read_cb(void *dest, const size_t size, void *data) {
     FILE *ptr = (FILE *)data;
     return fread(dest, sizeof(uint8_t), size, ptr) == size;
 }
 
-void owf_binary_reader_init_file(owf_binary_reader_t *binary, FILE *file, owf_alloc_t *alloc, owf_reader_visit_cb_t visitor) {
+void owf_binary_reader_init_file(owf_binary_reader_t *binary, FILE *file, owf_alloc_t *alloc, owf_visit_cb_t visitor) {
     owf_reader_init(&binary->reader, alloc, owf_binary_reader_file_read_cb, visitor, file);
 }
 
-static bool owf_binary_reader_buffer_read_cb(void *dest, size_t size, void *data) {
+static bool owf_binary_reader_buffer_read_cb(void *dest, const size_t size, void *data) {
     owf_buffer_t *ptr = (owf_buffer_t *)data;
     size_t new_position = ptr->position + size;
     if (OWF_NOEXPECT(new_position > ptr->length)) {
@@ -95,12 +75,12 @@ static bool owf_binary_reader_buffer_read_cb(void *dest, size_t size, void *data
     return true;
 }
 
-void owf_binary_reader_init_buffer(owf_binary_reader_t *binary, owf_buffer_t *buf, owf_alloc_t *alloc, owf_reader_visit_cb_t visitor) {
+void owf_binary_reader_init_buffer(owf_binary_reader_t *binary, owf_buffer_t *buf, owf_alloc_t *alloc, owf_visit_cb_t visitor) {
     owf_reader_init(&binary->reader, alloc, owf_binary_reader_buffer_read_cb, visitor, buf);
 }
 
 const char *owf_binary_reader_strerror(owf_binary_reader_t *binary) {
-    return binary->reader.error.error;
+    return owf_reader_strerror(&binary->reader);
 }
 
 bool owf_binary_reader_unwrap(owf_binary_reader_t *binary, owf_binary_reader_cb_t cb, void *ptr) {
@@ -113,7 +93,7 @@ bool owf_binary_reader_unwrap(owf_binary_reader_t *binary, owf_binary_reader_cb_
         return false;
     } else {
         /* Subtract the length of what we just read, plus space for the length, and restore the modified length */
-        OWF_BINARY_SAFE_SUB32(binary, old_length, length);
+        OWF_ARITH_SAFE_SUB32(binary->reader.error, old_length, length);
         binary->segment_length = old_length;
         return true;
     }
@@ -143,7 +123,7 @@ bool owf_binary_reader_unwrap_top(owf_binary_reader_t *binary, owf_binary_reader
     while (binary->skip_length > 0) {
         const uint32_t to_skip = OWF_MIN(binary->skip_length, sizeof(binary->skip));
         OWF_BINARY_SAFE_READ(binary, binary->skip, to_skip);
-        OWF_BINARY_SAFE_SUB32(binary, binary->skip_length, to_skip);
+        OWF_ARITH_SAFE_SUB32(binary->reader.error, binary->skip_length, to_skip);
     }
 
     /* Ensure we have no trailing bytes */
@@ -216,10 +196,7 @@ bool owf_binary_reader_read_samples(owf_binary_reader_t *binary, void *ptr) {
     OWF_BINARY_SAFE_VARIABLE_READ(binary, signal->samples, length, sizeof(double), 0);
 
     /* Treat this memory as a union between a double and a uint64_t to protect strict-aliasing */
-    union {
-        double f64;
-        uint64_t u64;
-    } val;
+    owf_double_union_t val;
     
     /* Byteswap the samples */
     for (uint32_t i = 0; i < OWF_ARRAY_LEN(signal->samples); i++) {
@@ -235,9 +212,10 @@ bool owf_binary_reader_read_signal(owf_binary_reader_t *binary, void *ptr) {
     owf_signal_t *signal = &binary->reader.ctx.signal;
     owf_signal_init(signal);
 
-    if (OWF_NOEXPECT(!owf_binary_reader_unwrap(binary, owf_binary_reader_read_str, &signal->id) ||
-            !owf_binary_reader_unwrap(binary, owf_binary_reader_read_str, &signal->unit) ||
-            !owf_binary_reader_unwrap(binary, owf_binary_reader_read_samples, NULL))) {
+    if (OWF_NOEXPECT(
+        !owf_binary_reader_unwrap(binary, owf_binary_reader_read_str, &signal->id) ||
+        !owf_binary_reader_unwrap(binary, owf_binary_reader_read_str, &signal->unit) ||
+        !owf_binary_reader_unwrap(binary, owf_binary_reader_read_samples, NULL))) {
         return false;
     }
 
@@ -391,7 +369,7 @@ bool owf_binary_read(owf_binary_reader_t *binary) {
 }
 
 owf_t *owf_binary_materialize(owf_binary_reader_t *binary) {
-    owf_reader_visit_cb_t old_cb = binary->reader.visit;
+    owf_visit_cb_t old_cb = binary->reader.visit;
     binary->reader.visit = owf_reader_materialize_cb;
     if (OWF_NOEXPECT(!owf_binary_read(binary))) {
         return NULL;

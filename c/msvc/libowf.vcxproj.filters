@@ -19,11 +19,20 @@
     <Filter Include="Source Files\owf">
       <UniqueIdentifier>{924cf77a-e022-4803-9317-58893983b80c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\owf\reader">
+      <UniqueIdentifier>{b76b50f9-8519-4485-ad7f-089adb0dc14a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\owf\reader">
+      <UniqueIdentifier>{a7c4de33-caad-496a-bbd1-abd5eae8073c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\owf\writer">
+      <UniqueIdentifier>{8337a4e3-c240-4e87-a620-5e29d6797ef9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\owf\writer">
+      <UniqueIdentifier>{71bb6aaa-2f60-4a8a-8caa-4ccb2f795435}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\owf\binary.c">
-      <Filter>Source Files\owf</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\owf\reader.c">
       <Filter>Source Files\owf</Filter>
     </ClCompile>
@@ -36,10 +45,19 @@
     <ClCompile Include="..\src\owf\arith.c">
       <Filter>Source Files\owf</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\owf\array.c">
+    <ClCompile Include="..\src\owf\types.c">
       <Filter>Source Files\owf</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\owf\types.c">
+    <ClCompile Include="..\src\owf\writer.c">
+      <Filter>Source Files\owf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\owf\reader\binary_reader.c">
+      <Filter>Source Files\owf\reader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\owf\writer\binary_writer.c">
+      <Filter>Source Files\owf\writer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\owf\version.c">
       <Filter>Source Files\owf</Filter>
     </ClCompile>
   </ItemGroup>
@@ -48,9 +66,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\owf\reader.h">
-      <Filter>Header Files\owf</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\owf\binary.h">
       <Filter>Header Files\owf</Filter>
     </ClInclude>
     <ClInclude Include="..\include\owf\platform.h">
@@ -65,14 +80,20 @@
     <ClInclude Include="..\include\owf\arith.h">
       <Filter>Header Files\owf</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\owf\array.h">
-      <Filter>Header Files\owf</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\owf\error.h">
       <Filter>Header Files\owf</Filter>
     </ClInclude>
     <ClInclude Include="..\include\owf\types.h">
       <Filter>Header Files\owf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\owf\writer.h">
+      <Filter>Header Files\owf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\owf\reader\binary.h">
+      <Filter>Header Files\owf\reader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\owf\writer\binary.h">
+      <Filter>Header Files\owf\writer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
 #include <owf/reader.h>
 #include <owf/platform.h>
 
-void owf_reader_init(owf_reader_t *reader, owf_alloc_t *alloc, owf_reader_read_cb_t read, owf_reader_visit_cb_t visitor, void *data) {
+void owf_reader_init(owf_reader_t *reader, owf_alloc_t *alloc, owf_read_cb_t read, owf_visit_cb_t visitor, void *data) {
     reader->alloc = alloc;
     reader->read = read;
     reader->visit = visitor;
