@@ -7,14 +7,14 @@
 	<key>IDESourceControlProjectIdentifier</key>
 	<string>AF0802BB-0178-4F8C-A4F4-5CFDCF252D67</string>
 	<key>IDESourceControlProjectName</key>
-	<string>libowf</string>
+	<string>project</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
 		<key>4204BB83BFC5F76275DADE87D8CC1308FE473E36</key>
 		<string>mic.github.com:medicalinformaticscorp/open-waveform-format.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>c/xcode/libowf.xcodeproj</string>
+	<string>c/xcode/libowf.xcodeproj/project.xcworkspace</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>4204BB83BFC5F76275DADE87D8CC1308FE473E36</key>

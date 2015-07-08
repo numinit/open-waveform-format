@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #ifndef OWF_ERROR_H
 #define OWF_ERROR_H
@@ -17,15 +18,10 @@ typedef struct owf_error {
     bool is_error;
 } owf_error_t;
 
-#define OWF_ERR_SET(err, fmt) \
-    do { \
-        (&(err))->is_error = true; \
-        snprintf((&(err))->error, sizeof((&(err))->error), "%s:%d@%s: " fmt, __FILE__, __LINE__, __FUNCTION__); \
-    } while (0)
-#define OWF_ERR_SETF(err, fmt, ...) \
-    do { \
-        (&(err))->is_error = true; \
-        snprintf((&(err))->error, sizeof((&(err))->error), "%s:%d@%s: " fmt, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__); \
-    } while (0)
+void owf_error_init(owf_error_t *error);
+void owf_error_set(owf_error_t *error, const char *fmt, ...);
+
+#define OWF_ERR_SET(_err, _fmt) do {owf_error_set(_err, "%s:%d@%s: " _fmt, __FILE__, __LINE__, __FUNCTION__); } while (0)
+#define OWF_ERR_SETF(_err, _fmt, ...) do {owf_error_set(_err, "%s:%d@%s: " _fmt, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__); } while (0)
 
 #endif /* OWF_ERROR_H */

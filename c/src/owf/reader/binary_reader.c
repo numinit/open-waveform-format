@@ -1,54 +1,54 @@
 #include <owf/reader/binary.h>
 
-#define OWF_BINARY_SAFE_READ(binary, ptr, length) \
+#define OWF_BINARY_SAFE_READ(_binary, _ptr, _length) \
     do { \
         /* Length of zero is a no-op */ \
-        if (OWF_NOEXPECT(length > 0 && !binary->reader.read(ptr, length, binary->reader.data))) { \
-            OWF_READER_ERRF(binary->reader, "read error (" OWF_PRINT_U32 " bytes)", (uint32_t)length); \
+        if (OWF_NOEXPECT(_length > 0 && !_binary->reader.read(_ptr, _length, _binary->reader.data))) { \
+            OWF_ERR_SETF(_binary->reader.error, "read error (" OWF_PRINT_U32 " bytes)", (uint32_t)_length); \
             return false; \
         } else { \
-            OWF_ARITH_SAFE_SUB32(binary->reader.error, binary->segment_length, length); \
+            OWF_ARITH_SAFE_SUB32(_binary->reader.error, _binary->segment_length, _length); \
         } \
     } while (0)
 
-#define OWF_BINARY_SAFE_VARIABLE_READ(binary, arr, len, elem_size, padding) \
+#define OWF_BINARY_SAFE_VARIABLE_READ(_binary, _arr, _len, _elem_size, _padding) \
     do { \
-        uint32_t effective_length = len; \
-        OWF_ARITH_SAFE_ADD32(binary->reader.error, effective_length, padding); \
+        uint32_t effective_length = _len; \
+        OWF_ARITH_SAFE_ADD32(_binary->reader.error, effective_length, _padding); \
         \
         /* Length of zero is a no-op */ \
         if (OWF_EXPECT(effective_length > 0)) { \
-            if (!owf_array_reserve_exactly((&(arr)), binary->reader.alloc, &binary->reader.error, effective_length, 1)) { \
+            if (!owf_array_reserve_exactly((&(_arr)), _binary->reader.alloc, _binary->reader.error, effective_length, 1)) { \
                 return false; \
             } \
-            (&(arr))->length = effective_length / (elem_size); \
+            (&(_arr))->length = effective_length / (_elem_size); \
             \
-            if (OWF_NOEXPECT(!binary->reader.read((&(arr))->ptr, len, binary->reader.data))) { \
-                OWF_READER_ERRF(binary->reader, "variable read error (" OWF_PRINT_U32 " bytes into buffer of length " OWF_PRINT_U32 ")", (uint32_t)len, (uint32_t)effective_length); \
-                owf_array_destroy((&(arr)), binary->reader.alloc); \
+            if (OWF_NOEXPECT(!_binary->reader.read((&(_arr))->ptr, _len, _binary->reader.data))) { \
+                OWF_ERR_SETF(_binary->reader.error, "variable read error (" OWF_PRINT_U32 " bytes into buffer of length " OWF_PRINT_U32 ")", (uint32_t)_len, (uint32_t)effective_length); \
+                owf_array_destroy((&(_arr)), _binary->reader.alloc); \
                 return false; \
             } else { \
-                binary->segment_length = owf_arith_safe_sub32(binary->segment_length, len, &binary->reader.error); \
-                if (OWF_NOEXPECT(owf_reader_is_error(&binary->reader))) { \
-                    OWF_READER_ERRF(binary->reader, "out-of-bounds length (" OWF_PRINT_U32 " bytes for segment length " OWF_PRINT_U32 ")", (uint32_t)len, binary->segment_length); \
-                    owf_array_destroy((&(arr)), binary->reader.alloc); \
+                _binary->segment_length = owf_arith_safe_sub32(_binary->segment_length, _len, _binary->reader.error); \
+                if (OWF_NOEXPECT(owf_reader_is_error(&_binary->reader))) { \
+                    OWF_ERR_SETF(_binary->reader.error, "out-of-bounds length (" OWF_PRINT_U32 " bytes for segment length " OWF_PRINT_U32 ")", (uint32_t)_len, _binary->segment_length); \
+                    owf_array_destroy((&(_arr)), _binary->reader.alloc); \
                     return false; \
                 } \
             } \
         } \
     } while (0)
 
-#define OWF_BINARY_READER_VISIT(binary, type) \
+#define OWF_BINARY_READER_VISIT(_binary, _type) \
     do { \
-        if (!OWF_READER_VISIT(binary->reader, type)) { \
+        if (!OWF_READER_VISIT(_binary->reader, _type)) { \
             /* Skip the rest of the segment */ \
-            binary->skip_length = binary->segment_length; \
-            return !owf_reader_is_error(&binary->reader); \
+            _binary->skip_length = _binary->segment_length; \
+            return !owf_reader_is_error(&_binary->reader); \
         } \
     } while (0)
 
-void owf_binary_reader_init(owf_binary_reader_t *binary, owf_alloc_t *alloc, owf_read_cb_t read, owf_visit_cb_t visitor, void *data) {
-    owf_reader_init(&binary->reader, alloc, read, visitor, data);
+void owf_binary_reader_init(owf_binary_reader_t *binary, owf_alloc_t *alloc, owf_error_t *error, owf_read_cb_t read, owf_visit_cb_t visitor, void *data) {
+    owf_reader_init(&binary->reader, alloc, error, read, visitor, data);
     binary->segment_length = binary->skip_length = 0;
 }
 
@@ -57,8 +57,8 @@ static bool owf_binary_reader_file_read_cb(void *dest, const size_t size, void *
     return fread(dest, sizeof(uint8_t), size, ptr) == size;
 }
 
-void owf_binary_reader_init_file(owf_binary_reader_t *binary, FILE *file, owf_alloc_t *alloc, owf_visit_cb_t visitor) {
-    owf_reader_init(&binary->reader, alloc, owf_binary_reader_file_read_cb, visitor, file);
+void owf_binary_reader_init_file(owf_binary_reader_t *binary, FILE *file, owf_alloc_t *alloc, owf_error_t *error, owf_visit_cb_t visitor) {
+    owf_reader_init(&binary->reader, alloc, error, owf_binary_reader_file_read_cb, visitor, file);
 }
 
 static bool owf_binary_reader_buffer_read_cb(void *dest, const size_t size, void *data) {
@@ -75,8 +75,8 @@ static bool owf_binary_reader_buffer_read_cb(void *dest, const size_t size, void
     return true;
 }
 
-void owf_binary_reader_init_buffer(owf_binary_reader_t *binary, owf_buffer_t *buf, owf_alloc_t *alloc, owf_visit_cb_t visitor) {
-    owf_reader_init(&binary->reader, alloc, owf_binary_reader_buffer_read_cb, visitor, buf);
+void owf_binary_reader_init_buffer(owf_binary_reader_t *binary, owf_buffer_t *buf, owf_alloc_t *alloc, owf_error_t *error, owf_visit_cb_t visitor) {
+    owf_reader_init(&binary->reader, alloc, error, owf_binary_reader_buffer_read_cb, visitor, buf);
 }
 
 const char *owf_binary_reader_strerror(owf_binary_reader_t *binary) {
@@ -108,7 +108,7 @@ bool owf_binary_reader_unwrap_top(owf_binary_reader_t *binary, owf_binary_reader
 
     /* Verify alignment */
     if (OWF_NOEXPECT(length % sizeof(uint32_t) != 0)) {
-        OWF_READER_ERRF(binary->reader, "length was not " OWF_PRINT_SIZE "-byte aligned (got " OWF_PRINT_U32 " bytes)", sizeof(uint32_t), length);
+        OWF_ERR_SETF(binary->reader.error, "length was not " OWF_PRINT_SIZE "-byte aligned (got " OWF_PRINT_U32 " bytes)", sizeof(uint32_t), length);
         return false;
     }
 
@@ -128,7 +128,7 @@ bool owf_binary_reader_unwrap_top(owf_binary_reader_t *binary, owf_binary_reader
 
     /* Ensure we have no trailing bytes */
     if (OWF_NOEXPECT(binary->segment_length > 0)) {
-        OWF_READER_ERRF(binary->reader, "trailing data when reading segment: " OWF_PRINT_U32 " bytes", binary->segment_length);
+        OWF_ERR_SETF(binary->reader.error, "trailing data when reading segment: " OWF_PRINT_U32 " bytes", binary->segment_length);
         return false;
     }
 
@@ -163,7 +163,7 @@ bool owf_binary_reader_read_str(owf_binary_reader_t *binary, void *ptr) {
      * Read the actual string.
      * The string's length is currently saved in binary->segment_length if this call is wrapped.
      */
-    if (OWF_NOEXPECT(!owf_str_reserve(str, binary->reader.alloc, &binary->reader.error, binary->segment_length))) {
+    if (OWF_NOEXPECT(!owf_str_reserve(str, binary->reader.alloc, binary->reader.error, binary->segment_length))) {
         return false;
     } else {
         OWF_BINARY_SAFE_VARIABLE_READ(binary, str->bytes, binary->segment_length, sizeof(uint8_t), 0);
@@ -174,7 +174,7 @@ bool owf_binary_reader_read_str(owf_binary_reader_t *binary, void *ptr) {
      * str->length with the string in it. Make sure it's NULL-terminated.
      */
     if (OWF_NOEXPECT(OWF_ARRAY_LEN(str->bytes) > 0 && OWF_ARRAY_GET(str->bytes, uint8_t, OWF_ARRAY_LEN(str->bytes) - 1) != 0)) {
-        OWF_READER_ERR(binary->reader, "string was not NULL-terminated");
+        OWF_ERR_SET(binary->reader.error, "string was not NULL-terminated");
         owf_str_destroy(str, binary->reader.alloc);
         return false;
     }
@@ -187,7 +187,7 @@ bool owf_binary_reader_read_samples(owf_binary_reader_t *binary, void *ptr) {
 
     /* Length is stored in segment_length, ensure it's also double aligned */
     if (OWF_NOEXPECT(length % sizeof(double) != 0)) {
-        OWF_READER_ERRF(binary->reader, "length of sample array is not " OWF_PRINT_SIZE "-byte aligned (got " OWF_PRINT_U32 " bytes)", sizeof(double), length);
+        OWF_ERR_SETF(binary->reader.error, "length of sample array is not " OWF_PRINT_SIZE "-byte aligned (got " OWF_PRINT_U32 " bytes)", sizeof(double), length);
         return false;
     }
 
@@ -238,7 +238,7 @@ bool owf_binary_reader_read_event(owf_binary_reader_t *binary, void *ptr) {
 
     /* Ensure that the timestamp is in range */
     if (OWF_NOEXPECT(!owf_namespace_covers(&binary->reader.ctx.ns, event->t0))) {
-        OWF_READER_ERRF(binary->reader, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_TIME " did not cover event at " OWF_PRINT_TIME,
+        OWF_ERR_SETF(binary->reader.error, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_TIME " did not cover event at " OWF_PRINT_TIME,
             OWF_STR_PTR(binary->reader.ctx.ns.id),
             binary->reader.ctx.ns.t0, binary->reader.ctx.ns.t0 + binary->reader.ctx.ns.dt, binary->reader.ctx.ns.dt, event->t0);
         return false;
@@ -268,7 +268,7 @@ bool owf_binary_reader_read_alarm(owf_binary_reader_t *binary, void *ptr) {
 
     /* Ensure that the timestamp is in range */
     if (OWF_NOEXPECT(!owf_namespace_covers(&binary->reader.ctx.ns, alarm->t0))) {
-        OWF_READER_ERRF(binary->reader, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_TIME " did not cover alarm at " OWF_PRINT_TIME,
+        OWF_ERR_SETF(binary->reader.error, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_TIME " did not cover alarm at " OWF_PRINT_TIME,
             OWF_STR_PTR(binary->reader.ctx.ns.id),
             binary->reader.ctx.ns.t0, binary->reader.ctx.ns.t0 + binary->reader.ctx.ns.dt, binary->reader.ctx.ns.dt, alarm->t0);
         return false;
@@ -347,7 +347,7 @@ bool owf_binary_reader_read_channels(owf_binary_reader_t *binary, void *ptr) {
 
 bool owf_binary_read(owf_binary_reader_t *binary) {
     owf_t *owf = &binary->reader.ctx.owf;
-    uint32_t magic, length;
+    uint32_t magic = 0, length;
 
     /* Initialize the owf_t */
     owf_init(owf);
@@ -359,7 +359,7 @@ bool owf_binary_read(owf_binary_reader_t *binary) {
 
     /* Make sure that the magic is correct */
     if (OWF_NOEXPECT(magic != OWF_MAGIC)) {
-        OWF_READER_ERRF(binary->reader, "invalid magic header: %#08x", magic);
+        OWF_ERR_SETF(binary->reader.error, "invalid magic header: %#08x", magic);
         return false;
     }
 

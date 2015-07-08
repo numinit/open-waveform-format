@@ -18,6 +18,7 @@
 		BF76FF9D1B4C88DC006076D2 /* writer.c in Sources */ = {isa = PBXBuildFile; fileRef = BF76FF991B4C88DC006076D2 /* writer.c */; };
 		BF76FFA11B4C8917006076D2 /* binary.h in Headers */ = {isa = PBXBuildFile; fileRef = BF76FF9F1B4C8917006076D2 /* binary.h */; };
 		BF76FFA21B4C8917006076D2 /* writer.h in Headers */ = {isa = PBXBuildFile; fileRef = BF76FFA01B4C8917006076D2 /* writer.h */; };
+		BFCFE8591B4EF859001C68A2 /* error.c in Sources */ = {isa = PBXBuildFile; fileRef = BFCFE8581B4EF859001C68A2 /* error.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,6 +53,7 @@
 		BF76FF9F1B4C8917006076D2 /* binary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = binary.h; sourceTree = "<group>"; };
 		BF76FFA01B4C8917006076D2 /* writer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = writer.h; sourceTree = "<group>"; };
 		BFBA63731B45E5B80066A119 /* binary.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = binary.h; sourceTree = "<group>"; };
+		BFCFE8581B4EF859001C68A2 /* error.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = error.c; sourceTree = "<group>"; };
 		BFE790D31B39BE3900F4A24B /* libowf.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libowf.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -115,6 +117,7 @@
 			children = (
 				BF54FDCA1B39BF0900760CAE /* alloc.c */,
 				BF54FDCB1B39BF0900760CAE /* arith.c */,
+				BFCFE8581B4EF859001C68A2 /* error.c */,
 				BF54FDCE1B39BF0900760CAE /* platform.c */,
 				BF54FDCF1B39BF0900760CAE /* reader.c */,
 				BFBA63741B45E5C60066A119 /* reader */,
@@ -264,6 +267,7 @@
 				BF76FF9B1B4C88DC006076D2 /* binary_writer.c in Sources */,
 				BF54FDD51B39BF1800760CAE /* platform.c in Sources */,
 				BF54FDD21B39BF1800760CAE /* arith.c in Sources */,
+				BFCFE8591B4EF859001C68A2 /* error.c in Sources */,
 				BF76FF9D1B4C88DC006076D2 /* writer.c in Sources */,
 				BF54FDD61B39BF1800760CAE /* reader.c in Sources */,
 				BF76FF9A1B4C88DC006076D2 /* version.c in Sources */,

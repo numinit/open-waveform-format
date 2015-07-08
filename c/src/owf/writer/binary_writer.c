@@ -1,15 +1,15 @@
 #include <owf/writer/binary.h>
 
-#define OWF_BINARY_SAFE_WRITE(binary, ptr, length) \
+#define OWF_BINARY_SAFE_WRITE(_binary, _ptr, _length) \
     do { \
-        if (OWF_NOEXPECT(length > 0 && !binary->writer.write(ptr, length, binary->writer.data))) { \
-            OWF_WRITER_ERRF(binary->writer, "write error (" OWF_PRINT_U32 " bytes)", (uint32_t)length); \
+        if (OWF_NOEXPECT(_length > 0 && !_binary->writer.write(_ptr, _length, _binary->writer.data))) { \
+            OWF_ERR_SETF(_binary->writer.error, "write error (" OWF_PRINT_U32 " bytes)", (uint32_t)_length); \
             return false; \
         } \
     } while (0)
 
-void owf_binary_writer_init(owf_binary_writer_t *binary, owf_alloc_t *alloc, owf_write_cb_t write, void *data) {
-    owf_writer_init(&binary->writer, alloc, write, data);
+void owf_binary_writer_init(owf_binary_writer_t *binary, owf_alloc_t *alloc, owf_error_t *error, owf_write_cb_t write, void *data) {
+    owf_writer_init(&binary->writer, alloc, error, write, data);
 }
 
 static bool owf_binary_writer_file_write_cb(const void *src, const size_t size, void *data) {
@@ -17,8 +17,8 @@ static bool owf_binary_writer_file_write_cb(const void *src, const size_t size, 
     return fwrite(src, sizeof(uint8_t), size, ptr) == size;
 }
 
-void owf_binary_writer_init_file(owf_binary_writer_t *binary, FILE *file, owf_alloc_t *alloc) {
-    owf_writer_init(&binary->writer, alloc, owf_binary_writer_file_write_cb, file);
+void owf_binary_writer_init_file(owf_binary_writer_t *binary, FILE *file, owf_alloc_t *alloc, owf_error_t *error) {
+    owf_writer_init(&binary->writer, alloc, error, owf_binary_writer_file_write_cb, file);
 }
 
 static bool owf_binary_writer_buffer_write_cb(const void *src, const size_t size, void *data) {
@@ -35,8 +35,8 @@ static bool owf_binary_writer_buffer_write_cb(const void *src, const size_t size
     return true;
 }
 
-void owf_binary_writer_init_buffer(owf_binary_writer_t *binary, owf_buffer_t *buf, owf_alloc_t *alloc) {
-    owf_writer_init(&binary->writer, alloc, owf_binary_writer_buffer_write_cb, buf);
+void owf_binary_writer_init_buffer(owf_binary_writer_t *binary, owf_buffer_t *buf, owf_alloc_t *alloc, owf_error_t *error) {
+    owf_writer_init(&binary->writer, alloc, error, owf_binary_writer_buffer_write_cb, buf);
 }
 
 const char *owf_binary_writer_strerror(owf_binary_writer_t *binary) {
@@ -59,7 +59,7 @@ bool owf_binary_writer_write_time(owf_binary_writer_t *binary, owf_time_t time) 
 
 bool owf_binary_writer_write_size(owf_binary_writer_t *binary, uint32_t length) {
     if (length % sizeof(uint32_t) != 0) {
-        OWF_WRITER_ERRF(binary->writer, "length `" OWF_PRINT_U32 "` was not a multiple of " OWF_PRINT_SIZE " bytes", length, sizeof(uint32_t));
+        OWF_ERR_SETF(binary->writer.error, "length `" OWF_PRINT_U32 "` was not a multiple of " OWF_PRINT_SIZE " bytes", length, sizeof(uint32_t));
         return false;
     }
 
@@ -87,30 +87,36 @@ bool owf_binary_writer_write_u8(owf_binary_writer_t *binary, uint8_t u8) {
 
 bool owf_binary_writer_write_str(owf_binary_writer_t *binary, owf_str_t *str) {
     /* Figure out the string's size */
-    uint32_t string_size = owf_str_length(str), string_total_size = 0, null_padding = 0;
-    if (!owf_str_size(str, &binary->writer.error, &string_total_size)) {
+    uint32_t full_size = 0;
+    if (OWF_NOEXPECT(!owf_str_size(str, binary->writer.error, &full_size))) {
         return false;
     }
-
-    // Calculate the number of null bytes to write after the string
-    null_padding = string_total_size;
-    OWF_ARITH_SAFE_SUB32(binary->writer.error, null_padding, string_size);
-    OWF_ARITH_SAFE_SUB32(binary->writer.error, null_padding, sizeof(uint32_t));
-
-    // Write the length
-    if (OWF_NOEXPECT(!owf_binary_writer_write_size(binary, string_total_size - sizeof(uint32_t)))) {
+    
+    /* Write it */
+    full_size -= sizeof(uint32_t);
+    if (OWF_NOEXPECT(!owf_binary_writer_write_size(binary, full_size))) {
         return false;
     }
+    
+    if (full_size > 0) {
+        // Calculate the number of null bytes to write after the string
+        uint32_t length = owf_str_length(str);
 
-    // Write the string
-    OWF_BINARY_SAFE_WRITE(binary, OWF_STR_PTR(*str), string_size);
+        // Write the string and a null-terminator
+        OWF_BINARY_SAFE_WRITE(binary, OWF_STR_PTR(*str), length);
+        owf_binary_writer_write_u8(binary, 0);
+        
+        // Subtract what we just wrote
+        OWF_ARITH_SAFE_ADD32(binary->writer.error, length, 1);
+        OWF_ARITH_SAFE_SUB32(binary->writer.error, full_size, length);
+    }
 
     // Write the null padding
-    while (null_padding > 0) {
+    while (full_size > 0) {
         if (OWF_NOEXPECT(!owf_binary_writer_write_u8(binary, 0))) {
             return false;
         }
-        null_padding--;
+        full_size--;
     }
     return true;
 }
@@ -139,7 +145,7 @@ bool owf_binary_writer_write_signal(owf_binary_writer_t *binary, owf_signal_t *s
 
 bool owf_binary_writer_write_event(owf_binary_writer_t *binary, owf_namespace_t *ns, owf_event_t *event) {
     if (!owf_namespace_covers(ns, event->t0)) {
-        OWF_WRITER_ERRF(binary->writer, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_TIME " did not cover event at " OWF_PRINT_TIME,
+        OWF_ERR_SETF(binary->writer.error, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_TIME " did not cover event at " OWF_PRINT_TIME,
             OWF_STR_PTR(ns->id), ns->t0, ns->t0 + ns->dt, ns->dt, event->t0);
         return false;
     }
@@ -155,7 +161,7 @@ bool owf_binary_writer_write_event(owf_binary_writer_t *binary, owf_namespace_t 
 
 bool owf_binary_writer_write_alarm(owf_binary_writer_t *binary, owf_namespace_t *ns, owf_alarm_t *alarm) {
     if (!owf_namespace_covers(ns, alarm->t0)) {
-        OWF_WRITER_ERRF(binary->writer, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_TIME " did not cover alarm at " OWF_PRINT_TIME,
+        OWF_ERR_SETF(binary->writer.error, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_TIME " did not cover alarm at " OWF_PRINT_TIME,
             OWF_STR_PTR(ns->id), ns->t0, ns->t0 + ns->dt, ns->dt, alarm->t0);
         return false;
     }
@@ -181,7 +187,7 @@ bool owf_binary_writer_write_namespace(owf_binary_writer_t *binary, owf_namespac
     for (uint32_t i = 0; i < OWF_ARRAY_LEN(ns->signals); i++) {
         owf_signal_t *signal = OWF_ARRAY_PTR(ns->signals, owf_signal_t, i);
         uint32_t signal_size = 0;
-        if (OWF_NOEXPECT(!owf_signal_size(signal, &binary->writer.error, &signal_size))) {
+        if (OWF_NOEXPECT(!owf_signal_size(signal, binary->writer.error, &signal_size))) {
             return false;
         } else {
             OWF_ARITH_SAFE_ADD32(binary->writer.error, signals_size, signal_size);
@@ -191,7 +197,7 @@ bool owf_binary_writer_write_namespace(owf_binary_writer_t *binary, owf_namespac
     for (uint32_t i = 0; i < OWF_ARRAY_LEN(ns->events); i++) {
         owf_event_t *event = OWF_ARRAY_PTR(ns->events, owf_event_t, i);
         uint32_t event_size = 0;
-        if (OWF_NOEXPECT(!owf_event_size(event, &binary->writer.error, &event_size))) {
+        if (OWF_NOEXPECT(!owf_event_size(event, binary->writer.error, &event_size))) {
             return false;
         } else {
             OWF_ARITH_SAFE_ADD32(binary->writer.error, events_size, event_size);
@@ -201,7 +207,7 @@ bool owf_binary_writer_write_namespace(owf_binary_writer_t *binary, owf_namespac
     for (uint32_t i = 0; i < OWF_ARRAY_LEN(ns->alarms); i++) {
         owf_alarm_t *alarm = OWF_ARRAY_PTR(ns->alarms, owf_alarm_t, i);
         uint32_t alarm_size = 0;
-        if (OWF_NOEXPECT(!owf_alarm_size(alarm, &binary->writer.error, &alarm_size))) {
+        if (OWF_NOEXPECT(!owf_alarm_size(alarm, binary->writer.error, &alarm_size))) {
             return false;
         } else {
             OWF_ARITH_SAFE_ADD32(binary->writer.error, alarms_size, alarm_size);
@@ -210,7 +216,7 @@ bool owf_binary_writer_write_namespace(owf_binary_writer_t *binary, owf_namespac
     
     /* Write the namespace header */
     if (OWF_NOEXPECT(
-        !owf_namespace_size(ns, &binary->writer.error, &size) ||
+        !owf_namespace_size(ns, binary->writer.error, &size) ||
         !owf_binary_writer_write_size(binary, size - sizeof(uint32_t)) ||
         !owf_binary_writer_write_time(binary, ns->t0) ||
         !owf_binary_writer_write_time(binary, ns->dt) ||
@@ -255,7 +261,7 @@ bool owf_binary_writer_write_namespace(owf_binary_writer_t *binary, owf_namespac
 bool owf_binary_writer_write_channel(owf_binary_writer_t *binary, owf_channel_t *channel) {
     uint32_t size = 0;
     if (OWF_NOEXPECT(
-        !owf_channel_size(channel, &binary->writer.error, &size) ||
+        !owf_channel_size(channel, binary->writer.error, &size) ||
         !owf_binary_writer_write_size(binary, size - sizeof(uint32_t)) ||
         !owf_binary_writer_write_str(binary, &channel->id))) {
         return false;
@@ -275,7 +281,7 @@ bool owf_binary_write(owf_binary_writer_t *binary, owf_t *owf) {
     uint32_t size = 0;
     if (OWF_NOEXPECT(
         !owf_binary_writer_write_u32(binary, OWF_MAGIC) ||
-        !owf_size(owf, &binary->writer.error, &size) ||
+        !owf_size(owf, binary->writer.error, &size) ||
         !owf_binary_writer_write_size(binary, size - (sizeof(uint32_t) * 2)))) {
         return false;
     }
@@ -290,18 +296,18 @@ bool owf_binary_write(owf_binary_writer_t *binary, owf_t *owf) {
     return true;
 }
 
-bool owf_binary_write_to_buffer(owf_binary_writer_t *binary, owf_t *owf, owf_buffer_t *buf, owf_alloc_t *alloc) {
+bool owf_binary_write_to_buffer(owf_binary_writer_t *binary, owf_t *owf, owf_buffer_t *buf, owf_alloc_t *alloc, owf_error_t *error) {
     uint32_t size = 0;
     void *ptr;
-    if (OWF_NOEXPECT(!owf_size(owf, &binary->writer.error, &size))) {
+    if (OWF_NOEXPECT(!owf_size(owf, error, &size))) {
         return false;
     } else {
-        ptr = owf_malloc(alloc, &binary->writer.error, size);
+        ptr = owf_malloc(alloc, error, size);
         if (OWF_NOEXPECT(ptr == NULL)) {
             return false;
         } else {
             owf_buffer_init(buf, ptr, size);
-            owf_binary_writer_init_buffer(binary, buf, alloc);
+            owf_binary_writer_init_buffer(binary, buf, alloc, error);
             return owf_binary_write(binary, owf);
         }
     }
