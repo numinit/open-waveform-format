@@ -8,22 +8,14 @@ The Open Waveform Format (OWF) is a new format for transmitting captured wavefor
 
 * HTTP transport (with MIME types)
 * JSON format for development and prototyping
-* Binary format for speed
+* Binary format for speed and lower space footprint
 * Designed to transmit measurements
-* Designed to optionally transmist device alarms and events in free text
+* Designed to optionally transmit device alarms and events in free text
 * Support for batch updates for multiple data sources, multiple data acquisition devices, and multiple acquisition channels
 
 Read more on our [wiki](https://github.com/medicalinformaticscorp/open-waveform-format/wiki)
 
 ### Supported languages
-|Language| JSON | Binary |
-|--------|------|--------|
-| C | planned | planned |
-| C++ | planned | planned |
-| C# | planned | Serialize only|
-| JS (NodeJS) | planned | planned |
-| Ruby | planned | Serialize only |
-| Elixir | planned | planned |
 
 |Language|JSON|Binary|
 |:-------|:---|:-----|
