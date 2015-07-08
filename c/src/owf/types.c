@@ -22,7 +22,7 @@ int owf_compare(owf_t *lhs, owf_t *rhs) {
 
 bool owf_size(owf_t *owf, owf_error_t *error, uint32_t *output_size) {
     if (owf_memoize_stale(&owf->memoize)) {
-        uint32_t size = 0;
+        uint32_t size = sizeof(uint32_t) * 2;
         for (uint32_t i = 0; i < OWF_ARRAY_LEN(owf->channels); i++) {
             uint32_t channel_size = 0;
             if (OWF_EXPECT(owf_channel_size(OWF_ARRAY_PTR(owf->channels, owf_channel_t, i), error, &channel_size))) {

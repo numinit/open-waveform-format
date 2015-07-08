@@ -2,6 +2,8 @@
 #include <owf/types.h>
 #include <owf/reader.h>
 #include <owf/reader/binary.h>
+#include <owf/writer.h>
+#include <owf/writer/binary.h>
 #include <owf/platform.h>
 #include <owf/version.h>
 
@@ -20,8 +22,10 @@
 #define OWF_TEST_VISITOR_BUFFER(str, result) owf_test_binary_reader_visitor_buffer_execute(OWF_TEST_PATH_TO(str), result)
 #define OWF_TEST_MATERIALIZE_FILE(str, result) owf_test_binary_reader_materialize_file_execute(OWF_TEST_PATH_TO(str), result)
 #define OWF_TEST_MATERIALIZE_BUFFER(str, result) owf_test_binary_reader_materialize_buffer_execute(OWF_TEST_PATH_TO(str), result)
+#define OWF_TEST_WRITE_BUFFER(str, owf) owf_test_binary_writer_buffer_execute(OWF_TEST_PATH_TO(str), owf)
 
 static bool owf_test_verbose;
+static owf_alloc_t alloc = {.malloc = malloc, .realloc = realloc, .free = free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
 
 typedef struct owf_test {
     const char *name;
@@ -111,7 +115,7 @@ static bool owf_test_binary_reader_visitor(owf_reader_t *reader, owf_reader_ctx_
     return true;
 }
 
-static bool owf_test_binary_reader_read_file(const char *filename, owf_binary_reader_t *binary, owf_alloc_t *alloc, owf_buffer_t *buf, owf_visit_cb_t visitor) {
+static bool owf_test_binary_read_file(const char *filename, owf_alloc_t *alloc, owf_error_t *error, owf_buffer_t *buf) {
     FILE *f = fopen(filename, "rb");
     void *dest;
     size_t size;
@@ -142,7 +146,7 @@ static bool owf_test_binary_reader_read_file(const char *filename, owf_binary_re
     }
 
     /* Allocate space for it */
-    dest = owf_malloc(alloc, &binary->reader.error, size);
+    dest = owf_malloc(alloc, error, size);
     if (dest == NULL) {
         fclose(f);
         return false;
@@ -159,10 +163,17 @@ static bool owf_test_binary_reader_read_file(const char *filename, owf_binary_re
     owf_buffer_init(buf, dest, size);
     fclose(f);
 
-    /* Init the binary reader */
-    owf_binary_reader_init_buffer(binary, buf, alloc, visitor);
-
     return true;
+}
+
+static bool owf_test_binary_reader_read_file(const char *filename, owf_binary_reader_t *binary, owf_alloc_t *alloc, owf_buffer_t *buf, owf_visit_cb_t visitor) {
+    if (!owf_test_binary_read_file(filename, alloc, &binary->reader.error, buf)) {
+        return false;
+    } else {
+        /* Init the binary reader */
+        owf_binary_reader_init_buffer(binary, buf, alloc, visitor);
+        return true;
+    }
 }
 
 static bool owf_test_binary_reader_open(owf_binary_reader_t *reader, const char *filename, owf_alloc_t *alloc, owf_visit_cb_t visitor) {
@@ -184,7 +195,6 @@ static void owf_test_binary_reader_buffer_close(owf_binary_reader_t *reader) {
 
 /* ---------- TESTS ---------- */
 static int owf_test_binary_reader_visitor_file_execute(const char *filename, bool result) {
-    owf_alloc_t alloc = {.malloc = malloc, .realloc = realloc, .free = free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
     owf_binary_reader_t reader;
 
     if (!owf_test_binary_reader_open(&reader, filename, &alloc, owf_test_binary_reader_visitor)) {
@@ -201,7 +211,6 @@ static int owf_test_binary_reader_visitor_file_execute(const char *filename, boo
 }
 
 static int owf_test_binary_reader_visitor_buffer_execute(const char *filename, bool result) {
-    owf_alloc_t alloc = {.malloc = malloc, .realloc = realloc, .free = free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
     owf_binary_reader_t reader;
     owf_buffer_t buf;
 
@@ -249,7 +258,6 @@ static int owf_test_binary_reader_materialize_print(owf_binary_reader_t *reader,
 }
 
 static int owf_test_binary_reader_materialize_file_execute(const char *filename, bool result) {
-    owf_alloc_t alloc = {.malloc = malloc, .realloc = realloc, .free = free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
     owf_binary_reader_t reader;
     owf_t *owf;
 
@@ -270,7 +278,6 @@ static int owf_test_binary_reader_materialize_file_execute(const char *filename,
 }
 
 static int owf_test_binary_reader_materialize_buffer_execute(const char *filename, bool result) {
-    owf_alloc_t alloc = {.malloc = malloc, .realloc = realloc, .free = free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
     owf_buffer_t buf;
     owf_binary_reader_t reader;
     owf_t *owf;
@@ -288,6 +295,46 @@ static int owf_test_binary_reader_materialize_buffer_execute(const char *filenam
     }
     owf_test_binary_reader_buffer_close(&reader);
 
+    OWF_TEST_OK;
+}
+
+static int owf_test_binary_writer_buffer_execute(const char *filename, owf_t *owf) {
+    owf_binary_writer_t writer;
+    owf_buffer_t expected, actual;
+    owf_error_t error;
+    if (!owf_test_binary_read_file(filename, &alloc, &error, &expected)) {
+        OWF_TEST_FAILF("error reading file: %s", error.error);
+    } else if (!owf_binary_write_to_buffer(&writer, owf, &actual, &alloc)) {
+        OWF_TEST_FAILF("error writing to buffer: %s", owf_binary_writer_strerror(&writer));
+    } else if (expected.length != actual.length) {
+        OWF_TEST_FAILF("expected and actual did not have identical lengths (" OWF_PRINT_SIZE " vs. " OWF_PRINT_SIZE ")", expected.length, actual.length);
+    } else if (memcmp(expected.ptr, actual.ptr, expected.length) != 0) {
+        uint8_t *p1 = (uint8_t *)expected.ptr, *p2 = (uint8_t *)actual.ptr;
+        fprintf(stderr, "expected and actual were not identical\n");
+        fprintf(stderr, "expected: ");
+        for (size_t i = 0; i < expected.length; i++) {
+            fprintf(stderr, "%02x", p1[i]);
+            if ((i + 1) % 4 == 0) {
+                fprintf(stderr, " ");
+            }
+        }
+        fprintf(stderr, "\n");
+        
+        fprintf(stderr, "actual:   ");
+        for (size_t i = 0; i < actual.length; i++) {
+            fprintf(stderr, "%02x", p2[i]);
+            if ((i + 1) % 4 == 0) {
+                fprintf(stderr, " ");
+            }
+        }
+        fprintf(stderr, "\n");
+
+        owf_free(&alloc, expected.ptr);
+        owf_free(&alloc, actual.ptr);
+        OWF_TEST_FAIL("see above for hex output");
+    }
+    owf_free(&alloc, expected.ptr);
+    owf_free(&alloc, actual.ptr);
     OWF_TEST_OK;
 }
 
@@ -355,8 +402,26 @@ static int owf_test_binary_reader_materialize_buffer_valid_empty(void) {
     return OWF_TEST_MATERIALIZE_BUFFER("binary_valid_empty", true);
 }
 
-static int owf_test_binary_writer_file_valid_empty(void) {
-    OWF_TEST_OK;
+static int owf_test_binary_writer_buffer_valid_empty(void) {
+    owf_t owf;
+    owf_init(&owf);
+    int ret = OWF_TEST_WRITE_BUFFER("binary_valid_empty", &owf);
+    owf_destroy(&owf, &alloc);
+    return ret;
+}
+
+static int owf_test_binary_writer_buffer_valid_empty_channel(void) {
+    owf_t owf;
+    owf_channel_t c;
+    owf_error_t error;
+    owf_init(&owf);
+    owf_channel_init(&c);
+    if (!owf_array_push(&owf.channels, &alloc, &error, &c, sizeof(c))) {
+        OWF_TEST_FAILF("owf_array_push failed: %s", error.error);
+    }
+    int ret = OWF_TEST_WRITE_BUFFER("binary_valid_empty_channel", &owf);
+    owf_destroy(&owf, &alloc);
+    return ret;
 }
 
 static owf_test_t tests[] = {
@@ -376,7 +441,8 @@ static owf_test_t tests[] = {
     {"binary_reader_materialize_buffer_valid_3", owf_test_binary_reader_materialize_buffer_valid_3},
     {"binary_reader_materialize_file_valid_empty", owf_test_binary_reader_materialize_file_valid_empty},
     {"binary_reader_materialize_buffer_valid_empty", owf_test_binary_reader_materialize_buffer_valid_empty},
-    { "binary_writer_file_valid_empty", owf_test_binary_writer_file_valid_empty }
+    {"binary_writer_buffer_valid_empty", owf_test_binary_writer_buffer_valid_empty},
+    {"binary_writer_buffer_valid_empty_channel", owf_test_binary_writer_buffer_valid_empty_channel}
 };
 
 static bool owf_test_opt(const char *opt, int argc, char **argv) {

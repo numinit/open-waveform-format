@@ -19,6 +19,7 @@ typedef bool (*owf_binary_writer_cb_t)(owf_binary_writer_t *, void *);
 void owf_binary_writer_init(owf_binary_writer_t *binary, owf_alloc_t *alloc, owf_write_cb_t write, void *data);
 void owf_binary_writer_init_file(owf_binary_writer_t *binary, FILE *file, owf_alloc_t *alloc);
 void owf_binary_writer_init_buffer(owf_binary_writer_t *binary, owf_buffer_t *buf, owf_alloc_t *alloc);
+const char *owf_binary_writer_strerror(owf_binary_writer_t *binary);
 
 bool owf_binary_writer_write_double(owf_binary_writer_t *binary, double val);
 bool owf_binary_writer_write_time(owf_binary_writer_t *binary, owf_time_t time);
@@ -34,5 +35,6 @@ bool owf_binary_writer_write_alarm(owf_binary_writer_t *binary, owf_namespace_t 
 bool owf_binary_writer_write_namespace(owf_binary_writer_t *binary, owf_namespace_t *ns);
 bool owf_binary_writer_write_channel(owf_binary_writer_t *binary, owf_channel_t *channel);
 bool owf_binary_write(owf_binary_writer_t *binary, owf_t *owf);
+bool owf_binary_write_to_buffer(owf_binary_writer_t *binary, owf_t *owf, owf_buffer_t *buf, owf_alloc_t *alloc);
 
 #endif /* OWF_BINARY_WRITER_H */
