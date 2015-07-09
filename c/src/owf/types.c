@@ -391,7 +391,7 @@ bool owf_str_set(owf_str_t *str, owf_alloc_t *allocator, owf_error_t *error, con
     
     /* No truncation, please */
     if (size >= UINT32_MAX) {
-        OWF_ERR_SETF(error, "strlen of input string (" OWF_PRINT_SIZE ") was greater than UINT32_MAX (" OWF_PRINT_U32 ")", size, UINT32_MAX);
+        OWF_ERROR_SETF(error, "strlen of input string (" OWF_PRINT_SIZE ") was greater than UINT32_MAX (" OWF_PRINT_U32 ")", size, UINT32_MAX);
         return false;
     } else {
         truncated_size = (uint32_t)size;
@@ -531,7 +531,7 @@ bool owf_array_reserve_exactly(owf_array_t *arr, owf_alloc_t *allocator, owf_err
     if (OWF_NOEXPECT(error->is_error)) {
         return false;
     } else if (OWF_NOEXPECT(new_size == 0)) {
-        OWF_ERR_SET(error, "tried to reserve zero-byte length");
+        OWF_ERROR_SET(error, "tried to reserve zero-byte length");
         return false;
     }
 
@@ -571,7 +571,7 @@ void *owf_array_at(owf_array_t *arr, owf_error_t *error, uint32_t idx, uint32_t 
     if (OWF_EXPECT(idx < arr->length)) {
         return owf_array_ptr_for(arr, error, idx, width);
     } else {
-        OWF_ERR_SETF(error, "array index out of bounds: " OWF_PRINT_U32 " >= " OWF_PRINT_U32, idx, arr->length);
+        OWF_ERROR_SETF(error, "array index out of bounds: " OWF_PRINT_U32 " >= " OWF_PRINT_U32, idx, arr->length);
         return NULL;
     }
 }

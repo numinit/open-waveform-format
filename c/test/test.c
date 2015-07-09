@@ -196,8 +196,7 @@ static void owf_test_binary_reader_buffer_close(owf_binary_reader_t *reader) {
 /* ---------- TESTS ---------- */
 static int owf_test_binary_reader_visitor_file_execute(const char *filename, bool result) {
     owf_binary_reader_t reader;
-    owf_error_t error;
-    owf_error_init(&error);
+    owf_error_t error = OWF_ERROR_DEFAULT;
 
     if (!owf_test_binary_reader_open(&reader, filename, &alloc, &error, owf_test_binary_reader_visitor)) {
         OWF_TEST_FAIL("error opening file");
@@ -214,8 +213,7 @@ static int owf_test_binary_reader_visitor_file_execute(const char *filename, boo
 static int owf_test_binary_reader_visitor_buffer_execute(const char *filename, bool result) {
     owf_binary_reader_t reader;
     owf_buffer_t buf;
-    owf_error_t error;
-    owf_error_init(&error);
+    owf_error_t error = OWF_ERROR_DEFAULT;
 
     if (!owf_test_binary_reader_read_file(filename, &reader, &alloc, &error, &buf, owf_test_binary_reader_visitor)) {
         OWF_TEST_FAIL("error reading file");
@@ -260,10 +258,9 @@ static int owf_test_binary_reader_materialize_print(owf_binary_reader_t *reader,
 
 static int owf_test_binary_reader_materialize_file_execute(const char *filename, bool result) {
     owf_binary_reader_t reader;
-    owf_error_t error;
+    owf_error_t error = OWF_ERROR_DEFAULT;
     owf_t *owf;
 
-    owf_error_init(&error);
     if (!owf_test_binary_reader_open(&reader, filename, &alloc, &error, NULL)) {
         OWF_TEST_FAIL("error opening file");
     }
@@ -286,10 +283,9 @@ static int owf_test_binary_reader_materialize_file_execute(const char *filename,
 static int owf_test_binary_reader_materialize_buffer_execute(const char *filename, bool result) {
     owf_buffer_t buf;
     owf_binary_reader_t reader;
-    owf_error_t error;
+    owf_error_t error = OWF_ERROR_DEFAULT;
     owf_t *owf;
 
-    owf_error_init(&error);
     if (!owf_test_binary_reader_read_file(filename, &reader, &alloc, &error, &buf, NULL)) {
         OWF_TEST_FAIL("error reading file");
     }
@@ -419,9 +415,8 @@ static int owf_test_binary_reader_materialize_buffer_valid_empty(void) {
 
 static int owf_test_binary_writer_buffer_valid_empty(void) {
     owf_t owf;
-    owf_error_t error;
+    owf_error_t error = OWF_ERROR_DEFAULT;
     owf_init(&owf);
-    owf_error_init(&error);
     int ret = OWF_TEST_WRITE_BUFFER("binary_valid_empty", &owf, &alloc, &error);
     owf_destroy(&owf, &alloc);
     return ret;
@@ -430,9 +425,8 @@ static int owf_test_binary_writer_buffer_valid_empty(void) {
 static int owf_test_binary_writer_buffer_valid_empty_channel(void) {
     owf_t owf;
     owf_channel_t c;
-    owf_error_t error;
+    owf_error_t error = OWF_ERROR_DEFAULT;
     owf_init(&owf);
-    owf_error_init(&error);
     if (!owf_channel_init2(&c, &alloc, &error, "BED_42") ||
         !owf_push_channel(&owf, &alloc, &error, &c)) {
         OWF_TEST_FAIL("catastrophic failure");

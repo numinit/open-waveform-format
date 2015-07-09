@@ -3,7 +3,7 @@
 #define OWF_BINARY_SAFE_WRITE(_binary, _ptr, _length) \
     do { \
         if (OWF_NOEXPECT(_length > 0 && !_binary->writer.write(_ptr, _length, _binary->writer.data))) { \
-            OWF_ERR_SETF(_binary->writer.error, "write error (" OWF_PRINT_U32 " bytes)", (uint32_t)_length); \
+            OWF_ERROR_SETF(_binary->writer.error, "write error (" OWF_PRINT_U32 " bytes)", (uint32_t)_length); \
             return false; \
         } \
     } while (0)
@@ -59,7 +59,7 @@ bool owf_binary_writer_write_time(owf_binary_writer_t *binary, owf_time_t time) 
 
 bool owf_binary_writer_write_size(owf_binary_writer_t *binary, uint32_t length) {
     if (length % sizeof(uint32_t) != 0) {
-        OWF_ERR_SETF(binary->writer.error, "length `" OWF_PRINT_U32 "` was not a multiple of " OWF_PRINT_SIZE " bytes", length, sizeof(uint32_t));
+        OWF_ERROR_SETF(binary->writer.error, "length `" OWF_PRINT_U32 "` was not a multiple of " OWF_PRINT_SIZE " bytes", length, sizeof(uint32_t));
         return false;
     }
 
@@ -145,7 +145,7 @@ bool owf_binary_writer_write_signal(owf_binary_writer_t *binary, owf_signal_t *s
 
 bool owf_binary_writer_write_event(owf_binary_writer_t *binary, owf_namespace_t *ns, owf_event_t *event) {
     if (!owf_namespace_covers(ns, event->t0)) {
-        OWF_ERR_SETF(binary->writer.error, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_TIME " did not cover event at " OWF_PRINT_TIME,
+        OWF_ERROR_SETF(binary->writer.error, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_TIME " did not cover event at " OWF_PRINT_TIME,
             OWF_STR_PTR(ns->id), ns->t0, ns->t0 + ns->dt, ns->dt, event->t0);
         return false;
     }
@@ -161,7 +161,7 @@ bool owf_binary_writer_write_event(owf_binary_writer_t *binary, owf_namespace_t 
 
 bool owf_binary_writer_write_alarm(owf_binary_writer_t *binary, owf_namespace_t *ns, owf_alarm_t *alarm) {
     if (!owf_namespace_covers(ns, alarm->t0)) {
-        OWF_ERR_SETF(binary->writer.error, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_TIME " did not cover alarm at " OWF_PRINT_TIME,
+        OWF_ERROR_SETF(binary->writer.error, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_TIME " did not cover alarm at " OWF_PRINT_TIME,
             OWF_STR_PTR(ns->id), ns->t0, ns->t0 + ns->dt, ns->dt, alarm->t0);
         return false;
     }
