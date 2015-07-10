@@ -1,5 +1,4 @@
 #include <owf.h>
-#include <owf/platform.h>
 #include <owf/types.h>
 #include <owf/arith.h>
 #include <owf/writer.h>

@@ -1,5 +1,6 @@
 #include <owf/arith.h>
 #include <owf/error.h>
+#include <owf/platform.h>
 
 uint32_t owf_arith_safe_add32(uint32_t a, uint32_t b, owf_error_t *error) {
     uint64_t ret = a + b;

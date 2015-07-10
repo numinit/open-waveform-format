@@ -1,5 +1,5 @@
 #include <owf/types.h>
-
+#include <owf/platform.h>
 #include <string.h>
 
 void owf_init(owf_t *owf) {

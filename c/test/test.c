@@ -116,7 +116,7 @@ static bool owf_test_binary_reader_visitor(owf_reader_t *reader, owf_reader_ctx_
 }
 
 static bool owf_test_binary_read_file(const char *filename, owf_alloc_t *alloc, owf_error_t *error, owf_buffer_t *buf) {
-    FILE *f = fopen(filename, "rb");
+    FILE *f = owf_fopen(filename, "rb");
     void *dest;
     size_t size;
     long val;
@@ -177,7 +177,7 @@ static bool owf_test_binary_reader_read_file(const char *filename, owf_binary_re
 }
 
 static bool owf_test_binary_reader_open(owf_binary_reader_t *reader, const char *filename, owf_alloc_t *alloc, owf_error_t *error, owf_visit_cb_t visitor) {
-    FILE *f = fopen(filename, "rb");
+    FILE *f = owf_fopen(filename, "rb");
     if (f == NULL) {
         return false;
     }
@@ -476,7 +476,7 @@ int main(int argc, char **argv) {
     owf_test_verbose = owf_test_opt("--verbose", argc, argv);
 
     // And here we go...
-    getcwd(dir, sizeof(dir));
+    owf_getcwd(dir, sizeof(dir));
     fprintf(stdout, "--------------------------------\n");
     fprintf(stdout, "libowf " OWF_LIBRARY_VERSION_STRING " test harness starting\n");
     fprintf(stdout, "--------------------------------\n");

@@ -6,22 +6,36 @@
 #include <owf/writer/binary.h>
 #include <owf/platform.h>
 #include <owf/version.h>
-
-#include <stdio.h>
 #include <errno.h>
 
+#include <stdio.h>
+
 #if OWF_PLATFORM_IS_GNU
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <netdb.h>
-#include <poll.h>
-#include <fcntl.h>
+    #include <unistd.h>
+    #include <sys/types.h>
+    #include <sys/socket.h>
+    #include <arpa/inet.h>
+    #include <netinet/in.h>
+    #include <netinet/tcp.h>
+    #include <netdb.h>
+    #include <poll.h>
+    #include <fcntl.h>
+    #define owf_socket_close(...) close(__VA_ARGS__)
+    #define owf_socket_poll(...) poll(__VA_ARGS__)
+    #define OWF_SOCKET_ERROR errno
+    #define OWF_SOCKET_EAGAIN EAGAIN
+    #define OWF_SOCKET_EINTR EINTR
+    #define OWF_SOCKET_EWOULDBLOCK EWOULDBLOCK
 #elif OWF_PLATFORM == OWF_PLATFORM_WINDOWS
-#error "TODO: Build on Windows"
+    #include <windows.h>
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    #define owf_socket_close(...) closesocket(__VA_ARGS__)
+    #define owf_socket_poll(...) WSAPoll(__VA_ARGS__)
+    #define OWF_SOCKET_ERROR WSAGetLastError()
+    #define OWF_SOCKET_EAGAIN EAGAIN
+    #define OWF_SOCKET_EINTR WSAEINTR
+    #define OWF_SOCKET_EWOULDBLOCK WSAEWOULDBLOCK
 #endif
 
 #define OWF_SERVER_TCP 0
@@ -32,24 +46,35 @@
 #define OWF_SERVER_LISTEN_QUEUE 8192
 
 bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, const char *host_str, const char *protocol_str, const char *port_str);
-bool owf_server_loop_tcp(FILE *restrict logger, owf_alloc_t *restrict alloc, owf_error_t *restrict error, struct pollfd *pfd, int sfd);
-bool owf_server_loop_udp(FILE *logger, owf_alloc_t *restrict alloc, owf_error_t *restrict error, int sfd);
+bool owf_server_loop_tcp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, struct pollfd *pfd, int sfd);
+bool owf_server_loop_udp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, uint8_t *buffer, int sfd);
 
 bool owf_setup_socket(owf_error_t *error, int fd, uint16_t mode) {
     if (fd < 0) {
         OWF_ERROR_SET(error, "invalid fd");
         return false;
-    } else if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int)) != 0) {
+    }
+#if OWF_PLATFORM == OWF_PLATFORM_WINDOWS
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &(char){ 1 }, sizeof(int)) != 0) {
+        OWF_ERROR_SET(error, "setsockopt for SO_REUSEADDR failed: %d", OWF_SOCKET_ERROR);
+        return false;
+    } else if (mode == OWF_SERVER_TCP && setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &(char){ 1 }, sizeof(int)) != 0) {
+        OWF_ERROR_SET(error, "setsockopt for TCP_NODELAY failed: %d", OWF_SOCKET_ERROR);
+        return false;
+    }
+#elif OWF_PLATFORM_IS_GNU
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int)) != 0) {
         OWF_ERROR_SET(error, "setsockopt for SO_REUSEADDR failed");
         return false;
     } else if (mode == OWF_SERVER_TCP && setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &(int){ 1 }, sizeof(int)) != 0) {
         OWF_ERROR_SET(error, "setsockopt for TCP_NODELAY failed");
         return false;
     }
+#endif
 
 #if OWF_PLATFORM == OWF_PLATFORM_WINDOWS
-    unsigned long mode = 1;
-    return ioctlsocket(fd, FIONBIO, &mode) == 0;
+    unsigned long flags = 1;
+    return ioctlsocket(fd, FIONBIO, &flags) == 0;
 #elif OWF_PLATFORM_IS_GNU
     int flags = fcntl(fd, F_GETFL, 0);
     if (flags < 0) {
@@ -63,17 +88,21 @@ bool owf_setup_socket(owf_error_t *error, int fd, uint16_t mode) {
 }
 
 bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, const char *host_str, const char *protocol_str, const char *port_str) {
+#if OWF_PLATFORM == OWF_PLATFORM_WINDOWS
+    WSADATA ws;
+#endif
     owf_array_t fds;
     struct addrinfo hints, *host = NULL;
     struct addrinfo *ptr = NULL;
-    int err, fd = -1, nfds;
-    bool ret;
+    uint8_t *buffer = NULL;
+    int err = 0, fd = -1, nfds = 0;
+    bool ret = true;
     uint16_t protocol;
 
     // verify the protocol
-    if (strcasecmp(protocol_str, "tcp") == 0) {
+    if (owf_strcasecmp(protocol_str, "tcp") == 0) {
         protocol = OWF_SERVER_TCP;
-    } else if (strcasecmp(protocol_str, "udp") == 0) {
+    } else if (owf_strcasecmp(protocol_str, "udp") == 0) {
         protocol = OWF_SERVER_UDP;
     } else {
         OWF_ERROR_SETF(error, "invalid protocol `%s`; we support tcp and udp", protocol_str);
@@ -85,6 +114,13 @@ bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, cons
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = protocol == OWF_SERVER_TCP ? SOCK_STREAM : SOCK_DGRAM;
 
+#if OWF_PLATFORM == OWF_PLATFORM_WINDOWS
+    // init winsock
+    if (WSAStartup(MAKEWORD(2, 0), &ws) != 0) {
+        OWF_ERROR_SETF(error, "WSAStartup failed");
+        goto fail;
+    }
+#endif
     // get address information for the requested socket
     if ((err = getaddrinfo(host_str, port_str, &hints, &host)) != 0) {
         OWF_ERROR_SETF(error, "getaddrinfo failed: %s", gai_strerror(err));
@@ -112,7 +148,7 @@ bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, cons
             
             // Try to listen
             if (ptr->ai_socktype == SOCK_STREAM && listen(fd, OWF_SERVER_LISTEN_QUEUE) != 0) {
-                OWF_ERROR_SET(error, "error listening");
+                OWF_ERROR_SET(error, "error listening: %d", OWF_SOCKET_ERROR);
                 goto fail;
             }
 
@@ -130,7 +166,7 @@ bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, cons
 
             break;
         } else {
-            close(fd);
+            owf_socket_close(fd);
             fd = -1;
         }
     }
@@ -154,11 +190,11 @@ bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, cons
                 socklen_t client_len = sizeof(client_addr);
                 
                 if ((cfd = accept(fd, &client_addr, &client_len)) == -1) {
-                    if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
+                    if (OWF_SOCKET_ERROR != OWF_SOCKET_EAGAIN && OWF_SOCKET_ERROR != OWF_SOCKET_EWOULDBLOCK) {
                         // error accepting this client
-                        OWF_ERROR_SET(error, "error accepting client");
+                        OWF_ERROR_SETF(error, "error accepting client: %d", OWF_SOCKET_ERROR);
                         goto fail;
-                    } else if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                    } else if (OWF_SOCKET_ERROR == OWF_SOCKET_EAGAIN || OWF_SOCKET_ERROR == OWF_SOCKET_EWOULDBLOCK) {
                         // no more clients to accept in this batch
                         break;
                     }
@@ -176,10 +212,10 @@ bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, cons
             }
             
             // Find sockets that we should act upon
-            if ((nfds = poll(OWF_ARRAY_PTR(fds, struct pollfd, 0), OWF_ARRAY_LEN(fds), 100)) == -1) {
-                OWF_ERROR_SET(error, "poll error");
+            if (OWF_ARRAY_LEN(fds) > 0 && (nfds = owf_socket_poll(OWF_ARRAY_PTR(fds, struct pollfd, 0), OWF_ARRAY_LEN(fds), 100)) == -1) {
+                OWF_ERROR_SETF(error, "poll error: %d", OWF_SOCKET_ERROR);
                 return false;
-            } else if (nfds > 0) {
+            } else if (OWF_ARRAY_LEN(fds) > 0 && nfds > 0) {
                 for (uint32_t i = 0; i < OWF_ARRAY_LEN(fds); i++) {
                     // Process existing clients
                     if (!owf_server_loop_tcp(logger, alloc, error, OWF_ARRAY_PTR(fds, struct pollfd, i), fd)) {
@@ -188,31 +224,44 @@ bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, cons
                 }
             }
             
-            usleep(10000);
+            //usleep(10000);
         }
     } else {
+        // Allocate a buffer
+        buffer = owf_malloc(alloc, error, OWF_SERVER_UDP_BUFFER_SIZE);
+        if (buffer == NULL) {
+            goto fail;
+        }
+
         while (true) {
             // Process existing clients
-            if (!owf_server_loop_udp(logger, alloc, error, fd)) {
+            if (!owf_server_loop_udp(logger, alloc, error, buffer, fd)) {
                 goto fail;
             }
             
-            usleep(10000);
+           // usleep(10000);
         }
     }
+    goto out;
 
 fail:
     ret = false;
 
+out:
     // Destroy the array
     owf_array_destroy(&fds, alloc);
     
     if (fd != -1) {
-        close(fd);
+        owf_socket_close(fd);
     }
     if (host != NULL) {
         freeaddrinfo(host);
     }
+
+#if OWF_PLATFORM == OWF_PLATFORM_WINDOWS
+    // Clean up winsock
+    WSACleanup();
+#endif
 
     return ret;
 }
@@ -224,10 +273,10 @@ bool owf_server_tcp_read_cb(void *dest, const size_t size, void *data) {
     uint8_t *buf = (uint8_t *)dest;
 
     while (bytes_left > 0) {
-        if ((bytes_read = read(pfd->fd, buf, bytes_left)) < 0) {
-            if (errno == EINTR) {
+        if ((bytes_read = recv(pfd->fd, buf, bytes_left, 0)) < 0) {
+            if (OWF_SOCKET_ERROR == OWF_SOCKET_EINTR) {
                 bytes_read = 0;
-            } else if (errno == EAGAIN) {
+            } else if (OWF_SOCKET_ERROR == OWF_SOCKET_EWOULDBLOCK) {
                 continue;
             } else {
                 return false;
@@ -250,10 +299,10 @@ bool owf_server_tcp_write_cb(const void *src, const size_t size, void *data) {
     uint8_t *buf = (uint8_t *)src;
 
     while (bytes_left > 0) {
-        if ((bytes_written = write(pfd->fd, buf, bytes_left)) <= 0) {
-            if (errno == EINTR) {
+        if ((bytes_written = send(pfd->fd, buf, bytes_left, 0)) <= 0) {
+            if (OWF_SOCKET_ERROR == OWF_SOCKET_EINTR) {
                 bytes_written = 0;
-            } else if (errno == EAGAIN) {
+            } else if (OWF_SOCKET_ERROR == OWF_SOCKET_EAGAIN) {
                 continue;
             } else {
                 return false;
@@ -267,7 +316,7 @@ bool owf_server_tcp_write_cb(const void *src, const size_t size, void *data) {
     return true;
 }
 
-bool owf_server_loop_tcp(FILE *restrict logger, owf_alloc_t *alloc, owf_error_t *error, struct pollfd *pfd, int sfd) {
+bool owf_server_loop_tcp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, struct pollfd *pfd, int sfd) {
     owf_binary_reader_t reader;
     owf_binary_writer_t writer;
     owf_error_t rw_error;
@@ -316,8 +365,7 @@ bool owf_server_loop_tcp(FILE *restrict logger, owf_alloc_t *alloc, owf_error_t 
     return true;
 }
 
-bool owf_server_loop_udp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, int sfd) {
-    uint8_t buffer[OWF_SERVER_UDP_BUFFER_SIZE];
+bool owf_server_loop_udp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, uint8_t *buffer, int sfd) {
     owf_binary_reader_t reader;
     owf_binary_writer_t writer;
     owf_buffer_t input_buffer, output_buffer;
@@ -345,8 +393,8 @@ bool owf_server_loop_udp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, i
                 fprintf(logger, "<= got a " OWF_PRINT_U32 "-byte OWF packet\n", tmp);
             }
         }
-    } else if (errno != EAGAIN && errno != EWOULDBLOCK) {
-        fprintf(logger, "recvfrom error\n");
+    } else if (OWF_SOCKET_ERROR != OWF_SOCKET_EAGAIN && OWF_SOCKET_ERROR != OWF_SOCKET_EWOULDBLOCK) {
+        fprintf(logger, "recvfrom error: %d\n", OWF_SOCKET_ERROR);
     }
     
     if (owf != NULL) {
@@ -371,7 +419,7 @@ bool owf_server_loop_udp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, i
                 if ((len = sendto(sfd, output_buffer.ptr, output_buffer.length, 0, &client_addr, client_len)) > 0) {
                     fprintf(logger, "=> wrote a " OWF_PRINT_U32 "-byte OWF packet\n", size);
                 } else {
-                    fprintf(logger, "=> error writing buffer to socket: %s\n", strerror(errno));
+                    fprintf(logger, "=> error writing buffer to socket: %d\n", OWF_SOCKET_ERROR);
                 }
             }
             
@@ -387,10 +435,9 @@ bool owf_server_loop_udp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, i
 int main(int argc, const char **argv) {
     owf_error_t error = OWF_ERROR_DEFAULT;
     owf_alloc_t alloc = {.malloc = malloc, .realloc = realloc, .free = free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
-    char host_str[256], protocol_str[16], port_str[8];
     FILE *logger = stderr;
 
-    if (argc != 4 || sscanf(argv[1], "%15[^:]", protocol_str) != 1 || sscanf(argv[2], "%255s", host_str) != 1 || sscanf(argv[3], "%7[0-9]", port_str) != 1) {
+    if (argc != 4) {
         fprintf(stderr, "Usage: %s <tcp|udp> <host> <port>\n", argv[0]);
         fprintf(stderr, "Examples:\n");
         fprintf(stderr, "  $ %s tcp 127.0.0.1 1234\n", argv[0]);
@@ -398,10 +445,10 @@ int main(int argc, const char **argv) {
         return 1;
     }
 
-    if (!owf_server_start(logger, &alloc, &error, host_str, protocol_str, port_str)) {
-        fprintf(logger, "error starting server on %s://%s:%s: %s\n", protocol_str, host_str, port_str, error.error);
+    if (!owf_server_start(logger, &alloc, &error, argv[2], argv[1], argv[3])) {
+        fprintf(logger, "error starting server on %s://%s:%s: %s\n", argv[1], argv[2], argv[3], error.error);
         return 1;
     }
-
+    
     return 0;
 }

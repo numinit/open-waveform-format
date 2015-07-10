@@ -1,4 +1,5 @@
 #include <owf/writer/binary.h>
+#include <owf/platform.h>
 
 #define OWF_BINARY_SAFE_WRITE(_binary, _ptr, _length) \
     do { \

@@ -1,4 +1,5 @@
 #include <owf/reader/binary.h>
+#include <owf/platform.h>
 
 #define OWF_BINARY_SAFE_READ(_binary, _ptr, _length) \
     do { \

@@ -23,7 +23,9 @@ msvc/build/*
 xcuserdata
 
 # MSVC userdata
+ipch
 *.suo
+*.user
 *.sdf
 *.opensdf
 *.v12

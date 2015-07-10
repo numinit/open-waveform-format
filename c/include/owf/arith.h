@@ -1,5 +1,4 @@
 #include <owf.h>
-#include <owf/platform.h>
 #include <owf/error.h>
 
 #ifndef OWF_ARITH_H

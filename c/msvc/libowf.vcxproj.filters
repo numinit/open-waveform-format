@@ -60,6 +60,9 @@
     <ClCompile Include="..\src\owf\version.c">
       <Filter>Source Files\owf</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\owf\error.c">
+      <Filter>Source Files\owf</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\owf.h">

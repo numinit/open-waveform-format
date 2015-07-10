@@ -225,17 +225,29 @@
  * Shims for GNU components on Windows
  */
 #if OWF_PLATFORM_IS_GNU
-    #include <unistd.h> 
+    #include <unistd.h>
+    #define owf_snprintf(...) snprintf(__VA_ARGS__)
+    #define owf_vsnprintf(...) vsnprintf(__VA_ARGS__)
+    #define owf_sscanf(...) sscanf(__VA_ARGS__)
+    #define owf_fopen(...) fopen(__VA_ARGS__)
+    #define owf_getcwd(...) getcwd(__VA_ARGS__)
+    #define owf_strcasecmp(...) strcasecmp(__VA_ARGS__)
+    #define owf_strncasecmp(...) strncasecmp(__VA_ARGS__)
 #elif OWF_PLATFORM == OWF_PLATFORM_WINDOWS
     #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
     #include <direct.h>
-    #define snprintf(...) owf_platform_windows_snprintf(__VA_ARGS__)
-    #define fopen(...) owf_platform_windows_fopen(__VA_ARGS__)
-    #define getcwd(...) owf_platform_windows_getcwd(__VA_ARGS__)
+    #define ssize_t int64_t
+    #define owf_snprintf(...) owf_platform_windows_snprintf(__VA_ARGS__)
+    #define owf_vsnprintf(...) owf_platform_windows_vsnprintf(__VA_ARGS__)
+    #define owf_fopen(...) owf_platform_windows_fopen(__VA_ARGS__)
+    #define owf_getcwd(...) owf_platform_windows_getcwd(__VA_ARGS__)
+    #define owf_strcasecmp _stricmp 
+    #define owf_strncasecmp _strnicmp 
     
     FILE *owf_platform_windows_fopen(const char *filename, const char *mode);
     int owf_platform_windows_snprintf(char *dst, size_t size, const char *format, ...);
+    int owf_platform_windows_vsnprintf(char *dst, size_t size, const char *format, va_list va);
     char *owf_platform_windows_getcwd(char *buf, size_t size);
 #endif
 
