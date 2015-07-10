@@ -27,12 +27,13 @@
 #define OWF_SERVER_TCP 0
 #define OWF_SERVER_UDP 1
 
+#define OWF_SERVER_UDP_BUFFER_SIZE 1048576
 #define OWF_SERVER_MAX_CLIENT_BATCH 10
 #define OWF_SERVER_LISTEN_QUEUE 8192
 
 bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, const char *host_str, const char *protocol_str, const char *port_str);
-bool owf_server_loop_tcp(FILE *restrict logger, owf_alloc_t *restrict alloc, owf_error_t *restrict err, owf_array_t *restrict arr, int sfd);
-bool owf_server_loop_udp(FILE *logger, owf_alloc_t *restrict alloc, owf_error_t *restrict err, int sfd);
+bool owf_server_loop_tcp(FILE *restrict logger, owf_alloc_t *restrict alloc, owf_error_t *restrict error, struct pollfd *pfd, int sfd);
+bool owf_server_loop_udp(FILE *logger, owf_alloc_t *restrict alloc, owf_error_t *restrict error, int sfd);
 
 bool owf_setup_socket(owf_error_t *error, int fd, uint16_t mode) {
     if (fd < 0) {
@@ -62,9 +63,10 @@ bool owf_setup_socket(owf_error_t *error, int fd, uint16_t mode) {
 }
 
 bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, const char *host_str, const char *protocol_str, const char *port_str) {
+    owf_array_t fds;
     struct addrinfo hints, *host = NULL;
     struct addrinfo *ptr = NULL;
-    int err, fd = -1;
+    int err, fd = -1, nfds;
     bool ret;
     uint16_t protocol;
 
@@ -97,28 +99,35 @@ bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, cons
             goto fail;
         } else if (bind(fd, ptr->ai_addr, ptr->ai_addrlen) == 0) {
             // Successfully bound
-            const char *type = ptr->ai_socktype == SOCK_STREAM ? "tcp" : (ptr->ai_socktype == SOCK_DGRAM ? "udp" : "<unknown>");
+            const char *type = ptr->ai_socktype == SOCK_STREAM ? "tcp" : (ptr->ai_socktype == SOCK_DGRAM ? "udp" : NULL);
             const char *host = ptr->ai_canonname == NULL ? host_str : ptr->ai_canonname;
             struct sockaddr *addr = ptr->ai_addr;
             int port;
+            
+            // Make sure we're a TCP or UDP socket
+            if (type == NULL) {
+                OWF_ERROR_SET(error, "type is neither SOCK_STREAM not SOCK_DGRAM");
+                goto fail;
+            }
+            
+            // Try to listen
+            if (ptr->ai_socktype == SOCK_STREAM && listen(fd, OWF_SERVER_LISTEN_QUEUE) != 0) {
+                OWF_ERROR_SET(error, "error listening");
+                goto fail;
+            }
 
             // Make sure we bound to the right family
             if (addr->sa_family == AF_INET) {
                 port = (int)ntohs(((struct sockaddr_in *)addr)->sin_port);
+                fprintf(logger, "bound to socket on %s://%s:%d\n", type, host, port);
             } else if (addr->sa_family == AF_INET6) {
                 port = (int)ntohs(((struct sockaddr_in6 *)addr)->sin6_port);
+                fprintf(logger, "bound to IPv6 socket on %s://%s:%d\n", type, host, port);
             } else {
                 OWF_ERROR_SET(error, "address family is neither AF_INET nor AF_INET6");
                 goto fail;
             }
 
-            // Try to listen
-            if (listen(fd, OWF_SERVER_LISTEN_QUEUE) != 0) {
-                OWF_ERROR_SET(error, "error listening");
-                goto fail;
-            }
-
-            fprintf(logger, "listening on %s://%s:%d\n", type, host, port);
             break;
         } else {
             close(fd);
@@ -131,35 +140,73 @@ bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, cons
         OWF_ERROR_SET(error, "couldn't bind");
         goto fail;
     }
+    
+    // Init an array of file descriptors
+    owf_array_init(&fds);
 
     // Loop
     if (protocol == OWF_SERVER_TCP) {
-        // Make an array of file descriptors
-        owf_array_t fds;
-        owf_array_init(&fds);
-
-        // Accept/process new descriptors
         while (true) {
-            if (!owf_server_loop_tcp(logger, alloc, error, &fds, fd)) {
-                goto fail;
+            // Try to accept new clients
+            for (int i = 0; i < OWF_SERVER_MAX_CLIENT_BATCH; i++) {
+                int cfd;
+                struct sockaddr client_addr;
+                socklen_t client_len = sizeof(client_addr);
+                
+                if ((cfd = accept(fd, &client_addr, &client_len)) == -1) {
+                    if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
+                        // error accepting this client
+                        OWF_ERROR_SET(error, "error accepting client");
+                        goto fail;
+                    } else if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                        // no more clients to accept in this batch
+                        break;
+                    }
+                } else {
+                    // create a poll file descriptor
+                    struct pollfd pfd;
+                    pfd.fd = cfd;
+                    pfd.events = POLLIN | POLLOUT;
+                    if (!owf_array_push(&fds, alloc, error, &pfd, sizeof(pfd))) {
+                        goto fail;
+                    } else {
+                        fprintf(logger, "accepted client on fd %d\n", fd);
+                    }
+                }
             }
+            
+            // Find sockets that we should act upon
+            if ((nfds = poll(OWF_ARRAY_PTR(fds, struct pollfd, 0), OWF_ARRAY_LEN(fds), 100)) == -1) {
+                OWF_ERROR_SET(error, "poll error");
+                return false;
+            } else if (nfds > 0) {
+                for (uint32_t i = 0; i < OWF_ARRAY_LEN(fds); i++) {
+                    // Process existing clients
+                    if (!owf_server_loop_tcp(logger, alloc, error, OWF_ARRAY_PTR(fds, struct pollfd, i), fd)) {
+                        goto fail;
+                    }
+                }
+            }
+            
+            usleep(10000);
         }
-
-        // Destroy the array
-        owf_array_destroy(&fds, alloc);
     } else {
         while (true) {
+            // Process existing clients
             if (!owf_server_loop_udp(logger, alloc, error, fd)) {
                 goto fail;
             }
+            
+            usleep(10000);
         }
     }
 
-    goto out;
-
 fail:
     ret = false;
-out:
+
+    // Destroy the array
+    owf_array_destroy(&fds, alloc);
+    
     if (fd != -1) {
         close(fd);
     }
@@ -220,97 +267,120 @@ bool owf_server_tcp_write_cb(const void *src, const size_t size, void *data) {
     return true;
 }
 
-bool owf_server_loop_tcp(FILE *restrict logger, owf_alloc_t *alloc, owf_error_t *err, owf_array_t *arr, int sfd) {
-    owf_binary_writer_t writer;
+bool owf_server_loop_tcp(FILE *restrict logger, owf_alloc_t *alloc, owf_error_t *error, struct pollfd *pfd, int sfd) {
     owf_binary_reader_t reader;
+    owf_binary_writer_t writer;
     owf_error_t rw_error;
     owf_t *owf = NULL;
-    struct pollfd *pfd;
     uint32_t size = 0;
-    int nfds;
-    
-    // Try to accept new clients
-    for (int i = 0; i < OWF_SERVER_MAX_CLIENT_BATCH; i++) {
-        int fd;
-        struct sockaddr client_addr;
-        socklen_t client_len = sizeof(client_addr);
 
-        if ((fd = accept(sfd, &client_addr, &client_len)) == -1) {
-            if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
-                // error accepting this client
-                OWF_ERROR_SET(err, "error accepting client");
-                return false;
-            } else if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                // no more clients to accept in this batch
-                break;
-            }
+    if (pfd->revents & POLLIN && !(pfd->revents & POLLHUP)) {
+        // Some data is here, hopefully containing an OWF message.
+        // Greedily eat the data until we can receive an OWF message.
+        owf_error_init(&rw_error);
+        owf_binary_reader_init(&reader, alloc, &rw_error, owf_server_tcp_read_cb, NULL, pfd);
+
+        if ((owf = owf_binary_materialize(&reader)) == NULL) {
+            fprintf(logger, "<= error materializing packet for fd %d: %s\n", pfd->fd, rw_error.error);
         } else {
-            // create a poll file descriptor
-            struct pollfd pfd;
-            pfd.fd = fd;
-            pfd.events = POLLIN | POLLOUT;
-            if (!owf_array_push(arr, alloc, err, &pfd, sizeof(pfd))) {
-                return false;
+            // hooray, we have an OWF packet
+            if (!owf_size(owf, &rw_error, &size)) {
+                fprintf(logger, "<= error getting OWF size for fd %d's packet: %s\n", pfd->fd, rw_error.error);
             } else {
-                fprintf(logger, "accepted client on fd %d\n", fd);
+                fprintf(logger, "<= got a " OWF_PRINT_U32 "-byte OWF packet from fd %d\n", size, pfd->fd);
             }
         }
     }
 
-    // Find sockets that we should act upon
-    if ((nfds = poll(OWF_ARRAY_PTR(*arr, struct pollfd, 0), OWF_ARRAY_LEN(*arr), 1000)) == -1) {
-        return false;
-    } else if (nfds > 0) {
-        for (uint32_t i = 0; i < OWF_ARRAY_LEN(*arr); i++) {
-            pfd = OWF_ARRAY_PTR(*arr, struct pollfd, i);
+    if (pfd->revents & POLLOUT && !(pfd->revents & POLLHUP) && owf != NULL) {
+        // initialize the binary writer
+        owf_error_init(&rw_error);
+        owf_binary_writer_init(&writer, alloc, &rw_error, owf_server_tcp_write_cb, pfd);
 
-            if (pfd->revents & POLLIN && !(pfd->revents & POLLHUP)) {
-                // Some data is here, hopefully containing an OWF message.
-                // Greedily eat the data until we can receive an OWF message.
-                owf_error_init(&rw_error);
-                owf_binary_reader_init(&reader, alloc, &rw_error, owf_server_tcp_read_cb, NULL, pfd);
-
-                // materialize it
-                if ((owf = owf_binary_materialize(&reader)) == NULL) {
-                    fprintf(logger, "<= error materializing packet for fd %d: %s\n", pfd->fd, rw_error.error);
-                    continue;
-                } else {
-                    // hooray, we have an OWF packet
-                    if (!owf_size(owf, &rw_error, &size)) {
-                        fprintf(logger, "<= error getting OWF size for fd %d's packet: %s\n", pfd->fd, rw_error.error);
-                    } else {
-                        fprintf(logger, "<= got a " OWF_PRINT_U32 "-byte OWF packet from fd %d\n", size, pfd->fd);
-                    }
-                }
-            }
-
-            if (pfd->revents & POLLOUT && !(pfd->revents & POLLHUP) && owf != NULL) {
-                // initialize the binary writer
-                owf_error_init(&rw_error);
-                owf_binary_writer_init(&writer, alloc, &rw_error, owf_server_tcp_write_cb, pfd);
-
-                // write to the buffer
-                if (!owf_binary_write(&writer, owf)) {
-                    fprintf(logger, "=> error writing packet to fd %d: %s\n", pfd->fd, rw_error.error);
-                } else {
-                    if (!owf_size(owf, &rw_error, &size)) {
-                        fprintf(logger, "=> error getting OWF size for fd %d's packet: %s\n", pfd->fd, rw_error.error);
-                    } else {
-                        fprintf(logger, "=> wrote a " OWF_PRINT_U32 "-byte OWF packet to fd %d\n", size, pfd->fd);
-                    }
-                }
-            }
-
-            if (owf != NULL) {
-                owf_destroy(owf, alloc);
+        // write to the buffer
+        if (!owf_binary_write(&writer, owf)) {
+            fprintf(logger, "=> error writing packet to fd %d: %s\n", pfd->fd, rw_error.error);
+        } else {
+            if (!owf_size(owf, &rw_error, &size)) {
+                fprintf(logger, "=> error getting OWF size for fd %d's packet: %s\n", pfd->fd, rw_error.error);
+            } else {
+                fprintf(logger, "=> wrote a " OWF_PRINT_U32 "-byte OWF packet to fd %d\n", size, pfd->fd);
             }
         }
+    }
+
+    if (owf != NULL) {
+        owf_destroy(owf, alloc);
     }
 
     return true;
 }
 
 bool owf_server_loop_udp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, int sfd) {
+    uint8_t buffer[OWF_SERVER_UDP_BUFFER_SIZE];
+    owf_binary_reader_t reader;
+    owf_binary_writer_t writer;
+    owf_buffer_t input_buffer, output_buffer;
+    owf_error_t rw_error;
+    
+    struct sockaddr client_addr;
+    socklen_t client_len = sizeof(client_addr);
+    owf_t *owf = NULL;
+    ssize_t len;
+    uint32_t tmp;
+    
+    // Read the packet
+    if ((len = recvfrom(sfd, buffer, sizeof(buffer), 0, &client_addr, &client_len)) > 0) {
+        // We've got the UDP packet in a buffer. Read it.
+        owf_error_init(&rw_error);
+        owf_buffer_init(&input_buffer, buffer, (size_t)len);
+        owf_binary_reader_init_buffer(&reader, &input_buffer, alloc, &rw_error, NULL);
+        
+        if ((owf = owf_binary_materialize(&reader)) == NULL) {
+            fprintf(logger, "<= error materializing packet: %s\n", rw_error.error);
+        } else {
+            if (!owf_size(owf, &rw_error, &tmp)) {
+                fprintf(logger, "<= error getting OWF size packet: %s\n", rw_error.error);
+            } else {
+                fprintf(logger, "<= got a " OWF_PRINT_U32 "-byte OWF packet\n", tmp);
+            }
+        }
+    } else if (errno != EAGAIN && errno != EWOULDBLOCK) {
+        fprintf(logger, "recvfrom error\n");
+    }
+    
+    if (owf != NULL) {
+        // Allocate a buffer that's as large as the OWF packet we're about to write back
+        uint32_t size;
+        owf_error_init(&rw_error);
+        if (!owf_size(owf, &rw_error, &size)) {
+            fprintf(logger, "=> error getting OWF size: %s\n", rw_error.error);
+        } else {
+            void *ptr = owf_malloc(alloc, error, size);
+            if (ptr == NULL) {
+                return false;
+            }
+            
+            // Write out the packet
+            owf_buffer_init(&output_buffer, ptr, size);
+            owf_binary_writer_init_buffer(&writer, &output_buffer, alloc, &rw_error);
+            if (!owf_binary_write(&writer, owf)) {
+                fprintf(logger, "=> error writing packet to buffer: %s\n", rw_error.error);
+            } else {
+                // Write the buffer to the UDP socket
+                if ((len = sendto(sfd, output_buffer.ptr, output_buffer.length, 0, &client_addr, client_len)) > 0) {
+                    fprintf(logger, "=> wrote a " OWF_PRINT_U32 "-byte OWF packet\n", size);
+                } else {
+                    fprintf(logger, "=> error writing buffer to socket: %s\n", strerror(errno));
+                }
+            }
+            
+            owf_free(alloc, ptr);
+        }
+        
+        owf_destroy(owf, alloc);
+    }
+    
     return true;
 }
 
@@ -320,11 +390,11 @@ int main(int argc, const char **argv) {
     char host_str[256], protocol_str[16], port_str[8];
     FILE *logger = stderr;
 
-    if (argc != 2 || sscanf(argv[1], "%15[^:]://%255[^:]:%7[0-9]", protocol_str, host_str, port_str) != 3) {
-        fprintf(stderr, "Usage: %s <port-spec>\n", argv[0]);
+    if (argc != 4 || sscanf(argv[1], "%15[^:]", protocol_str) != 1 || sscanf(argv[2], "%255s", host_str) != 1 || sscanf(argv[3], "%7[0-9]", port_str) != 1) {
+        fprintf(stderr, "Usage: %s <tcp|udp> <host> <port>\n", argv[0]);
         fprintf(stderr, "Examples:\n");
-        fprintf(stderr, "  $ %s tcp://127.0.0.1:1234\n", argv[0]);
-        fprintf(stderr, "  $ %s udp://localhost:9001\n", argv[0]);
+        fprintf(stderr, "  $ %s tcp 127.0.0.1 1234\n", argv[0]);
+        fprintf(stderr, "  $ %s udp localhost 9001\n", argv[0]);
         return 1;
     }
 
