@@ -48,7 +48,9 @@ typedef struct owf_alarm {
     owf_memoize_t memoize;
     owf_time_t t0, dt;
     union {
-        uint8_t  level, volume, _reserved_0, _reserved_1;
+        struct {
+            uint8_t  level, volume, _reserved_0, _reserved_1;
+        } u8;
         uint32_t u32;
     } details;
     owf_str_t type, message;

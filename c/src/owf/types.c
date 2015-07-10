@@ -340,10 +340,10 @@ int owf_alarm_compare(owf_alarm_t *lhs, owf_alarm_t *rhs) {
         return lhs->t0 < rhs->t0 ? -1 : 1;
     } else if (lhs->dt != rhs->dt) {
         return lhs->dt < rhs->dt ? -1 : 1;
-    } else if (lhs->details.level != rhs->details.level) {
-        return lhs->details.level < rhs->details.level ? -1 : 1;
-    } else if (lhs->details.volume != rhs->details.volume) {
-        return lhs->details.volume < rhs->details.volume ? -1 : 1;
+    } else if (lhs->details.u8.level != rhs->details.u8.level) {
+        return lhs->details.u8.level < rhs->details.u8.level ? -1 : 1;
+    } else if (lhs->details.u8.volume != rhs->details.u8.volume) {
+        return lhs->details.u8.volume < rhs->details.u8.volume ? -1 : 1;
     } else if ((ret = owf_str_compare(&lhs->type, &rhs->type)) != 0) {
         return ret;
     } else {

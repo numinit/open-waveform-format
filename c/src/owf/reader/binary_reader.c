@@ -279,7 +279,7 @@ bool owf_binary_reader_read_alarm(owf_binary_reader_t *binary, void *ptr) {
     OWF_HOST64(alarm->dt);
 
     /* Read the level, volume, etc */
-    OWF_BINARY_SAFE_READ(binary, &alarm->details, sizeof(alarm->details));
+    OWF_BINARY_SAFE_READ(binary, &alarm->details.u32, sizeof(alarm->details.u32));
 
     /* Read the type */
     if (OWF_NOEXPECT(!owf_binary_reader_unwrap(binary, owf_binary_reader_read_str, &alarm->type))) {

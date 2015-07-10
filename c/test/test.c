@@ -83,7 +83,7 @@ static void owf_test_print_event(owf_event_t *event) {
 
 static void owf_test_print_alarm(owf_alarm_t *alarm) {
     if (owf_test_verbose) {
-        fprintf(stderr, "    [ALARM] <type=%s, message=%s, t0=" OWF_PRINT_U64 ", dt=" OWF_PRINT_U64 ", level=" OWF_PRINT_U8 ", volume=" OWF_PRINT_U8 ">\n", OWF_STR_PTR(alarm->type), OWF_STR_PTR(alarm->message), alarm->t0, alarm->dt, alarm->details.level, alarm->details.volume);
+        fprintf(stderr, "    [ALARM] <type=%s, message=%s, t0=" OWF_PRINT_U64 ", dt=" OWF_PRINT_U64 ", level=" OWF_PRINT_U8 ", volume=" OWF_PRINT_U8 ">\n", OWF_STR_PTR(alarm->type), OWF_STR_PTR(alarm->message), alarm->t0, alarm->dt, alarm->details.u8.level, alarm->details.u8.volume);
     }
 }
 
@@ -202,7 +202,6 @@ static int owf_test_binary_reader_visitor_file_execute(const char *filename, boo
         OWF_TEST_FAIL("error opening file");
     }
 
-    fprintf(stderr, "\n");
     if (owf_binary_read(&reader) != result) {
         OWF_TEST_FAIL("unexpected result when reading OWF in file mode");
     }
@@ -219,7 +218,6 @@ static int owf_test_binary_reader_visitor_buffer_execute(const char *filename, b
         OWF_TEST_FAIL("error reading file");
     }
 
-    fprintf(stderr, "\n");
     if (owf_binary_read(&reader) != result) {
         OWF_TEST_FAIL("unexpected result when reading OWF in buffer mode");
     }
@@ -229,7 +227,6 @@ static int owf_test_binary_reader_visitor_buffer_execute(const char *filename, b
 }
 
 static int owf_test_binary_reader_materialize_print(owf_binary_reader_t *reader, owf_t *owf) {
-    fprintf(stderr, "\n");
     for (size_t channel_idx = 0; channel_idx < OWF_ARRAY_LEN(owf->channels); channel_idx++) {
         owf_channel_t *channel = OWF_ARRAY_PTR(owf->channels, owf_channel_t, channel_idx);
         owf_test_print_channel(channel);
@@ -491,9 +488,9 @@ int main(int argc, char **argv) {
         int res = test->fn();
         if (res == 0) {
             success++;
-            fprintf(stdout, "PASSED\n");
+            fprintf(stdout, " PASSED\n");
         } else if (res == 1) {
-            fprintf(stdout, "FAILED\n");
+            fprintf(stdout, " FAILED\n");
         }
 
         if (res != 0 && res != 1) {

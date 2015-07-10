@@ -169,8 +169,8 @@ bool owf_binary_writer_write_alarm(owf_binary_writer_t *binary, owf_namespace_t 
     if (OWF_NOEXPECT(
         !owf_binary_writer_write_time(binary, alarm->t0) ||
         !owf_binary_writer_write_time(binary, alarm->dt) ||
-        !owf_binary_writer_write_u8(binary, alarm->details.level) ||
-        !owf_binary_writer_write_u8(binary, alarm->details.volume) ||
+        !owf_binary_writer_write_u8(binary, alarm->details.u8.level) ||
+        !owf_binary_writer_write_u8(binary, alarm->details.u8.volume) ||
         !owf_binary_writer_write_u16(binary, 0) ||
         !owf_binary_writer_write_str(binary, &alarm->type) ||
         !owf_binary_writer_write_str(binary, &alarm->message))) {
