@@ -35,6 +35,7 @@ bool owf_size(owf_t *owf, owf_error_t *error, uint32_t *output_size) {
     } else {
         *output_size = owf_memoize_fetch(&owf->memoize);
     }
+    
     return true;
 }
 
@@ -437,7 +438,7 @@ int owf_str_compare(owf_str_t *lhs, owf_str_t *rhs) {
 uint32_t owf_str_length(owf_str_t *str) {
     if (owf_memoize_stale(&str->string_size)) {
         /* OWF_ARRAY_LEN(str->bytes) returns a uint32_t, so we can truncate the return value of strnlen */
-        return owf_memoize_cache(&str->string_size, (uint32_t)strnlen(str->bytes.ptr, OWF_ARRAY_LEN(str->bytes)));
+        return owf_memoize_cache(&str->string_size, OWF_ARRAY_LEN(str->bytes) == 0 ? 0 : (uint32_t)strnlen(str->bytes.ptr, OWF_ARRAY_LEN(str->bytes)));
     } else {
         return owf_memoize_fetch(&str->string_size);
     }
@@ -453,14 +454,16 @@ bool owf_str_size(owf_str_t *str, owf_error_t *error, uint32_t *output_size) {
         // Get the length in bytes of the string's byte array, not including a trailing null byte
         uint32_t length = owf_str_length(str), padding;
         
-        // Add the trailing null byte
-        OWF_ARITH_SAFE_ADD32(error, length, 1);
+        if (length > 0) {
+            // Add the trailing null byte
+            OWF_ARITH_SAFE_ADD32(error, length, 1);
 
-        // Pad out the length, counting the null byte
-        padding = owf_str_padding(length);
-        
-        // Add the padding to the length
-        OWF_ARITH_SAFE_ADD32(error, length, padding);
+            // Pad out the length, counting the null byte
+            padding = owf_str_padding(length);
+            
+            // Add the padding to the length
+            OWF_ARITH_SAFE_ADD32(error, length, padding);
+        }
         
         // Add size for the header
         OWF_ARITH_SAFE_ADD32(error, length, sizeof(uint32_t));

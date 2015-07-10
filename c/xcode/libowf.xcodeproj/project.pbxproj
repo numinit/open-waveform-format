@@ -29,6 +29,13 @@
 			remoteGlobalIDString = BF54FDE11B39BFC300760CAE;
 			remoteInfo = "libowf-test";
 		};
+		BFB9066E1B50215600B35A9F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BFB9066A1B50215600B35A9F /* libowf-server.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = BF36BFBD1B50205700C76F8B;
+			remoteInfo = "libowf-server";
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -52,6 +59,7 @@
 		BF76FF991B4C88DC006076D2 /* writer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = writer.c; sourceTree = "<group>"; };
 		BF76FF9F1B4C8917006076D2 /* binary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = binary.h; sourceTree = "<group>"; };
 		BF76FFA01B4C8917006076D2 /* writer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = writer.h; sourceTree = "<group>"; };
+		BFB9066A1B50215600B35A9F /* libowf-server.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "libowf-server.xcodeproj"; sourceTree = "<group>"; };
 		BFBA63731B45E5B80066A119 /* binary.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = binary.h; sourceTree = "<group>"; };
 		BFCFE8581B4EF859001C68A2 /* error.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = error.c; sourceTree = "<group>"; };
 		BFE790D31B39BE3900F4A24B /* libowf.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libowf.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -145,6 +153,14 @@
 			path = writer;
 			sourceTree = "<group>";
 		};
+		BFB9066B1B50215600B35A9F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BFB9066F1B50215600B35A9F /* libowf-server */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		BFBA63721B45E5B80066A119 /* reader */ = {
 			isa = PBXGroup;
 			children = (
@@ -164,6 +180,7 @@
 		BFE790CA1B39BE3900F4A24B = {
 			isa = PBXGroup;
 			children = (
+				BFB9066A1B50215600B35A9F /* libowf-server.xcodeproj */,
 				BF459D601B39BFE900BB7117 /* libowf-test.xcodeproj */,
 				BF54FDBC1B39BF0900760CAE /* include */,
 				BF54FDC81B39BF0900760CAE /* src */,
@@ -237,6 +254,10 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
+					ProductGroup = BFB9066B1B50215600B35A9F /* Products */;
+					ProjectRef = BFB9066A1B50215600B35A9F /* libowf-server.xcodeproj */;
+				},
+				{
 					ProductGroup = BF459D611B39BFE900BB7117 /* Products */;
 					ProjectRef = BF459D601B39BFE900BB7117 /* libowf-test.xcodeproj */;
 				},
@@ -254,6 +275,13 @@
 			fileType = "compiled.mach-o.executable";
 			path = "libowf-test";
 			remoteRef = BF459D641B39BFE900BB7117 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		BFB9066F1B50215600B35A9F /* libowf-server */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "libowf-server";
+			remoteRef = BFB9066E1B50215600B35A9F /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -314,6 +342,11 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(PROJECT_DIR)/../include",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -350,6 +383,11 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(PROJECT_DIR)/../include",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
@@ -365,7 +403,6 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					"$(PROJECT_DIR)/../include",
 				);
 				PRODUCT_NAME = owf;
 				PUBLIC_HEADERS_FOLDER_PATH = /usr/local/include;
@@ -382,7 +419,6 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					"$(PROJECT_DIR)/../include",
 				);
 				PRODUCT_NAME = owf;
 				PUBLIC_HEADERS_FOLDER_PATH = /usr/local/include;

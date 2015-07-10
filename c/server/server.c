@@ -221,6 +221,14 @@ bool owf_server_tcp_write_cb(const void *src, const size_t size, void *data) {
 }
 
 bool owf_server_loop_tcp(FILE *restrict logger, owf_alloc_t *alloc, owf_error_t *err, owf_array_t *arr, int sfd) {
+    owf_binary_writer_t writer;
+    owf_binary_reader_t reader;
+    owf_error_t rw_error;
+    owf_t *owf = NULL;
+    struct pollfd *pfd;
+    uint32_t size = 0;
+    int nfds;
+    
     // Try to accept new clients
     for (int i = 0; i < OWF_SERVER_MAX_CLIENT_BATCH; i++) {
         int fd;
@@ -250,32 +258,26 @@ bool owf_server_loop_tcp(FILE *restrict logger, owf_alloc_t *alloc, owf_error_t 
     }
 
     // Find sockets that we should act upon
-    int nfds;
     if ((nfds = poll(OWF_ARRAY_PTR(*arr, struct pollfd, 0), OWF_ARRAY_LEN(*arr), 1000)) == -1) {
         return false;
     } else if (nfds > 0) {
         for (uint32_t i = 0; i < OWF_ARRAY_LEN(*arr); i++) {
-            struct pollfd *pfd = OWF_ARRAY_PTR(*arr, struct pollfd, i);
-            owf_t *owf = NULL;
+            pfd = OWF_ARRAY_PTR(*arr, struct pollfd, i);
 
             if (pfd->revents & POLLIN && !(pfd->revents & POLLHUP)) {
                 // Some data is here, hopefully containing an OWF message.
                 // Greedily eat the data until we can receive an OWF message.
-                owf_binary_reader_t reader;
-                owf_error_t read_error = OWF_ERROR_DEFAULT;
-
-                // initialize the binary reader
-                owf_binary_reader_init(&reader, alloc, &read_error, owf_server_tcp_read_cb, NULL, pfd);
+                owf_error_init(&rw_error);
+                owf_binary_reader_init(&reader, alloc, &rw_error, owf_server_tcp_read_cb, NULL, pfd);
 
                 // materialize it
                 if ((owf = owf_binary_materialize(&reader)) == NULL) {
-                    fprintf(logger, "<= error materializing packet for fd %d: %s\n", pfd->fd, read_error.error);
+                    fprintf(logger, "<= error materializing packet for fd %d: %s\n", pfd->fd, rw_error.error);
                     continue;
                 } else {
                     // hooray, we have an OWF packet
-                    uint32_t size;
-                    if (!owf_size(owf, &read_error, &size)) {
-                        fprintf(logger, "<= error getting OWF size for fd %d's packet: %s\n", pfd->fd, read_error.error);
+                    if (!owf_size(owf, &rw_error, &size)) {
+                        fprintf(logger, "<= error getting OWF size for fd %d's packet: %s\n", pfd->fd, rw_error.error);
                     } else {
                         fprintf(logger, "<= got a " OWF_PRINT_U32 "-byte OWF packet from fd %d\n", size, pfd->fd);
                     }
@@ -283,19 +285,16 @@ bool owf_server_loop_tcp(FILE *restrict logger, owf_alloc_t *alloc, owf_error_t 
             }
 
             if (pfd->revents & POLLOUT && !(pfd->revents & POLLHUP) && owf != NULL) {
-                owf_binary_writer_t writer;
-                owf_error_t write_error = OWF_ERROR_DEFAULT;
-
                 // initialize the binary writer
-                owf_binary_writer_init(&writer, alloc, &write_error, owf_server_tcp_write_cb, pfd);
+                owf_error_init(&rw_error);
+                owf_binary_writer_init(&writer, alloc, &rw_error, owf_server_tcp_write_cb, pfd);
 
                 // write to the buffer
                 if (!owf_binary_write(&writer, owf)) {
-                    fprintf(logger, "=> error writing packet to fd %d: %s\n", pfd->fd, write_error.error);
+                    fprintf(logger, "=> error writing packet to fd %d: %s\n", pfd->fd, rw_error.error);
                 } else {
-                    uint32_t size;
-                    if (!owf_size(owf, &write_error, &size)) {
-                        fprintf(logger, "=> error getting OWF size for fd %d's packet: %s\n", pfd->fd, write_error.error);
+                    if (!owf_size(owf, &rw_error, &size)) {
+                        fprintf(logger, "=> error getting OWF size for fd %d's packet: %s\n", pfd->fd, rw_error.error);
                     } else {
                         fprintf(logger, "=> wrote a " OWF_PRINT_U32 "-byte OWF packet to fd %d\n", size, pfd->fd);
                     }
