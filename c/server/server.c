@@ -97,7 +97,7 @@ bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, cons
     struct addrinfo hints, *host = NULL;
     struct addrinfo *ptr = NULL;
     uint8_t *buffer = NULL;
-    owf_socket_t fd;
+    owf_socket_t fd = -1;
     int err = 0, nfds = 0;
     bool ret = true;
     uint16_t protocol;
