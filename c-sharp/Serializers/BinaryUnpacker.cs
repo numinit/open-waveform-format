@@ -409,7 +409,7 @@ namespace OWF.Serializers {
         /// <returns>An OWFPackage</returns>
         public OWFPackage Convert(Stream str) {
             lock (this) {
-                using (this._br = new BinaryReader(str, Encoding.UTF8)) {
+                using (this._br = new BinaryReader(str, Encoding.UTF8, true)) {
                     // Read the header
                     UInt32 length = sizeof(UInt32);
                     this._segmentLength = length;

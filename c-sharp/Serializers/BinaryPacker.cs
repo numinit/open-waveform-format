@@ -224,8 +224,8 @@ namespace OWF.Serializers {
         /// <param name="stream">The stream</param>
         public void Convert(OWFPackage package, Stream stream) {
             lock (this) {
-                using (this._bw = new BinaryWriter(stream, Encoding.UTF8)) {
-                    this.WriteHeader(checked(package.GetSizeInBytes() - sizeof(UInt32)));
+                using (this._bw = new BinaryWriter(stream, Encoding.UTF8, true)) {
+                    this.WriteHeader(checked(package.GetSizeInBytes() - 2 * sizeof(UInt32)));
                     foreach (var channel in package.Channels) {
                         this.WriteChannel(channel);
                     }

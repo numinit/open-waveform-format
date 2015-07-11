@@ -28,7 +28,7 @@ namespace OWF.DTO {
         protected override UInt32 ComputeSizeInBytes() {
             checked {
                 var packageSize = this.Channels.Aggregate<OWFChannel, uint>(0, (current, channel) => current + channel.GetSizeInBytes());
-                return sizeof(UInt32) + packageSize;
+                return 2 * sizeof(UInt32) + packageSize;
             }
         }
 
