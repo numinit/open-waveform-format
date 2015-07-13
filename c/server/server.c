@@ -149,8 +149,7 @@ bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, cons
         OWF_ERROR_SETF(error, "WSAStartup returned an invalid version of Winsock");
         goto fail;
     } else {
-        fprintf(logger, "Running on WinSock " OWF_PRINT_SIZE "." OWF_PRINT_SIZE ": %s\n", LOBYTE(ws.wVersion), HIBYTE(ws.wVersion), ws.szDescription);
-        fprintf(logger, "%s\n", ws.szSystemStatus);
+        fprintf(logger, "(running on WinSock " OWF_PRINT_SIZE "." OWF_PRINT_SIZE ")\n\n", LOBYTE(ws.wVersion), HIBYTE(ws.wVersion));
     }
 #endif
 
@@ -513,7 +512,9 @@ int main(int argc, const char **argv) {
     
     // install signal handlers - XXX: we could use sigaction here, but have SIGPIPE handled fairly well
     signal(SIGINT, owf_server_signal);
+#if OWF_PLATFORM_IS_GNU
     signal(SIGPIPE, SIG_IGN);
+#endif
 
     fprintf(logger, "--------------------------------\n");
     fprintf(logger, "libowf " OWF_LIBRARY_VERSION_STRING " net server starting\n");
