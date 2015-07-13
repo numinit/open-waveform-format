@@ -1,6 +1,5 @@
 #include <owf.h>
 #include <owf/error.h>
-#include <owf/platform.h>
 
 #include <stdlib.h>
 #include <string.h>

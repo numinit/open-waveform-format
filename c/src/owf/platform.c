@@ -22,6 +22,10 @@ int owf_platform_windows_snprintf(char *dst, size_t size, const char *format, ..
     return ret;
 }
 
+int owf_platform_windows_vsnprintf(char *dst, size_t size, const char *format, va_list va) {
+    return vsnprintf_s(dst, size, _TRUNCATE, format, va);
+}
+
 char *owf_platform_windows_getcwd(char *buf, size_t size) {
     return _getcwd(buf, (int)size);
 }

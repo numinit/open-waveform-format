@@ -6,10 +6,6 @@
 #include <limits.h>
 #include <assert.h>
 
-#ifndef _Bool
-#define _Bool int
-#endif
-
 #ifndef OWF_H
 #define OWF_H
 

@@ -19,6 +19,9 @@ LIBOWF_OBJS = $(LIBOWF_SRCS:.c=.o)
 LIBOWF_TEST_SRCS = $(shell find test -type f -name '*.c')
 LIBOWF_TEST_OBJS = $(LIBOWF_TEST_SRCS:.c=.o)
 
+LIBOWF_SERVER_SRCS = $(shell find server -type f -name '*.c')
+LIBOWF_SERVER_OBJS = $(LIBOWF_SERVER_SRCS:.c=.o)
+
 # Export variables for subprocesses
 export PATH := ./build/lib:./build/bin:$(PATH)
 export LD_LIBRARY_PATH := ./build/lib:$(LD_LIBRARY_PATH)
@@ -43,14 +46,29 @@ endif
 # Define the executable file
 LIBOWF = build/lib/libowf$(DL_EXT)
 LIBOWF_TEST = build/bin/libowf-test$(BIN_EXT)
+LIBOWF_SERVER = build/bin/libowf-server$(BIN_EXT)
 
-# Define `make all`, `make tests`, and `make test`.
-all: $(LIBOWF)
-tests: $(LIBOWF) $(LIBOWF_TEST)
+# Define `make all`, `make test`, and `make server`
+all: $(LIBOWF) $(LIBOWF_TEST) $(LIBOWF_SERVER)
 test: $(LIBOWF) $(LIBOWF_TEST)
+server: $(LIBOWF) $(LIBOWF_SERVER)
+
+# Define `make clean`, `make run-test`, and `make run-server` as phony targets
+clean:
+	@echo "RM $(LIBOWF) $(LIBOWF_TEST) $(LIBOWF_SERVER)"
+	@rm -f $(LIBOWF) $(LIBOWF_TEST) $(LIBOWF_SERVER)
+	@echo "RM *.o"
+	@find src test server -name '*.o' -exec rm -f {} \;
+test-run: $(LIBOWF) $(LIBOWF_TEST)
+	@echo
 	@echo "TEST $(LIBOWF_TEST)"
 	@$(LIBOWF_TEST)
-.PHONY: clean test
+server-run: $(LIBOWF) $(LIBOWF_SERVER)
+	@echo
+	@echo "SERVER $(LIBOWF_SERVER) $(protocol) $(host) $(port)"
+	@$(LIBOWF_SERVER) $(protocol) $(host) $(port)
+
+.PHONY: clean run-test run-server
 
 # Define the libowf target
 $(LIBOWF): $(LIBOWF_OBJS)
@@ -63,14 +81,13 @@ $(LIBOWF_TEST): $(LIBOWF) $(LIBOWF_TEST_OBJS)
 	@echo "LD $(LIBOWF_TEST)"
 	@$(CC) $(CFLAGS) $(LIBOWF_TEST_CFLAGS) $(INCLUDES) -o $(LIBOWF_TEST) $(LIBOWF_TEST_OBJS) $(LDFLAGS) $(LIBS)
 
+# Define the libowf-server target
+$(LIBOWF_SERVER): LDFLAGS += -Lbuild/lib -lm -lowf
+$(LIBOWF_SERVER): $(LIBOWF) $(LIBOWF_SERVER_OBJS)
+	@echo "LD $(LIBOWF_SERVER)"
+	@$(CC) $(CFLAGS) $(LIBOWF_SERVER_CFLAGS) $(INCLUDES) -o $(LIBOWF_SERVER) $(LIBOWF_SERVER_OBJS) $(LDFLAGS) $(LIBS)
+
 # Rule for translating .c into .o
 .c.o:
 	@echo "CC $<"
 	@$(CC) $(CFLAGS) $(INCLUDES) -c $<  -o $@
-
-# Rule for cleaning build files
-clean:
-	@echo "RM $(LIBOWF) $(LIBOWF_TEST)"
-	@rm -f $(LIBOWF) $(LIBOWF_TEST)
-	@echo "RM *.o"
-	@find src test -name '*.o' -exec rm -f {} \;
