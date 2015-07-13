@@ -59,13 +59,14 @@ clean:
 	@rm -f $(LIBOWF) $(LIBOWF_TEST) $(LIBOWF_SERVER)
 	@echo "RM *.o"
 	@find src test server -name '*.o' -exec rm -f {} \;
-run-test: $(LIBOWF) $(LIBOWF_TEST)
+test-run: $(LIBOWF) $(LIBOWF_TEST)
+	@echo
 	@echo "TEST $(LIBOWF_TEST)"
 	@$(LIBOWF_TEST)
-
-run-server: $(LIBOWF) $(LIBOWF_SERVER)
-	@echo "SERVER $(LIBOWF_SERVER)"
-	@$(LIBOWF_SERVER)
+server-run: $(LIBOWF) $(LIBOWF_SERVER)
+	@echo
+	@echo "SERVER $(LIBOWF_SERVER) $(protocol) $(host) $(port)"
+	@$(LIBOWF_SERVER) $(protocol) $(host) $(port)
 
 .PHONY: clean run-test run-server
 

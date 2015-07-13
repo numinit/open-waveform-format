@@ -131,19 +131,26 @@ bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, cons
         protocol = OWF_SERVER_UDP;
     } else {
         OWF_ERROR_SETF(error, "invalid protocol `%s`; we support tcp and udp", protocol_str);
-        goto fail;
+        return false;
     }
 
     // set up the addrinfo hints
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
+    hints.ai_flags = AI_NUMERICSERV | AI_CANONNAME;
     hints.ai_socktype = protocol == OWF_SERVER_TCP ? SOCK_STREAM : SOCK_DGRAM;
 
 #if OWF_PLATFORM == OWF_PLATFORM_WINDOWS
-    // init winsock
-    if (WSAStartup(MAKEWORD(2, 0), &ws) != 0) {
+    // initialize winsock
+    if (WSAStartup(MAKEWORD(2, 2), &ws) != 0) {
         OWF_ERROR_SETF(error, "WSAStartup failed: %d", OWF_SOCKET_ERROR);
+        return false;
+    } else if (LOBYTE(ws.wVersion) != 2 || HIBYTE(ws.wVersion) != 2) {
+        OWF_ERROR_SETF(error, "WSAStartup returned an invalid version of Winsock");
         goto fail;
+    } else {
+        fprintf(logger, "Running on WinSock " OWF_PRINT_SIZE "." OWF_PRINT_SIZE ": %s\n", LOBYTE(ws.wVersion), HIBYTE(ws.wVersion), ws.szDescription);
+        fprintf(logger, "%s\n", ws.szSystemStatus);
     }
 #endif
 
@@ -309,9 +316,9 @@ bool owf_server_tcp_read_cb(void *dest, const size_t size, void *data) {
 
     while (bytes_left > 0) {
         if ((bytes_read = recv(pfd->fd, buf, bytes_left, flags)) < 0) {
-            if (OWF_SOCKET_ERROR == OWF_SOCKET_EINTR) {
+            if (OWF_NOEXPECT(OWF_SOCKET_ERROR == OWF_SOCKET_EINTR)) {
                 bytes_read = 0;
-            } else if (OWF_SOCKET_ERROR == OWF_SOCKET_EWOULDBLOCK) {
+            } else if (OWF_NOEXPECT(OWF_SOCKET_ERROR == OWF_SOCKET_EWOULDBLOCK)) {
                 continue;
             } else {
                 return false;
@@ -343,9 +350,9 @@ bool owf_server_tcp_write_cb(const void *src, const size_t size, void *data) {
 
     while (bytes_left > 0) {
         if ((bytes_written = send(pfd->fd, buf, bytes_left, flags)) <= 0) {
-            if (OWF_SOCKET_ERROR == OWF_SOCKET_EINTR) {
+            if (OWF_NOEXPECT(OWF_SOCKET_ERROR == OWF_SOCKET_EINTR)) {
                 bytes_written = 0;
-            } else if (OWF_SOCKET_ERROR == OWF_SOCKET_EAGAIN) {
+            } else if (OWF_NOEXPECT(OWF_SOCKET_ERROR == OWF_SOCKET_EAGAIN)) {
                 continue;
             } else {
                 return false;
@@ -504,11 +511,13 @@ int main(int argc, const char **argv) {
         return 1;
     }
     
-    // install signal handlers
+    // install signal handlers - XXX: we could use sigaction here, but have SIGPIPE handled fairly well
     signal(SIGINT, owf_server_signal);
     signal(SIGPIPE, SIG_IGN);
 
-    fprintf(logger, "libowf " OWF_LIBRARY_VERSION_STRING " server starting\n");
+    fprintf(logger, "--------------------------------\n");
+    fprintf(logger, "libowf " OWF_LIBRARY_VERSION_STRING " net server starting\n");
+    fprintf(logger, "--------------------------------\n");
     if (!owf_server_start(logger, &alloc, &error, argv[2], argv[1], argv[3])) {
         fprintf(logger, "error starting server on %s://%s:%s: %s\n", argv[1], argv[2], argv[3], error.error);
         return 1;

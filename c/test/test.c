@@ -330,7 +330,7 @@ static int owf_test_binary_writer_buffer_execute(const char *filename, owf_t *ow
 
     if (!owf_test_binary_read_file(filename, alloc, error, &expected)) {
         OWF_TEST_FAILF("error reading file: %s", error->error);
-    } else if (!owf_binary_write_to_buffer(&writer, owf, &actual, alloc, error)) {
+    } else if (!owf_binary_write_buffer(&writer, owf, &actual, alloc, error)) {
         OWF_TEST_FAILF("error writing to buffer: %s", owf_binary_writer_strerror(&writer));
     } else if (expected.length != actual.length) {
         owf_test_binary_print_buffers(&expected, &actual);
@@ -496,8 +496,6 @@ int main(int argc, char **argv) {
         if (res != 0 && res != 1) {
             ret = res;
         }
-
-        fprintf(stdout, "--------------------------------\n");
     }
 
     // Display results
