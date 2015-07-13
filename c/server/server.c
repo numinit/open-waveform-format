@@ -7,6 +7,7 @@
 #include <owf/platform.h>
 #include <owf/version.h>
 #include <errno.h>
+#include <signal.h>
 
 #include <stdio.h>
 
@@ -47,37 +48,59 @@
 #define OWF_SERVER_MAX_CLIENT_BATCH 10
 #define OWF_SERVER_LISTEN_QUEUE 8192
 
+static volatile bool owf_server_go = true;
+
+void owf_server_signal(int sig);
+bool owf_server_setup_socket(owf_error_t *error, owf_socket_t fd, uint16_t mode, bool master);
 bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, const char *host_str, const char *protocol_str, const char *port_str);
 bool owf_server_loop_tcp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, struct pollfd *pfd, owf_socket_t sfd);
 bool owf_server_loop_udp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, uint8_t *buffer, owf_socket_t sfd);
 
-bool owf_setup_socket(owf_error_t *error, owf_socket_t fd, uint16_t mode) {
+void owf_server_signal(int sig) {
+    signal(sig, owf_server_signal);
+
+    switch (sig) {
+        case SIGINT:
+            owf_server_go = false;
+            break;
+        default:
+            break;
+    }
+}
+
+bool owf_server_setup_socket(owf_error_t *error, owf_socket_t fd, uint16_t mode, bool master) {
     if (fd < 0) {
         OWF_ERROR_SET(error, "invalid fd");
         return false;
     }
 #if OWF_PLATFORM == OWF_PLATFORM_WINDOWS
-    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &(char){ 1 }, sizeof(int)) != 0) {
+    char flag = 1;
+#elif OWF_PLATFORM_IS_GNU
+    int flag = 1;
+#endif
+
+    if (master && setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag)) != 0) {
         OWF_ERROR_SETF(error, "setsockopt for SO_REUSEADDR failed: %d", OWF_SOCKET_ERROR);
         return false;
-    } else if (mode == OWF_SERVER_TCP && setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &(char){ 1 }, sizeof(int)) != 0) {
+    } else if (mode == OWF_SERVER_TCP && setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag)) != 0) {
         OWF_ERROR_SETF(error, "setsockopt for TCP_NODELAY failed: %d", OWF_SOCKET_ERROR);
         return false;
     }
-#elif OWF_PLATFORM_IS_GNU
-    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int)) != 0) {
-        OWF_ERROR_SETF(error, "setsockopt for SO_REUSEADDR failed: %d", OWF_SOCKET_ERROR);
-        return false;
-    } else if (mode == OWF_SERVER_TCP && setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &(int){ 1 }, sizeof(int)) != 0) {
-        OWF_ERROR_SETF(error, "setsockopt for TCP_NODELAY failed: %d", OWF_SOCKET_ERROR);
+
+#if OWF_PLATFORM == OWF_PLATFORM_BSD || OWF_PLATFORM == OWF_PLATFORM_DARWIN
+    // admonish the socket not to send SIGPIPE
+    if (setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &flag, sizeof(flag)) != 0) {
+        OWF_ERROR_SETF(error, "setsockopt for SO_NOSIGPIPE failed: %d", OWF_SOCKET_ERROR);
         return false;
     }
 #endif
 
 #if OWF_PLATFORM == OWF_PLATFORM_WINDOWS
+    // enable nonblocking mode on Windows
     unsigned long flags = 1;
     return ioctlsocket(fd, FIONBIO, &flags) == 0;
 #elif OWF_PLATFORM_IS_GNU
+    // enable nonblocking mode on *NIX
     int flags = fcntl(fd, F_GETFL, 0);
     if (flags < 0) {
         OWF_ERROR_SETF(error, "fcntl failed: %d", OWF_SOCKET_ERROR);
@@ -86,7 +109,6 @@ bool owf_setup_socket(owf_error_t *error, owf_socket_t fd, uint16_t mode) {
     flags |= O_NONBLOCK;
     return fcntl(fd, F_SETFL, flags) == 0;
 #endif
-    return true;
 }
 
 bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, const char *host_str, const char *protocol_str, const char *port_str) {
@@ -124,6 +146,7 @@ bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, cons
         goto fail;
     }
 #endif
+
     // get address information for the requested socket
     if ((err = getaddrinfo(host_str, port_str, &hints, &host)) != 0) {
         OWF_ERROR_SETF(error, "getaddrinfo failed: %s", gai_strerror(err));
@@ -134,17 +157,17 @@ bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, cons
     for (ptr = host; ptr != NULL; ptr = ptr->ai_next) {
         if ((fd = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol)) == 1) {
             continue;
-        } else if (!owf_setup_socket(error, fd, protocol)) {
+        } else if (!owf_server_setup_socket(error, fd, protocol, true)) {
             goto fail;
         } else if (bind(fd, ptr->ai_addr, ptr->ai_addrlen) == 0) {
             // Successfully bound
-            const char *type = ptr->ai_socktype == SOCK_STREAM ? "tcp" : (ptr->ai_socktype == SOCK_DGRAM ? "udp" : NULL);
-            const char *host = ptr->ai_canonname == NULL ? host_str : ptr->ai_canonname;
+            const char *typename = ptr->ai_socktype == SOCK_STREAM ? "tcp" : (ptr->ai_socktype == SOCK_DGRAM ? "udp" : NULL);
+            const char *hostname = ptr->ai_canonname == NULL ? host_str : ptr->ai_canonname;
             struct sockaddr *addr = ptr->ai_addr;
             int port;
             
             // Make sure we're a TCP or UDP socket
-            if (type == NULL) {
+            if (typename == NULL) {
                 OWF_ERROR_SET(error, "type is neither SOCK_STREAM not SOCK_DGRAM");
                 goto fail;
             }
@@ -158,10 +181,10 @@ bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, cons
             // Make sure we bound to the right family
             if (addr->sa_family == AF_INET) {
                 port = (int)ntohs(((struct sockaddr_in *)addr)->sin_port);
-                fprintf(logger, "bound to socket on %s://%s:%d\n", type, host, port);
+                fprintf(logger, "bound to socket on %s://%s:%d\n", typename, hostname, port);
             } else if (addr->sa_family == AF_INET6) {
                 port = (int)ntohs(((struct sockaddr_in6 *)addr)->sin6_port);
-                fprintf(logger, "bound to IPv6 socket on %s://%s:%d\n", type, host, port);
+                fprintf(logger, "bound to IPv6 socket on %s://%s:%d\n", typename, hostname, port);
             } else {
                 OWF_ERROR_SET(error, "address family is neither AF_INET nor AF_INET6");
                 goto fail;
@@ -185,7 +208,7 @@ bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, cons
 
     // Loop
     if (protocol == OWF_SERVER_TCP) {
-        while (true) {
+        while (owf_server_go) {
             // Try to accept new clients
             for (int i = 0; i < OWF_SERVER_MAX_CLIENT_BATCH; i++) {
                 owf_socket_t cfd;
@@ -200,6 +223,11 @@ bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, cons
                         break;
                     }
                 } else {
+                    // set up the client socket
+                    if (!owf_server_setup_socket(error, cfd, protocol, false)) {
+                        goto fail;
+                    }
+                    
                     // create a poll file descriptor
                     struct pollfd pfd;
                     pfd.fd = cfd;
@@ -224,8 +252,6 @@ bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, cons
                     }
                 }
             }
-            
-            //usleep(10000);
         }
     } else {
         // Allocate a buffer
@@ -234,27 +260,27 @@ bool owf_server_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, cons
             goto fail;
         }
 
-        while (true) {
+        while (owf_server_go) {
             // Process existing clients
             if (!owf_server_loop_udp(logger, alloc, error, buffer, fd)) {
                 goto fail;
             }
-            
-           // usleep(10000);
         }
     }
     goto out;
 
 fail:
     ret = false;
-
 out:
+    fprintf(logger, "Exiting\n");
+    
     // Destroy the array
     owf_array_destroy(&fds, alloc);
     
     if (fd != -1) {
         owf_socket_close(fd);
     }
+
     if (host != NULL) {
         freeaddrinfo(host);
     }
@@ -273,8 +299,16 @@ bool owf_server_tcp_read_cb(void *dest, const size_t size, void *data) {
     ssize_t bytes_read;
     uint8_t *buf = (uint8_t *)dest;
 
+#if OWF_PLATFORM == OWF_PLATFORM_LINUX
+    // covers SIGPIPE on Linux
+    const int flags = MSG_NOSIGNAL;
+#else
+    // BSD/Darwin are covered by setsockopt, Windows doesn't have the SIGPIPE issue
+    const int flags = 0;
+#endif
+
     while (bytes_left > 0) {
-        if ((bytes_read = recv(pfd->fd, buf, bytes_left, 0)) < 0) {
+        if ((bytes_read = recv(pfd->fd, buf, bytes_left, flags)) < 0) {
             if (OWF_SOCKET_ERROR == OWF_SOCKET_EINTR) {
                 bytes_read = 0;
             } else if (OWF_SOCKET_ERROR == OWF_SOCKET_EWOULDBLOCK) {
@@ -290,7 +324,7 @@ bool owf_server_tcp_read_cb(void *dest, const size_t size, void *data) {
         buf += (size_t)bytes_read;
     }
 
-    return true;
+    return bytes_left == 0;
 }
 
 bool owf_server_tcp_write_cb(const void *src, const size_t size, void *data) {
@@ -298,9 +332,17 @@ bool owf_server_tcp_write_cb(const void *src, const size_t size, void *data) {
     size_t bytes_left = size;
     ssize_t bytes_written;
     uint8_t *buf = (uint8_t *)src;
+    
+#if OWF_PLATFORM == OWF_PLATFORM_LINUX
+    // covers SIGPIPE on Linux
+    const int flags = MSG_NOSIGNAL;
+#else
+    // BSD/Darwin are covered by setsockopt, Windows doesn't have the SIGPIPE issue
+    const int flags = 0;
+#endif
 
     while (bytes_left > 0) {
-        if ((bytes_written = send(pfd->fd, buf, bytes_left, 0)) <= 0) {
+        if ((bytes_written = send(pfd->fd, buf, bytes_left, flags)) <= 0) {
             if (OWF_SOCKET_ERROR == OWF_SOCKET_EINTR) {
                 bytes_written = 0;
             } else if (OWF_SOCKET_ERROR == OWF_SOCKET_EAGAIN) {
@@ -314,7 +356,7 @@ bool owf_server_tcp_write_cb(const void *src, const size_t size, void *data) {
         buf += (size_t)bytes_written;
     }
 
-    return true;
+    return bytes_left == 0;
 }
 
 bool owf_server_loop_tcp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, struct pollfd *pfd, owf_socket_t sfd) {
@@ -461,6 +503,10 @@ int main(int argc, const char **argv) {
         fprintf(stderr, "  $ %s udp localhost 9001\n", argv[0]);
         return 1;
     }
+    
+    // install signal handlers
+    signal(SIGINT, owf_server_signal);
+    signal(SIGPIPE, SIG_IGN);
 
     fprintf(logger, "libowf " OWF_LIBRARY_VERSION_STRING " server starting\n");
     if (!owf_server_start(logger, &alloc, &error, argv[2], argv[1], argv[3])) {
