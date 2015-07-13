@@ -42,4 +42,6 @@ bool owf_binary_writer_write_channel(owf_binary_writer_t *binary, owf_channel_t 
 bool owf_binary_write(owf_binary_writer_t *binary, owf_t *owf);
 bool owf_binary_write_buffer(owf_binary_writer_t *binary, owf_t *owf, owf_buffer_t *buf, owf_alloc_t *alloc, owf_error_t *error);
 
+#define OWF_BINARY_WRITER_BYTESWAP_BUFFER_LEN 32
+
 #endif /* OWF_BINARY_WRITER_H */

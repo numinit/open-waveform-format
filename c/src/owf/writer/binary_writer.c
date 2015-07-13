@@ -126,16 +126,25 @@ bool owf_binary_writer_write_str(owf_binary_writer_t *binary, owf_str_t *str) {
 
 bool owf_binary_writer_write_samples(owf_binary_writer_t *binary, const double *ptr, uint32_t count) {
     /* Write the samples */
-    uint32_t sample_size = count;
-    OWF_ARITH_SAFE_MUL32(binary->writer.error, sample_size, sizeof(double));
-    if (OWF_NOEXPECT(!owf_binary_writer_write_size(binary, sample_size))) {
+    owf_double_union_t buffer[OWF_BINARY_WRITER_BYTESWAP_BUFFER_LEN];
+    register uint32_t i = count, j, stride;
+    OWF_ARITH_SAFE_MUL32(binary->writer.error, i, sizeof(double));
+    if (OWF_NOEXPECT(!owf_binary_writer_write_size(binary, i))) {
         return false;
     }
-
-    for (uint32_t i = 0; i < count; i++) {
-        if (OWF_NOEXPECT(!owf_binary_writer_write_double(binary, ptr[i]))) {
-            return false;
+    
+    for (i = 0; i < count; i += stride) {
+        /* Calculate how many elements we are writing */
+        stride = OWF_MIN(count - i, OWF_BINARY_WRITER_BYTESWAP_BUFFER_LEN);
+        
+        /* Byteswap the chunk */
+        for (j = 0; j < stride; j++) {
+            buffer[j].f64 = ptr[i + j];
+            OWF_NET64(buffer[j].u64);
         }
+        
+        /* Bulk write the chunk to the buffer */
+        OWF_BINARY_SAFE_WRITE(binary, &buffer, stride * sizeof(double));
     }
     
     return true;
