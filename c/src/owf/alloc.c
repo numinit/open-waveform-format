@@ -32,11 +32,14 @@ void *owf_malloc(owf_alloc_t *alloc, owf_error_t *error, size_t size) {
 bool owf_realloc(owf_alloc_t *alloc, owf_error_t *error, void **bp, size_t size) {
     void *new_bp = NULL;
 
-    if (OWF_NOEXPECT(size == 0)) {
+    if (OWF_NOEXPECT(bp == NULL)) {
+        OWF_ERROR_SET(error, "no reallocation pointer provided");
+        return false;
+    } else if (OWF_NOEXPECT(size == 0)) {
         /* This would be free, but we want to avoid setting bp to NULL and returning success */
         OWF_ERROR_SET(error, "cannot call realloc with size of zero");
         return false;
-    } else if (OWF_NOEXPECT(bp == NULL)) {
+    } else if (OWF_NOEXPECT(*bp == NULL)) {
         /* This is just malloc */
         new_bp = owf_malloc(alloc, error, size);
         if (OWF_EXPECT(new_bp != NULL)) {

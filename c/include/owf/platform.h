@@ -42,6 +42,29 @@
     #error "Don't know whether your platform is GNU or not!"
 #endif
 
+/* Shims for GNU components on Windows */
+#if OWF_PLATFORM_IS_GNU
+    #include <unistd.h>
+    #define owf_snprintf(...) snprintf(__VA_ARGS__)
+    #define owf_vsnprintf(...) vsnprintf(__VA_ARGS__)
+    #define owf_sscanf(...) sscanf(__VA_ARGS__)
+    #define owf_fopen(...) fopen(__VA_ARGS__)
+    #define owf_strcasecmp(...) strcasecmp(__VA_ARGS__)
+    #define owf_strncasecmp(...) strncasecmp(__VA_ARGS__)
+#elif OWF_PLATFORM == OWF_PLATFORM_WINDOWS
+    #define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
+    #define owf_snprintf(...) owf_platform_windows_snprintf(__VA_ARGS__)
+    #define owf_vsnprintf(...) owf_platform_windows_vsnprintf(__VA_ARGS__)
+    #define owf_fopen(...) owf_platform_windows_fopen(__VA_ARGS__)
+    #define owf_strcasecmp _stricmp
+    #define owf_strncasecmp _strnicmp
+
+    FILE *owf_platform_windows_fopen(const char *filename, const char *mode);
+    int owf_platform_windows_snprintf(char *dst, size_t size, const char *format, ...);
+    int owf_platform_windows_vsnprintf(char *dst, size_t size, const char *format, va_list va);
+#endif
+
 /* Limits */
 #if CHAR_MAX == INT8_MAX || CHAR_MAX == UINT8_MAX
     #define OWF_INT8_BITS 8
@@ -198,30 +221,6 @@
 #elif OWF_PLATFORM == OWF_PLATFORM_WINDOWS
     #define OWF_PRINT_SIZE  "%Iu"
     #define OWF_PRINT_SSIZE "%Id"
-#endif
-
-/* Shims for GNU components on Windows */
-#if OWF_PLATFORM_IS_GNU
-    #include <unistd.h>
-    #define owf_snprintf(...) snprintf(__VA_ARGS__)
-    #define owf_vsnprintf(...) vsnprintf(__VA_ARGS__)
-    #define owf_sscanf(...) sscanf(__VA_ARGS__)
-    #define owf_fopen(...) fopen(__VA_ARGS__)
-    #define owf_strcasecmp(...) strcasecmp(__VA_ARGS__)
-    #define owf_strncasecmp(...) strncasecmp(__VA_ARGS__)
-#elif OWF_PLATFORM == OWF_PLATFORM_WINDOWS
-    #define WIN32_LEAN_AND_MEAN
-    #include <windows.h>
-    #include <direct.h>
-    #define owf_snprintf(...) owf_platform_windows_snprintf(__VA_ARGS__)
-    #define owf_vsnprintf(...) owf_platform_windows_vsnprintf(__VA_ARGS__)
-    #define owf_fopen(...) owf_platform_windows_fopen(__VA_ARGS__)
-    #define owf_strcasecmp _stricmp
-    #define owf_strncasecmp _strnicmp
-
-    FILE *owf_platform_windows_fopen(const char *filename, const char *mode);
-    int owf_platform_windows_snprintf(char *dst, size_t size, const char *format, ...);
-    int owf_platform_windows_vsnprintf(char *dst, size_t size, const char *format, va_list va);
 #endif
 
 #endif /* OWF_PLATFORM_H */

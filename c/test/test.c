@@ -12,8 +12,10 @@
 #include <math.h>
 
 #if OWF_PLATFORM == OWF_PLATFORM_WINDOWS
+    #include <direct.h>
     #define owf_test_getcwd(a, b) _getcwd(a, (int)b)
 #elif OWF_PLATFORM_IS_GNU
+    #include <unistd.h>
     #define owf_test_getcwd(a, b) getcwd(a, b)
 #endif
 
