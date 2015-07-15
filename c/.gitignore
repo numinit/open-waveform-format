@@ -4,8 +4,7 @@
 *.swo
 
 # Generated files
-*.gem
-html
+doc
 
 # Compiled files
 *.o

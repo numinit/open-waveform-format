@@ -9,11 +9,10 @@
 #ifndef OWF_H
 #define OWF_H
 
-/** The OWF magic word */
+/* OWF1's magic bytes */
 #define OWF_MAGIC 0x4f574631UL
 
-/**
- * Min/max
+/* Min/max
  */
 #define OWF_MIN(a, b) (a < b ? a : b)
 #define OWF_MAX(a, b) (a > b ? a : b)

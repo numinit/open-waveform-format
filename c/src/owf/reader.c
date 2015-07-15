@@ -9,16 +9,8 @@ void owf_reader_init(owf_reader_t *reader, owf_alloc_t *alloc, owf_error_t *erro
     reader->data = data;
 }
 
-bool owf_reader_is_error(owf_reader_t *reader) {
-    return reader->error->is_error;
-}
-
-const char *owf_reader_strerror(owf_reader_t *reader) {
-    return reader->error->error;
-}
-
 bool owf_reader_materialize_cb(owf_reader_t *reader, owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *ptr) {
-    owf_t *owf = &ctx->owf;
+    owf_package_t *owf = &ctx->owf;
     owf_channel_t *channel;
     owf_namespace_t *ns;
     bool ret = true;

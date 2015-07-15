@@ -338,7 +338,7 @@ bool owf_server_tcp_write_cb(const void *src, const size_t size, void *data) {
     size_t bytes_left = size;
     ssize_t bytes_written;
     uint8_t *buf = (uint8_t *)src;
-    
+
 #if OWF_PLATFORM == OWF_PLATFORM_LINUX
     // covers SIGPIPE on Linux
     const int flags = MSG_NOSIGNAL;
@@ -369,7 +369,7 @@ bool owf_server_loop_tcp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, s
     owf_binary_reader_t reader;
     owf_binary_writer_t writer;
     owf_error_t rw_error;
-    owf_t *owf = NULL;
+    owf_package_t *owf = NULL;
     uint32_t size = 0;
 
     if (pfd->revents & POLLRDNORM && pfd->revents & POLLWRNORM && !(pfd->revents & POLLHUP) && !(pfd->revents & POLLERR) && !(pfd->revents & POLLNVAL)) {
@@ -386,7 +386,7 @@ bool owf_server_loop_tcp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, s
             pfd->revents = 0;
         } else {
             // hooray, we have an OWF packet
-            if (!owf_size(owf, &rw_error, &size)) {
+            if (!owf_package_size(owf, &rw_error, &size)) {
                 fprintf(logger, "<= error getting OWF size for fd %d's packet: %s\n", pfd->fd, rw_error.error);
                 owf_socket_close(pfd->fd);
                 pfd->fd = 0;
@@ -411,7 +411,7 @@ bool owf_server_loop_tcp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, s
             pfd->events = 0;
             pfd->revents = 0;
         } else {
-            if (!owf_size(owf, &rw_error, &size)) {
+            if (!owf_package_size(owf, &rw_error, &size)) {
                 fprintf(logger, "=> error getting OWF size for fd %d's packet: %s\n", pfd->fd, rw_error.error);
                 owf_socket_close(pfd->fd);
                 pfd->fd = 0;
@@ -424,7 +424,7 @@ bool owf_server_loop_tcp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, s
     }
 
     if (owf != NULL) {
-        owf_destroy(owf, alloc);
+        owf_package_destroy(owf, alloc);
     }
 
     return true;
@@ -435,25 +435,25 @@ bool owf_server_loop_udp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, u
     owf_binary_writer_t writer;
     owf_buffer_t input_buffer, output_buffer;
     owf_error_t rw_error;
-    
+
     struct sockaddr client_addr;
     socklen_t client_len = sizeof(client_addr);
-    owf_t *owf = NULL;
+    owf_package_t *owf = NULL;
     ssize_t len;
     uint32_t tmp;
-    
+
     // Read the packet
     if ((len = recvfrom(sfd, buffer, sizeof(buffer), 0, &client_addr, &client_len)) > 0) {
         // We've got the UDP packet in a buffer. Read it.
         owf_error_init(&rw_error);
         owf_buffer_init(&input_buffer, buffer, (size_t)len);
         owf_binary_reader_init_buffer(&reader, &input_buffer, alloc, &rw_error, NULL);
-        
+
         if ((owf = owf_binary_materialize(&reader)) == NULL) {
-            fprintf(logger, "<= error materializing packet: %s\n", rw_error.error);
+            fprintf(logger, "<= error materializing packet: %s\n", owf_error_strerror(&rw_error));
         } else {
-            if (!owf_size(owf, &rw_error, &tmp)) {
-                fprintf(logger, "<= error getting OWF size packet: %s\n", rw_error.error);
+            if (!owf_package_size(owf, &rw_error, &tmp)) {
+                fprintf(logger, "<= error getting OWF size packet: %s\n", owf_error_strerror(&rw_error));
             } else {
                 fprintf(logger, "<= got a " OWF_PRINT_U32 "-byte OWF packet\n", tmp);
             }
@@ -461,24 +461,24 @@ bool owf_server_loop_udp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, u
     } else if (OWF_SOCKET_ERROR != OWF_SOCKET_EAGAIN && OWF_SOCKET_ERROR != OWF_SOCKET_EWOULDBLOCK) {
         fprintf(logger, "recvfrom error: %d\n", OWF_SOCKET_ERROR);
     }
-    
+
     if (owf != NULL) {
         // Allocate a buffer that's as large as the OWF packet we're about to write back
         uint32_t size;
         owf_error_init(&rw_error);
-        if (!owf_size(owf, &rw_error, &size)) {
-            fprintf(logger, "=> error getting OWF size: %s\n", rw_error.error);
+        if (!owf_package_size(owf, &rw_error, &size)) {
+            fprintf(logger, "=> error getting OWF size: %s\n", owf_error_strerror(&rw_error));
         } else {
             void *ptr = owf_malloc(alloc, error, size);
             if (ptr == NULL) {
                 return false;
             }
-            
+
             // Write out the packet
             owf_buffer_init(&output_buffer, ptr, size);
             owf_binary_writer_init_buffer(&writer, &output_buffer, alloc, &rw_error);
             if (!owf_binary_write(&writer, owf)) {
-                fprintf(logger, "=> error writing packet to buffer: %s\n", rw_error.error);
+                fprintf(logger, "=> error writing packet to buffer: %s\n", owf_error_strerror(&rw_error));
             } else {
                 // Write the buffer to the UDP socket
                 if ((len = sendto(sfd, output_buffer.ptr, output_buffer.length, 0, &client_addr, client_len)) > 0) {
@@ -487,13 +487,13 @@ bool owf_server_loop_udp(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, u
                     fprintf(logger, "=> error writing buffer to socket: %d\n", OWF_SOCKET_ERROR);
                 }
             }
-            
+
             owf_free(alloc, ptr);
         }
-        
-        owf_destroy(owf, alloc);
+
+        owf_package_destroy(owf, alloc);
     }
-    
+
     return true;
 }
 
@@ -509,7 +509,7 @@ int main(int argc, const char **argv) {
         fprintf(stderr, "  $ %s udp localhost 9001\n", argv[0]);
         return 1;
     }
-    
+
     // install signal handlers - XXX: we could use sigaction here, but have SIGPIPE handled fairly well
     signal(SIGINT, owf_server_signal);
 #if OWF_PLATFORM_IS_GNU
@@ -517,7 +517,7 @@ int main(int argc, const char **argv) {
 #endif
 
     fprintf(logger, "--------------------------------\n");
-    fprintf(logger, "libowf " OWF_LIBRARY_VERSION_STRING " net server starting\n");
+    fprintf(logger, "libowf %s net server starting\n", OWF_VERSION_STRING);
     fprintf(logger, "--------------------------------\n");
     if (!owf_server_start(logger, &alloc, &error, argv[2], argv[1], argv[3])) {
         fprintf(logger, "error starting server on %s://%s:%s: %s\n", argv[1], argv[2], argv[3], error.error);

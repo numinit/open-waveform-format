@@ -10,6 +10,7 @@
 
 #define OWF_ERROR_BUF_SIZE 256
 
+/* Stores information about errors occurring during OWF operations. */
 typedef struct owf_error {
     /** Buffer to store error strings */
     char error[OWF_ERROR_BUF_SIZE];
@@ -18,8 +19,31 @@ typedef struct owf_error {
     bool is_error;
 } owf_error_t;
 
+/* Initializes an <owf_error_t>.
+ * Note that the same thing can be performed using code like:
+ *     `owf_error_t error = OWF_ERROR_DEFAULT;`
+ * @error The <owf_error_t> to initialize.
+ */
 void owf_error_init(owf_error_t *error);
+
+/* Sets the error in an <owf_error_t>.
+ * @error The <owf_error_t> object.
+ * @fmt The format string (see printf)
+ */
 void owf_error_set(owf_error_t *error, const char *fmt, ...);
+
+/* Returns true if an error occurred.
+ * Note that all functions that populate an <owf_error_t> also have a
+ * return value indicating that an error occurred.
+ * @error The <owf_error_t> to test.
+ */
+bool owf_error_test(owf_error_t *error);
+
+/* Returns a pointer to an error string for this <owf_error_t>.
+ * @error The <owf_error_t>
+ * @return A pointer to a read-only NULL-terminated string.
+ */
+const char *owf_error_strerror(owf_error_t *error);
 
 #define OWF_ERROR_SET(_err, _fmt) do {owf_error_set(_err, "%s:%d@%s: " _fmt, __FILE__, __LINE__, __FUNCTION__); } while (0)
 #define OWF_ERROR_SETF(_err, _fmt, ...) do {owf_error_set(_err, "%s:%d@%s: " _fmt, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__); } while (0)
