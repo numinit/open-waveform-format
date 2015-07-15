@@ -9,6 +9,7 @@
  * @b The second value
  * @result Where to store the result of the addition if successful (a + b)
  * @error A pointer to an owf_error_t to store potential errors (overflow)
+ *
  * @return True if successful, false otherwise. If successful, changes the value of *result.
  */
 bool owf_arith_safe_add32(uint32_t a, uint32_t b, uint32_t *result, owf_error_t *error);
@@ -18,6 +19,7 @@ bool owf_arith_safe_add32(uint32_t a, uint32_t b, uint32_t *result, owf_error_t 
  * @b The second value
  * @result Where to store the result of the addition if successful (a - b)
  * @error A pointer to an owf_error_t to store potential errors (underflow)
+ *
  * @return True if successful, false otherwise. If successful, changes the value of *result.
  */
 bool owf_arith_safe_sub32(uint32_t a, uint32_t b, uint32_t *result, owf_error_t *error);
@@ -27,6 +29,7 @@ bool owf_arith_safe_sub32(uint32_t a, uint32_t b, uint32_t *result, owf_error_t 
  * @b The second value
  * @result Where to store the result of the multiplication if successful (a * b)
  * @error A pointer to an owf_error_t to store potential errors (overflow)
+ *
  * @return True if successful, false otherwise. If successful, changes the value of *result.
  */
 bool owf_arith_safe_mul32(uint32_t a, uint32_t b, uint32_t *result, owf_error_t *error);

@@ -12,17 +12,12 @@
 #include <math.h>
 
 #if OWF_PLATFORM == OWF_PLATFORM_WINDOWS
-char *owf_platform_windows_getcwd(char *buf, size_t size) {
-    if (OWF_NOEXPECT(size > INT_MAX)) {
-        return NULL;
-    }
-    return _getcwd(buf, (int)size);
-}
-
-#define owf_test_getcwd owf_platform_windows_getcwd
-#else
-#define owf_test_getcwd getcwd
+    #define owf_test_getcwd(a, b) _getcwd(a, (int)b)
+#elif OWF_PLATFORM_IS_GNU
+    #define owf_test_getcwd(a, b) getcwd(a, b)
 #endif
+
+#define OWF_TEST_COUNT(arr) (sizeof(arr) / sizeof(arr[0]))
 
 #define OWF_TEST_SOFT_FAIL(str) {owf_test_fail(str); return 1;}
 #define OWF_TEST_SOFT_FAILF(str, ...) {owf_test_fail(str, __VA_ARGS__); return 1;}
@@ -151,7 +146,7 @@ static bool owf_test_binary_read_file(const char *filename, owf_alloc_t *alloc, 
     } else {
         size = (size_t)val;
     }
-    
+
     /* Rewind the file */
     if (fseek(f, 0, SEEK_SET) != 0) {
         fclose(f);
@@ -494,10 +489,10 @@ int main(int argc, char **argv) {
     fprintf(stdout, "libowf %s test harness starting\n", OWF_VERSION_STRING);
     fprintf(stdout, "--------------------------------\n");
     fprintf(stdout, "(in %s)\n\n", dir);
-    fprintf(stdout, ">> running " OWF_PRINT_SIZE " %s\n", OWF_COUNT(tests), "tests");
-    for (size_t i = 0; i < OWF_COUNT(tests); i++) {
+    fprintf(stdout, ">> running " OWF_PRINT_SIZE " %s\n", OWF_TEST_COUNT(tests), "tests");
+    for (size_t i = 0; i < OWF_TEST_COUNT(tests); i++) {
         owf_test_t *test = &tests[i];
-        fprintf(stdout, ">> test " OWF_PRINT_SIZE "/" OWF_PRINT_SIZE " (%s)...", i + 1, OWF_COUNT(tests), test->name);
+        fprintf(stdout, ">> test " OWF_PRINT_SIZE "/" OWF_PRINT_SIZE " (%s)...", i + 1, OWF_TEST_COUNT(tests), test->name);
         int res = test->fn();
         if (res == 0) {
             success++;
@@ -512,7 +507,7 @@ int main(int argc, char **argv) {
     }
 
     // Display results
-    fprintf(stdout, ">> " OWF_PRINT_SIZE "/" OWF_PRINT_SIZE " %s successful (%.2f%%)\n", success, OWF_COUNT(tests), "tests", (float)success / (float)OWF_COUNT(tests) * 100);
+    fprintf(stdout, ">> " OWF_PRINT_SIZE "/" OWF_PRINT_SIZE " %s successful (%.2f%%)\n", success, OWF_TEST_COUNT(tests), "tests", (float)success / (float)OWF_TEST_COUNT(tests) * 100);
 
     if (owf_test_opt("--pause", argc, argv)) {
         fprintf(stdout, "(press enter to exit)\n");

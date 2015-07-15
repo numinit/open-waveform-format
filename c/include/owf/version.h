@@ -20,11 +20,16 @@
 #define OWF_VERSION_STRING "0.9.0"
 
 /* Retrieves the version compiled into libowf.
- *
  * @major A pointer to an int to store the major version.
  * @minor A pointer to an int to store the minor version.
  * @patch A pointer to an int to store the patch version.
  */
 void owf_version(int *major, int *minor, int *patch);
+
+/* Returns the OWF version string. 
+ *
+ * @return A read-only pointer to the version string (e.g. "1.10.1")
+ */
+const char *owf_version_string();
 
 #endif /* OWF_VERSION_H */

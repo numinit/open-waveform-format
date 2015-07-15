@@ -6,10 +6,6 @@ void owf_version(int *major, int *minor, int *patch) {
     *patch = OWF_VERSION_PATCH;
 }
 
-uint16_t owf_version_numeric() {
-    return OWF_VERSION;
-}
-
 const char *owf_version_string() {
     return OWF_VERSION_STRING;
 }

@@ -75,11 +75,11 @@ server-run: $(LIBOWF) $(LIBOWF_SERVER)
 
 doc: -cldoc-installed doc-clean
 	@echo "CLDOC $(LIBOWF_DOC_SRCS)"
-	@cldoc generate $(CFLAGS) $(LIBOWF_CFLAGS) $(INCLUDES) -- --output $(LIBOWF_DOC) $(LIBOWF_DOC_SRCS)
+	@cldoc generate $(CFLAGS) $(LIBOWF_CFLAGS) $(INCLUDES) -- --report --language c --output $(LIBOWF_DOC) $(LIBOWF_DOC_SRCS)
 
 doc-static: -cldoc-installed -cldoc-static-installed doc-clean
 	@echo "CLDOC $(LIBOWF_DOC_SRCS)"
-	@cldoc generate $(CFLAGS) $(LIBOWF_CFLAGS) $(INCLUDES) -- --static --output $(LIBOWF_DOC) $(LIBOWF_DOC_SRCS)
+	@cldoc generate $(CFLAGS) $(LIBOWF_CFLAGS) $(INCLUDES) -- --static --language c --report --output $(LIBOWF_DOC) $(LIBOWF_DOC_SRCS)
 
 doc-server: doc -cldoc-server
 doc-static-server: doc-static -cldoc-server

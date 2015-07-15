@@ -180,7 +180,7 @@ void owf_channel_destroy(owf_channel_t *channel, owf_alloc_t *alloc) {
 
 int owf_channel_compare(owf_channel_t *lhs, owf_channel_t *rhs) {
     int ret;
-    if ((ret = owf_str_compare(&lhs->id, &rhs->id)) != 0) {
+    if ((ret = owf_str_binary_compare(&lhs->id, &rhs->id)) != 0) {
         return ret;
     } else {
         OWF_ARRAY_SEMANTIC_COMPARE(lhs->namespaces, rhs->namespaces, owf_namespace_t, owf_namespace_compare);
@@ -352,9 +352,9 @@ void owf_signal_destroy(owf_signal_t *signal, owf_alloc_t *alloc) {
 
 int owf_signal_compare(owf_signal_t *lhs, owf_signal_t *rhs) {
     int ret;
-    if ((ret = owf_str_compare(&lhs->id, &rhs->id)) != 0) {
+    if ((ret = owf_str_binary_compare(&lhs->id, &rhs->id)) != 0) {
         return ret;
-    } else if ((ret = owf_str_compare(&lhs->unit, &rhs->unit)) != 0) {
+    } else if ((ret = owf_str_binary_compare(&lhs->unit, &rhs->unit)) != 0) {
         return ret;
     } else {
         return owf_array_binary_compare(&lhs->samples, &rhs->samples, sizeof(double));
@@ -414,7 +414,7 @@ int owf_event_compare(owf_event_t *lhs, owf_event_t *rhs) {
     if (lhs->t0 != rhs->t0) {
         return lhs->t0 < rhs->t0 ? -1 : 1;
     } else {
-        return owf_str_compare(&lhs->message, &rhs->message);
+        return owf_str_binary_compare(&lhs->message, &rhs->message);
     }
 }
 
@@ -459,10 +459,10 @@ int owf_alarm_compare(owf_alarm_t *lhs, owf_alarm_t *rhs) {
         return lhs->details.u8.level < rhs->details.u8.level ? -1 : 1;
     } else if (lhs->details.u8.volume != rhs->details.u8.volume) {
         return lhs->details.u8.volume < rhs->details.u8.volume ? -1 : 1;
-    } else if ((ret = owf_str_compare(&lhs->type, &rhs->type)) != 0) {
+    } else if ((ret = owf_str_binary_compare(&lhs->type, &rhs->type)) != 0) {
         return ret;
     } else {
-        return owf_str_compare(&lhs->message, &rhs->message);
+        return owf_str_binary_compare(&lhs->message, &rhs->message);
     }
 }
 
@@ -541,7 +541,7 @@ void owf_str_destroy(owf_str_t *str, owf_alloc_t *alloc) {
     owf_array_destroy(&str->bytes, alloc);
 }
 
-int owf_str_compare(owf_str_t *lhs, owf_str_t *rhs) {
+int owf_str_binary_compare(owf_str_t *lhs, owf_str_t *rhs) {
     uint32_t lhs_len = owf_str_length(lhs), rhs_len = owf_str_length(rhs);
     if (OWF_EXPECT(lhs_len == rhs_len)) {
         const char *p1 = OWF_STR_PTR(*lhs), *p2 = OWF_STR_PTR(*rhs);
@@ -560,7 +560,7 @@ uint32_t owf_str_length(owf_str_t *str) {
     }
 }
 
-uint32_t owf_str_padding(uint32_t length) {
+static uint32_t owf_str_padding(uint32_t length) {
     uint32_t tmp = length % sizeof(uint32_t);
     return tmp == 0 ? 0 : sizeof(uint32_t) - tmp;
 }

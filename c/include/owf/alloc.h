@@ -13,13 +13,30 @@
  */
 #define OWF_ALLOC_DEFAULT_MAX 1048576
 
+/* A malloc callback.
+ *
+ * Takes the size of the allocation, which will never be 0.
+ */
 typedef void *(*owf_malloc_cb_t)(size_t);
+
+/* A realloc callback.
+ *
+ * Takes the block pointer, which will never be NULL, and
+ * the size of the new allocation, which will never be 0.
+ */
 typedef void *(*owf_realloc_cb_t)(void *, size_t);
+
+/* A free callback.
+ *
+ * Takes the block pointer, which will never be NULL.
+ */
 typedef void (*owf_free_cb_t)(void *);
 
-/* A struct holding information about memory allocation functions.
- */
-typedef struct owf_alloc {
+/* A struct holding information about memory allocation functions. */
+typedef struct owf_alloc owf_alloc_t;
+
+/* @see owf_alloc_t */
+struct owf_alloc {
     /* The malloc callback. */
     owf_malloc_cb_t malloc;
 
@@ -31,10 +48,9 @@ typedef struct owf_alloc {
 
     /* The maximum size we are willing to allocate. */
     size_t max_alloc;
-} owf_alloc_t;
+};
 
 /* Initializes an <owf_alloc_t> structure.
- *
  * @alloc A pointer to an <owf_alloc_t>
  * @malloc_fn A malloc callback
  * @realloc_fn A realloc callback
@@ -44,7 +60,6 @@ typedef struct owf_alloc {
 void owf_alloc_init(owf_alloc_t *alloc, owf_malloc_cb_t malloc_fn, owf_realloc_cb_t realloc_fn, owf_free_cb_t free_fn, size_t max_alloc);
 
 /* Calls the provided malloc callback. Will never pass it a zero or too large size.
- *
  * @alloc A pointer to an <owf_alloc_t>
  * @error A pointer to an <owf_error_t> to store potential errors resulting from the call
  * @size The size of the allocation
@@ -55,7 +70,6 @@ void owf_alloc_init(owf_alloc_t *alloc, owf_malloc_cb_t malloc_fn, owf_realloc_c
 void *owf_malloc(owf_alloc_t *alloc, owf_error_t *error, size_t size);
 
 /* Calls the provided realloc callback. Will never pass it a NULL pointer, zero size, or too large size.
- *
  * @alloc A pointer to an <owf_alloc_t>
  * @error A pointer to an <owf_error_t> to store potential errors resulting from the call
  * @bp A pointer to a pointer to the previously allocated block
@@ -68,7 +82,6 @@ void *owf_malloc(owf_alloc_t *alloc, owf_error_t *error, size_t size);
 bool owf_realloc(owf_alloc_t *alloc, owf_error_t *error, void **bp, size_t size);
 
 /* Calls the provided free callback. Will never pass it a NULL pointer.
- *
  * @alloc A pointer to an <owf_alloc_t>
  * @bp A pointer to an allocated block
  */
