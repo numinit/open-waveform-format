@@ -446,7 +446,7 @@ static int owf_test_binary_writer_buffer_valid_empty_channel(void) {
     owf_channel_t c;
     owf_error_t error = OWF_ERROR_DEFAULT;
     owf_package_init(&owf);
-    if (!owf_channel_init2(&c, &alloc, &error, "BED_42") ||
+    if (!owf_channel_init_id(&c, &alloc, &error, "BED_42") ||
         !owf_package_push_channel(&owf, &alloc, &error, &c)) {
         OWF_TEST_FAIL("catastrophic failure");
     }

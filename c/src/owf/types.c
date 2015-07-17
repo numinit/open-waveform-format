@@ -73,7 +73,7 @@ bool owf_array_reserve_exactly(owf_array_t *arr, owf_alloc_t *alloc, owf_error_t
     return true;
 }
 
-bool owf_array_push(owf_array_t *arr, owf_alloc_t *alloc, owf_error_t *error, void *obj, uint32_t width) {
+bool owf_array_push(owf_array_t *arr, owf_alloc_t *alloc, owf_error_t *error, const void *obj, uint32_t width) {
     if (OWF_NOEXPECT(arr->length == arr->capacity && !owf_array_reserve(arr, alloc, error, arr->capacity + 1, width))) {
         return false;
     }
@@ -81,7 +81,7 @@ bool owf_array_push(owf_array_t *arr, owf_alloc_t *alloc, owf_error_t *error, vo
     return owf_array_put(arr, error, obj, arr->length++, width);
 }
 
-bool owf_array_put(owf_array_t *arr, owf_error_t *error, void *obj, uint32_t idx, uint32_t width) {
+bool owf_array_put(owf_array_t *arr, owf_error_t *error, const void *obj, uint32_t idx, uint32_t width) {
     void *ptr = owf_array_ptr_for(arr, error, idx, width);
     if (OWF_NOEXPECT(ptr == NULL)) {
         return false;
@@ -163,7 +163,7 @@ void owf_channel_init(owf_channel_t *channel) {
     owf_array_init(&channel->namespaces);
 }
 
-bool owf_channel_init2(owf_channel_t *channel, owf_alloc_t *alloc, owf_error_t *error, const char *id) {
+bool owf_channel_init_id(owf_channel_t *channel, owf_alloc_t *alloc, owf_error_t *error, const char *id) {
     owf_channel_init(channel);
     return owf_channel_set_id(channel, alloc, error, id);
 }
@@ -241,6 +241,11 @@ void owf_namespace_init(owf_namespace_t *ns) {
     owf_array_init(&ns->signals);
     owf_array_init(&ns->events);
     owf_array_init(&ns->alarms);
+}
+
+bool owf_namespace_init_id(owf_namespace_t *ns, owf_alloc_t *alloc, owf_error_t *error, const char *id) {
+    owf_namespace_init(ns);
+    return owf_str_set(&ns->id, alloc, error, id);
 }
 
 void owf_namespace_destroy(owf_namespace_t *ns, owf_alloc_t *alloc) {
@@ -371,6 +376,11 @@ void owf_signal_init(owf_signal_t *signal) {
     owf_array_init(&signal->samples);
 }
 
+bool owf_signal_init_id_unit(owf_signal_t *signal, owf_alloc_t *alloc, owf_error_t *error, const char *id, const char *unit) {
+    owf_signal_init(signal);
+    return owf_str_set(&signal->id, alloc, error, id) && owf_str_set(&signal->unit, alloc, error, unit);
+}
+
 void owf_signal_destroy(owf_signal_t *signal, owf_alloc_t *alloc) {
     owf_str_destroy(&signal->id, alloc);
     owf_str_destroy(&signal->unit, alloc);
@@ -438,6 +448,16 @@ bool owf_signal_set_id(owf_signal_t *signal, owf_alloc_t *alloc, owf_error_t *er
 
 bool owf_signal_set_unit(owf_signal_t *signal, owf_alloc_t *alloc, owf_error_t *error, const char *unit) {
     return owf_str_set(&signal->unit, alloc, error, unit);
+}
+
+bool owf_signal_push_samples(owf_signal_t *signal, owf_alloc_t *alloc, owf_error_t *error, const double *samples, uint32_t count) {
+    for (uint32_t i = 0; i < count; i++) {
+        if (OWF_NOEXPECT(!owf_array_push(&signal->samples, alloc, error, &samples[i], sizeof(samples[i])))) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void owf_event_init(owf_event_t *event) {

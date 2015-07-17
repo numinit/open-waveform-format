@@ -208,7 +208,7 @@ bool owf_array_reserve_exactly(owf_array_t *arr, owf_alloc_t *alloc, owf_error_t
  *
  * @return True if the operation was successful. Sets `error` if unsuccessful.
  */
-bool owf_array_push(owf_array_t *arr, owf_alloc_t *alloc, owf_error_t *error, void *obj, uint32_t width);
+bool owf_array_push(owf_array_t *arr, owf_alloc_t *alloc, owf_error_t *error, const void *obj, uint32_t width);
 
 /* Puts the object `obj` at index `idx`
  * @arr The array
@@ -219,7 +219,7 @@ bool owf_array_push(owf_array_t *arr, owf_alloc_t *alloc, owf_error_t *error, vo
  *
  * @return True if the operation was successful. Sets `error` if unsuccessful.
  */
-bool owf_array_put(owf_array_t *arr, owf_error_t *error, void *obj, uint32_t idx, uint32_t width);
+bool owf_array_put(owf_array_t *arr, owf_error_t *error, const void *obj, uint32_t idx, uint32_t width);
 
 /* Gets the object `obj` at index `idx`
  * @arr The array
@@ -440,7 +440,7 @@ void owf_channel_init(owf_channel_t *channel);
  *
  * @return True if the operation was successful
  */
-bool owf_channel_init2(owf_channel_t *channel, owf_alloc_t *alloc, owf_error_t *error, const char *id);
+bool owf_channel_init_id(owf_channel_t *channel, owf_alloc_t *alloc, owf_error_t *error, const char *id);
 
 /* Destroys an <owf_channel_t>.
  * @channel The channel to destroy
@@ -524,6 +524,16 @@ struct owf_namespace {
  * @ns The namespace to initialize
  */
 void owf_namespace_init(owf_namespace_t *ns);
+
+/* Initializes this <owf_namespace_t> with an id.
+ * @ns The namespace to initialize
+ * @alloc The allocator
+ * @error The error context
+ * @id The ID of the namespace
+ *
+ * @return True if the operation was successful
+ */
+bool owf_namespace_init_id(owf_namespace_t *ns, owf_alloc_t *alloc, owf_error_t *error, const char *id);
 
 /* Destroys this <owf_namespace_t>.
  * @ns The namespace to destroy
@@ -634,6 +644,17 @@ struct owf_signal {
  */
 void owf_signal_init(owf_signal_t *signal);
 
+/* Initializes this <owf_signal_t> with an id and unit.
+ * @signal The signal
+ * @alloc The allocator
+ * @error The error context
+ * @id The signal ID
+ * @unit The signal units
+ *
+ * @return True if the operation was successful
+ */
+bool owf_signal_init_id_unit(owf_signal_t *signal, owf_alloc_t *alloc, owf_error_t *error, const char *id, const char *unit);
+
 /* Destroys an <owf_signal_t>.
  * @signal The signal
  * @alloc The allocator
@@ -693,6 +714,15 @@ bool owf_signal_set_id(owf_signal_t *signal, owf_alloc_t *alloc, owf_error_t *er
  * @return True if the operation was successful
  */
 bool owf_signal_set_unit(owf_signal_t *signal, owf_alloc_t *alloc, owf_error_t *error, const char *unit);
+
+/* Copies samples into this owf_signal_t, appending them to the array of samples.
+ * @signal The signal
+ * @alloc The allocator
+ * @error The error context
+ * @samples The sample array
+ * @count The number of samples to push
+ */
+bool owf_signal_push_samples(owf_signal_t *signal, owf_alloc_t *alloc, owf_error_t *error, const double *samples, uint32_t count);
 
 /* @see owf_event_t */
 struct owf_event {
