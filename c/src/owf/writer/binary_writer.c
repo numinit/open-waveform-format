@@ -126,7 +126,7 @@ bool owf_binary_writer_write_namespace_header(owf_binary_writer_t *binary, owf_n
     if (OWF_NOEXPECT(
         !owf_binary_writer_write_size(binary, size - sizeof(uint32_t)) ||
         !owf_binary_writer_write_time(binary, ns->t0) ||
-        !owf_binary_writer_write_time(binary, ns->dt) ||
+        !owf_binary_writer_write_duration(binary, ns->dt) ||
         !owf_binary_writer_write_str(binary, &ns->id))) {
         return false;
     }
@@ -258,7 +258,7 @@ bool owf_binary_writer_write_alarm_header(owf_binary_writer_t *binary, owf_names
 
     if (OWF_NOEXPECT(
         !owf_binary_writer_write_time(binary, alarm->t0) ||
-        !owf_binary_writer_write_time(binary, alarm->dt) ||
+        !owf_binary_writer_write_duration(binary, alarm->dt) ||
         !owf_binary_writer_write_u8(binary, alarm->details.u8.level) ||
         !owf_binary_writer_write_u8(binary, alarm->details.u8.volume) ||
         !owf_binary_writer_write_u16(binary, 0) ||
@@ -345,6 +345,13 @@ bool owf_binary_writer_write_double(owf_binary_writer_t *binary, double val) {
 
 bool owf_binary_writer_write_time(owf_binary_writer_t *binary, owf_time_t time) {
     owf_time_t network = time;
+    OWF_NET64(network);
+    OWF_BINARY_SAFE_WRITE(binary, &network, sizeof(network));
+    return true;
+}
+
+bool owf_binary_writer_write_duration(owf_binary_writer_t *binary, owf_duration_t duration) {
+    owf_duration_t network = duration;
     OWF_NET64(network);
     OWF_BINARY_SAFE_WRITE(binary, &network, sizeof(network));
     return true;

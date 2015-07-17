@@ -11,13 +11,6 @@
 
 #include <stdio.h>
 
-#if OWF_PLATFORM == OWF_PLATFORM_WINDOWS
-
-#elif OWF_PLATFORM_IS_GNU
-#include <unistd.h>
-#define owf_test_getcwd(a, b) getcwd(a, b)
-#endif
-
 #if OWF_PLATFORM_IS_GNU
     #include <unistd.h>
     #include <sys/types.h>

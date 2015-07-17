@@ -2,6 +2,8 @@
 #include <owf/alloc.h>
 #include <owf/arith.h>
 
+#include <string.h>
+
 #ifndef OWF_TYPES_H
 #define OWF_TYPES_H
 
@@ -247,17 +249,17 @@ void *owf_array_ptr_for(owf_array_t *arr, owf_error_t *error, uint32_t idx, uint
  */
 #define OWF_ARRAY_SEMANTIC_COMPARE(_lhs, _rhs, _type, _element_fn) \
     do { \
-        uint32_t lhs_len = OWF_ARRAY_LEN(_lhs), rhs_len = OWF_ARRAY_LEN(_rhs); \
-        if (lhs_len == rhs_len) { \
-            for (uint32_t i = 0; i < lhs_len; i++) { \
-                _type *lv = OWF_ARRAY_PTR(_lhs, _type, i), *rv = OWF_ARRAY_PTR(_rhs, _type, i); \
-                int ret = _element_fn(lv, rv); \
-                if (ret != 0) { \
-                    return ret; \
+        uint32_t __lhs_len = OWF_ARRAY_LEN(_lhs), __rhs_len = OWF_ARRAY_LEN(_rhs); \
+        if (__lhs_len == __rhs_len) { \
+            for (uint32_t __i = 0; __i < __lhs_len; __i++) { \
+                _type *__lv = OWF_ARRAY_PTR(_lhs, _type, __i), *__rv = OWF_ARRAY_PTR(_rhs, _type, __i); \
+                int __ret = _element_fn(__lv, __rv); \
+                if (__ret != 0) { \
+                    return __ret; \
                 } \
             } \
         } else { \
-            return lhs_len < rhs_len ? -1 : 1; \
+            return __lhs_len < __rhs_len ? -1 : 1; \
         } \
     } while (0)
 
@@ -446,6 +448,23 @@ bool owf_channel_init2(owf_channel_t *channel, owf_alloc_t *alloc, owf_error_t *
  */
 void owf_channel_destroy(owf_channel_t *channel, owf_alloc_t *alloc);
 
+/* Writes a description of a channel to a FILE pointer.
+ * @channel The channel
+ * @fp The file to write it to
+ *
+ * @return The number of bytes written
+ */
+int owf_channel_print(owf_channel_t *channel, FILE *fp);
+
+/* Writes a description of a channel to a string.
+ * @channel The channel
+ * @ptr The string pointer
+ * @size The length of the buffer
+ *
+ * @return The number of bytes written
+ */
+int owf_channel_stringify(owf_channel_t *channel, char *ptr, size_t size);
+
 /* Compares two <owf_channel_t> instances
  * @lhs The left hand channel
  * @rhs The right hand channel
@@ -491,8 +510,11 @@ struct owf_namespace {
     /* The namespace ID */
     owf_str_t id;
 
-    /* The namespace timestamp and measurement duration */
-    owf_time_t t0, dt;
+    /* The namespace timestamp */
+    owf_time_t t0;
+    
+    /* The duration */
+    owf_duration_t dt;
 
     /* Arrays of signals, events, and alarms */
     owf_array_t signals, events, alarms;
@@ -508,6 +530,23 @@ void owf_namespace_init(owf_namespace_t *ns);
  * @alloc The allocator
  */
 void owf_namespace_destroy(owf_namespace_t *ns, owf_alloc_t *alloc);
+
+/* Writes a description of a namespace to a FILE pointer.
+ * @ns The namespace
+ * @fp The file to write it to
+ *
+ * @return The number of bytes written
+ */
+int owf_namespace_print(owf_namespace_t *ns, FILE *fp);
+
+/* Writes a description of a namespace to a string.
+ * @ns The namespace
+ * @ptr The string pointer
+ * @size The length of the buffer
+ *
+ * @return The number of bytes written
+ */
+int owf_namespace_stringify(owf_namespace_t *ns, char *ptr, size_t size);
 
 /* Compares two <owf_namespace_t> instances.
  * @lhs The left hand namespace
@@ -601,6 +640,23 @@ void owf_signal_init(owf_signal_t *signal);
  */
 void owf_signal_destroy(owf_signal_t *signal, owf_alloc_t *alloc);
 
+/* Writes a description of a signal to a FILE pointer
+ * @signal The signal
+ * @fp The file to write it to
+ *
+ * @return The number of bytes written
+ */
+int owf_signal_print(owf_signal_t *signal, FILE *fp);
+
+/* Writes a description of a signal to a string.
+ * @signal The signal
+ * @ptr The string pointer
+ * @size The length of the buffer
+ *
+ * @return The number of bytes written
+ */
+int owf_signal_stringify(owf_signal_t *signal, char *ptr, size_t size);
+
 /* Compares two <owf_signal_t> instances.
  * @lhs The left hand signal
  * @rhs The right hand signal
@@ -661,6 +717,23 @@ void owf_event_init(owf_event_t *event);
  */
 void owf_event_destroy(owf_event_t *event, owf_alloc_t *alloc);
 
+/* Writes a description of an event to a FILE pointer
+ * @event The event
+ * @fp The file to write it to
+ *
+ * @return The number of bytes written
+ */
+int owf_event_print(owf_event_t *event, FILE *fp);
+
+/* Writes a description of an event to a string.
+ * @event The event
+ * @ptr The string pointer
+ * @size The length of the buffer
+ *
+ * @return The number of bytes written
+ */
+int owf_event_stringify(owf_event_t *event, char *ptr, size_t size);
+
 /* Compares two <owf_event_t> instances
  * @lhs The left hand event
  * @rhs The right hand event
@@ -683,8 +756,11 @@ struct owf_alarm {
     /* Memoization for the total size in bytes */
     owf_memoize_t memoize;
 
-    /* The measurement timestamp and total time the alarm has been sounding */
-    owf_time_t t0, dt;
+    /* The measurement timestamp */
+    owf_time_t t0;
+    
+    /* The total time this alarm has been sounding */
+    owf_duration_t dt;
 
     /* Union between a 32-bit int and the level and volume */
     union {
@@ -715,6 +791,23 @@ void owf_alarm_init(owf_alarm_t *alarm);
  * @alloc The allocator
  */
 void owf_alarm_destroy(owf_alarm_t *alarm, owf_alloc_t *alloc);
+
+/* Writes a description of an alarm to a FILE pointer
+ * @alarm The alarm
+ * @fp The file to write it to
+ *
+ * @return The number of bytes written
+ */
+int owf_alarm_print(owf_alarm_t *alarm, FILE *fp);
+
+/* Writes a description of an alarm to a string.
+ * @alarm The alarm
+ * @ptr The string pointer
+ * @size The length of the buffer
+ *
+ * @return The number of bytes written
+ */
+int owf_alarm_stringify(owf_alarm_t *ns, char *ptr, size_t size);
 
 /* Compares two <owf_alarm_t> instances
  * @lhs The left hand alarm

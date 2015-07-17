@@ -6,6 +6,6 @@ void owf_version(int *major, int *minor, int *patch) {
     *patch = OWF_VERSION_PATCH;
 }
 
-const char *owf_version_string() {
+const char *owf_version_string(void) {
     return OWF_VERSION_STRING;
 }

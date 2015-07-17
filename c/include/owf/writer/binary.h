@@ -207,6 +207,14 @@ bool owf_binary_writer_write_double(owf_binary_writer_t *binary, double val);
  */
 bool owf_binary_writer_write_time(owf_binary_writer_t *binary, owf_time_t time);
 
+/* Writes a duration to the <owf_binary_writer_t>.
+ * @binary The writer
+ * @duration The duration
+ *
+ * @return True if the write was successful, false otherwise
+ */
+bool owf_binary_writer_write_duration(owf_binary_writer_t *binary, owf_duration_t duration);
+
 /* Writes a size to the <owf_binary_writer_t>, checking for 4-byte alignment.
  * @binary The writer
  * @size The size
