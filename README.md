@@ -19,9 +19,9 @@ Read more on our [wiki](https://github.com/medicalinformaticscorp/open-waveform-
 
 |Language|JSON|Binary|
 |:-------|:---|:-----|
-|C|Planned|**Deserialize only (serializer in progress)**|
+|C|Planned|**Serialize and deserialize**|
 |C++|Planned|Planned|
-|C#|Planned|**Complete**|
+|C#|Planned|**Serialize and deserialize**|
 |JS (NodeJS)|Planned|Planned|
 |Ruby|Planned|**Convert from JSON only**|
 |Elixir|Planned|Planned|
