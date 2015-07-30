@@ -205,7 +205,7 @@ bool owf_binary_reader_read_event(owf_binary_reader_t *binary, void *ptr) {
 
     /* Ensure that the timestamp is in range */
     if (OWF_NOEXPECT(!owf_namespace_covers(&binary->reader.ctx.ns, event->t0))) {
-        OWF_ERROR_SETF(binary->reader.error, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_TIME " did not cover event at " OWF_PRINT_TIME,
+        OWF_ERROR_SETF(binary->reader.error, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_DURATION " did not cover event at " OWF_PRINT_TIME,
             OWF_STR_PTR(binary->reader.ctx.ns.id),
             binary->reader.ctx.ns.t0, binary->reader.ctx.ns.t0 + binary->reader.ctx.ns.dt, binary->reader.ctx.ns.dt, event->t0);
         return false;
@@ -235,7 +235,7 @@ bool owf_binary_reader_read_alarm(owf_binary_reader_t *binary, void *ptr) {
 
     /* Ensure that the timestamp is in range */
     if (OWF_NOEXPECT(!owf_namespace_covers(&binary->reader.ctx.ns, alarm->t0))) {
-        OWF_ERROR_SETF(binary->reader.error, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_TIME " did not cover alarm at " OWF_PRINT_TIME,
+        OWF_ERROR_SETF(binary->reader.error, "time interval for namespace `%s` [" OWF_PRINT_TIME ", " OWF_PRINT_TIME "):" OWF_PRINT_DURATION " did not cover alarm at " OWF_PRINT_TIME,
             OWF_STR_PTR(binary->reader.ctx.ns.id),
             binary->reader.ctx.ns.t0, binary->reader.ctx.ns.t0 + binary->reader.ctx.ns.dt, binary->reader.ctx.ns.dt, alarm->t0);
         return false;

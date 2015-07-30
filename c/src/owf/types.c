@@ -73,7 +73,7 @@ bool owf_array_reserve_exactly(owf_array_t *arr, owf_alloc_t *alloc, owf_error_t
     return true;
 }
 
-bool owf_array_push(owf_array_t *arr, owf_alloc_t *alloc, owf_error_t *error, void *obj, uint32_t width) {
+bool owf_array_push(owf_array_t *arr, owf_alloc_t *alloc, owf_error_t *error, const void *obj, uint32_t width) {
     if (OWF_NOEXPECT(arr->length == arr->capacity && !owf_array_reserve(arr, alloc, error, arr->capacity + 1, width))) {
         return false;
     }
@@ -81,7 +81,7 @@ bool owf_array_push(owf_array_t *arr, owf_alloc_t *alloc, owf_error_t *error, vo
     return owf_array_put(arr, error, obj, arr->length++, width);
 }
 
-bool owf_array_put(owf_array_t *arr, owf_error_t *error, void *obj, uint32_t idx, uint32_t width) {
+bool owf_array_put(owf_array_t *arr, owf_error_t *error, const void *obj, uint32_t idx, uint32_t width) {
     void *ptr = owf_array_ptr_for(arr, error, idx, width);
     if (OWF_NOEXPECT(ptr == NULL)) {
         return false;
@@ -163,7 +163,7 @@ void owf_channel_init(owf_channel_t *channel) {
     owf_array_init(&channel->namespaces);
 }
 
-bool owf_channel_init2(owf_channel_t *channel, owf_alloc_t *alloc, owf_error_t *error, const char *id) {
+bool owf_channel_init_id(owf_channel_t *channel, owf_alloc_t *alloc, owf_error_t *error, const char *id) {
     owf_channel_init(channel);
     return owf_channel_set_id(channel, alloc, error, id);
 }
@@ -176,6 +176,18 @@ void owf_channel_destroy(owf_channel_t *channel, owf_alloc_t *alloc) {
         owf_namespace_destroy(OWF_ARRAY_PTR(channel->namespaces, owf_namespace_t, i), alloc);
     }
     owf_array_destroy(&channel->namespaces, alloc);
+}
+
+#define OWF_CHANNEL_PRINT_FMT "#<owf_channel_t@%p: %s [" OWF_PRINT_U32 " %s]>"
+#define OWF_CHANNEL_PRINT_ARGS channel, OWF_STR_PTR(channel->id), \
+    OWF_ARRAY_LEN(channel->namespaces), OWF_ARRAY_LEN(channel->namespaces) == 1 ? "namespace" : "namespaces"
+
+int owf_channel_print(owf_channel_t *channel, FILE *fp) {
+    return fprintf(fp, OWF_CHANNEL_PRINT_FMT, OWF_CHANNEL_PRINT_ARGS);
+}
+
+int owf_channel_stringify(owf_channel_t *channel, char *ptr, size_t size) {
+    return owf_snprintf(ptr, size, OWF_CHANNEL_PRINT_FMT, OWF_CHANNEL_PRINT_ARGS);
 }
 
 int owf_channel_compare(owf_channel_t *lhs, owf_channel_t *rhs) {
@@ -231,6 +243,11 @@ void owf_namespace_init(owf_namespace_t *ns) {
     owf_array_init(&ns->alarms);
 }
 
+bool owf_namespace_init_id(owf_namespace_t *ns, owf_alloc_t *alloc, owf_error_t *error, const char *id) {
+    owf_namespace_init(ns);
+    return owf_str_set(&ns->id, alloc, error, id);
+}
+
 void owf_namespace_destroy(owf_namespace_t *ns, owf_alloc_t *alloc) {
     owf_str_destroy(&ns->id, alloc);
 
@@ -251,6 +268,21 @@ void owf_namespace_destroy(owf_namespace_t *ns, owf_alloc_t *alloc) {
         owf_alarm_destroy(OWF_ARRAY_PTR(ns->alarms, owf_alarm_t, i), alloc);
     }
     owf_array_destroy(&ns->alarms, alloc);
+}
+
+#define OWF_NAMESPACE_PRINT_FMT "#<owf_namespace_t@%p: %s [t0=" OWF_PRINT_TIME ", dt=" OWF_PRINT_DURATION ", " \
+    OWF_PRINT_U32 " %s, " OWF_PRINT_U32 " %s, " OWF_PRINT_U32 " %s]>"
+#define OWF_NAMESPACE_PRINT_ARGS ns, OWF_STR_PTR(ns->id), ns->t0, ns->dt, \
+    OWF_ARRAY_LEN(ns->signals), OWF_ARRAY_LEN(ns->signals) == 1 ? "signal" : "signals", \
+    OWF_ARRAY_LEN(ns->events), OWF_ARRAY_LEN(ns->events) == 1 ? "event" : "events", \
+    OWF_ARRAY_LEN(ns->alarms), OWF_ARRAY_LEN(ns->alarms) == 1 ? "alarm" : "alarms"
+
+int owf_namespace_print(owf_namespace_t *ns, FILE *fp) {
+    return fprintf(fp, OWF_NAMESPACE_PRINT_FMT, OWF_NAMESPACE_PRINT_ARGS);
+}
+
+int owf_namespace_stringify(owf_namespace_t *ns, char *ptr, size_t size) {
+    return owf_snprintf(ptr, size, OWF_NAMESPACE_PRINT_FMT, OWF_NAMESPACE_PRINT_ARGS);
 }
 
 int owf_namespace_compare(owf_namespace_t *lhs, owf_namespace_t *rhs) {
@@ -344,10 +376,27 @@ void owf_signal_init(owf_signal_t *signal) {
     owf_array_init(&signal->samples);
 }
 
+bool owf_signal_init_id_unit(owf_signal_t *signal, owf_alloc_t *alloc, owf_error_t *error, const char *id, const char *unit) {
+    owf_signal_init(signal);
+    return owf_str_set(&signal->id, alloc, error, id) && owf_str_set(&signal->unit, alloc, error, unit);
+}
+
 void owf_signal_destroy(owf_signal_t *signal, owf_alloc_t *alloc) {
     owf_str_destroy(&signal->id, alloc);
     owf_str_destroy(&signal->unit, alloc);
     owf_array_destroy(&signal->samples, alloc);
+}
+
+#define OWF_SIGNAL_PRINT_FMT "#<owf_signal_t@%p: [id=%s, unit=%s, " OWF_PRINT_U32 " %s]>"
+#define OWF_SIGNAL_PRINT_ARGS signal, OWF_STR_PTR(signal->id), OWF_STR_PTR(signal->unit), \
+    OWF_ARRAY_LEN(signal->samples), OWF_ARRAY_LEN(signal->samples) == 1 ? "sample" : "samples"
+
+int owf_signal_print(owf_signal_t *signal, FILE *fp) {
+    return fprintf(fp, OWF_SIGNAL_PRINT_FMT, OWF_SIGNAL_PRINT_ARGS);
+}
+
+int owf_signal_stringify(owf_signal_t *signal, char *ptr, size_t size) {
+    return owf_snprintf(ptr, size, OWF_SIGNAL_PRINT_FMT, OWF_SIGNAL_PRINT_ARGS);
 }
 
 int owf_signal_compare(owf_signal_t *lhs, owf_signal_t *rhs) {
@@ -401,6 +450,16 @@ bool owf_signal_set_unit(owf_signal_t *signal, owf_alloc_t *alloc, owf_error_t *
     return owf_str_set(&signal->unit, alloc, error, unit);
 }
 
+bool owf_signal_push_samples(owf_signal_t *signal, owf_alloc_t *alloc, owf_error_t *error, const double *samples, uint32_t count) {
+    for (uint32_t i = 0; i < count; i++) {
+        if (OWF_NOEXPECT(!owf_array_push(&signal->samples, alloc, error, &samples[i], sizeof(samples[i])))) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 void owf_event_init(owf_event_t *event) {
     owf_memoize_init(&event->memoize);
     owf_str_init(&event->message);
@@ -408,6 +467,17 @@ void owf_event_init(owf_event_t *event) {
 
 void owf_event_destroy(owf_event_t *event, owf_alloc_t *alloc) {
     owf_str_destroy(&event->message, alloc);
+}
+
+#define OWF_EVENT_PRINT_FMT "#<owf_event_t@%p: [message=%s, t0=" OWF_PRINT_TIME "]>"
+#define OWF_EVENT_PRINT_ARGS event, OWF_STR_PTR(event->message), event->t0
+
+int owf_event_print(owf_event_t *event, FILE *fp) {
+    return fprintf(fp, OWF_EVENT_PRINT_FMT, OWF_EVENT_PRINT_ARGS);
+}
+
+int owf_event_stringify(owf_event_t *event, char *ptr, size_t size) {
+    return owf_snprintf(ptr, size, OWF_EVENT_PRINT_FMT, OWF_EVENT_PRINT_ARGS);
 }
 
 int owf_event_compare(owf_event_t *lhs, owf_event_t *rhs) {
@@ -448,6 +518,19 @@ void owf_alarm_destroy(owf_alarm_t *alarm, owf_alloc_t *alloc) {
     owf_str_destroy(&alarm->message, alloc);
 }
 
+#define OWF_ALARM_PRINT_FMT "#<owf_alarm_t@%p: [type=%s, message=%s, t0=" OWF_PRINT_TIME ", dt=" OWF_PRINT_DURATION \
+    ", type=" OWF_PRINT_U8 ", volume=" OWF_PRINT_U8 "]>"
+#define OWF_ALARM_PRINT_ARGS alarm, OWF_STR_PTR(alarm->type), OWF_STR_PTR(alarm->message), \
+    alarm->t0, alarm->dt, alarm->details.u8.level, alarm->details.u8.volume
+
+int owf_alarm_print(owf_alarm_t *alarm, FILE *fp) {
+    return fprintf(fp, OWF_ALARM_PRINT_FMT, OWF_ALARM_PRINT_ARGS);
+}
+
+int owf_alarm_stringify(owf_alarm_t *alarm, char *ptr, size_t size) {
+    return owf_snprintf(ptr, size, OWF_ALARM_PRINT_FMT, OWF_ALARM_PRINT_ARGS);
+}
+
 int owf_alarm_compare(owf_alarm_t *lhs, owf_alarm_t *rhs) {
     int ret;
 
@@ -471,14 +554,14 @@ bool owf_alarm_size(owf_alarm_t *alarm, owf_error_t *error, uint32_t *output_siz
         uint32_t size = sizeof(owf_time_t) * 2 + sizeof(uint8_t) * 2 + sizeof(uint16_t), component_size = 0;
 
         /* Calculate the type size */
-        if (owf_str_size(&alarm->type, error, &component_size)) {
+        if (OWF_EXPECT(owf_str_size(&alarm->type, error, &component_size))) {
             OWF_ARITH_SAFE_ADD32(error, size, component_size);
         } else {
             return false;
         }
 
         /* Calculate the message size */
-        if (owf_str_size(&alarm->message, error, &component_size)) {
+        if (OWF_EXPECT(owf_str_size(&alarm->message, error, &component_size))) {
             OWF_ARITH_SAFE_ADD32(error, size, component_size);
         } else {
             return false;

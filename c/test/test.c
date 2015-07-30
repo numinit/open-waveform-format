@@ -53,19 +53,26 @@ static void owf_test_fail(const char *fmt, ...) {
 /* ---------- HELPERS ---------- */
 static void owf_test_print_channel(owf_channel_t *channel) {
     if (owf_test_verbose) {
-        fprintf(stderr, "[CHANNEL] %s\n", OWF_STR_PTR(channel->id));
+        owf_channel_print(channel, stderr);
+        fprintf(stderr, "\n");
     }
 }
 
 static void owf_test_print_namespace(owf_namespace_t *namespace) {
     if (owf_test_verbose) {
-        fprintf(stderr, "  [NS] %s <t0=" OWF_PRINT_U64 ", dt=" OWF_PRINT_U64 ">\n", OWF_STR_PTR(namespace->id), namespace->t0, namespace->dt);
+        fprintf(stderr, "  ");
+        owf_namespace_print(namespace, stderr);
+        fprintf(stderr, "\n");
     }
 }
 
 static void owf_test_print_signal(owf_signal_t *signal) {
     if (owf_test_verbose) {
-        fprintf(stderr, "    [SIGNAL] <id=%s, units=%s> [", OWF_STR_PTR(signal->id), OWF_STR_PTR(signal->unit));
+        fprintf(stderr, "    ");
+        owf_signal_print(signal, stderr);
+        fprintf(stderr, "\n");
+        fprintf(stderr, "      ");
+        fprintf(stderr, "[");
         for (uint32_t i = 0; i < OWF_ARRAY_LEN(signal->samples); i++) {
             double d = OWF_ARRAY_GET(signal->samples, double, i);
             if (isfinite(d)) {
@@ -81,19 +88,24 @@ static void owf_test_print_signal(owf_signal_t *signal) {
                 fprintf(stderr, ", ");
             }
         }
-        fprintf(stderr, "]\n");
+        fprintf(stderr, "]");
+        fprintf(stderr, "\n");
     }
 }
 
 static void owf_test_print_event(owf_event_t *event) {
     if (owf_test_verbose) {
-        fprintf(stderr, "    [EVENT] <message=%s, t0=" OWF_PRINT_U64 ">\n", OWF_STR_PTR(event->message), event->t0);
+        fprintf(stderr, "    ");
+        owf_event_print(event, stderr);
+        fprintf(stderr, "\n");
     }
 }
 
 static void owf_test_print_alarm(owf_alarm_t *alarm) {
     if (owf_test_verbose) {
-        fprintf(stderr, "    [ALARM] <type=%s, message=%s, t0=" OWF_PRINT_U64 ", dt=" OWF_PRINT_U64 ", level=" OWF_PRINT_U8 ", volume=" OWF_PRINT_U8 ">\n", OWF_STR_PTR(alarm->type), OWF_STR_PTR(alarm->message), alarm->t0, alarm->dt, alarm->details.u8.level, alarm->details.u8.volume);
+        fprintf(stderr, "    ");
+        owf_alarm_print(alarm, stderr);
+        fprintf(stderr, "\n");
     }
 }
 
@@ -323,7 +335,7 @@ static void owf_test_binary_print_buffers(owf_buffer_t *a, owf_buffer_t *b) {
         }
     }
     fprintf(stderr, "\n");
-    
+
     fprintf(stderr, "actual:   ");
     for (size_t i = 0; i < b->length; i++) {
         fprintf(stderr, "%02x", p2[i]);
@@ -434,7 +446,7 @@ static int owf_test_binary_writer_buffer_valid_empty_channel(void) {
     owf_channel_t c;
     owf_error_t error = OWF_ERROR_DEFAULT;
     owf_package_init(&owf);
-    if (!owf_channel_init2(&c, &alloc, &error, "BED_42") ||
+    if (!owf_channel_init_id(&c, &alloc, &error, "BED_42") ||
         !owf_package_push_channel(&owf, &alloc, &error, &c)) {
         OWF_TEST_FAIL("catastrophic failure");
     }

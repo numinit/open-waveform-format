@@ -26,10 +26,10 @@
  */
 void owf_version(int *major, int *minor, int *patch);
 
-/* Returns the OWF version string. 
+/* Returns the OWF version string.
  *
  * @return A read-only pointer to the version string (e.g. "1.10.1")
  */
-const char *owf_version_string();
+const char *owf_version_string(void);
 
 #endif /* OWF_VERSION_H */

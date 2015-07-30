@@ -9,14 +9,8 @@
 #include <errno.h>
 #include <signal.h>
 
+#include <math.h>
 #include <stdio.h>
-
-#if OWF_PLATFORM == OWF_PLATFORM_WINDOWS
-
-#elif OWF_PLATFORM_IS_GNU
-#include <unistd.h>
-#define owf_test_getcwd(a, b) getcwd(a, b)
-#endif
 
 #if OWF_PLATFORM_IS_GNU
     #include <unistd.h>
@@ -544,6 +538,7 @@ int main(int argc, const char **argv) {
     fprintf(logger, "--------------------------------\n");
     fprintf(logger, "libowf %s net server starting\n", OWF_VERSION_STRING);
     fprintf(logger, "--------------------------------\n");
+
     if (!owf_server_start(logger, &alloc, &error, argv[2], argv[1], argv[3])) {
         fprintf(logger, "error starting server on %s://%s:%s: %s\n", argv[1], argv[2], argv[3], error.error);
         return 1;
