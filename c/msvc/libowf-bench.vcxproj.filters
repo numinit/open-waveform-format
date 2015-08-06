@@ -13,13 +13,13 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\server">
-      <UniqueIdentifier>{2a607e96-d154-4237-a210-f70f2f3468e0}</UniqueIdentifier>
+    <Filter Include="Source Files\bench">
+      <UniqueIdentifier>{2dca091b-617a-45b6-8fbf-6c916d03bcfd}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\server\server.c">
-      <Filter>Source Files\server</Filter>
+    <ClCompile Include="..\bench\bench.c">
+      <Filter>Source Files\bench</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

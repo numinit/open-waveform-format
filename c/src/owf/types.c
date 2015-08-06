@@ -43,6 +43,7 @@ bool owf_array_reserve(owf_array_t *arr, owf_alloc_t *alloc, owf_error_t *error,
     /* Extend the capacity by a factor of 3/2.
      * Do a safe multiply by 3, then divide by 2.
      */
+    capacity = OWF_MAX(capacity, 2);
     OWF_ARITH_SAFE_MUL32(error, capacity, 3);
     capacity /= 2;
 
@@ -138,7 +139,7 @@ int owf_package_print(owf_package_t *package, FILE *fp) {
 }
 
 int owf_package_stringify(owf_package_t *package, char *ptr, size_t size) {
-    return snprintf(ptr, size, OWF_PACKAGE_PRINT_FMT, OWF_PACKAGE_PRINT_ARGS);
+    return owf_snprintf(ptr, size, OWF_PACKAGE_PRINT_FMT, OWF_PACKAGE_PRINT_ARGS);
 }
 
 int owf_package_compare(owf_package_t *lhs, owf_package_t *rhs) {

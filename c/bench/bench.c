@@ -6,15 +6,49 @@
 #include <owf/writer/binary.h>
 #include <owf/platform.h>
 #include <owf/version.h>
+
 #include <stdio.h>
-#include <unistd.h>
 
+#if OWF_PLATFORM == OWF_PLATFORM_WINDOWS
+#define _USE_MATH_DEFINES
+#define WIN32_LEAN_AND_MEAN
 #include <math.h>
+#include <windows.h>
 
-#if OWF_PLATFORM == OWF_PLATFORM_DARWIN
+owf_time_t owf_benchmark_time_now() {
+    SYSTEMTIME now = {0}, epoch = {0};
+    FILETIME now_ft = {0}, epoch_ft = {0};
+    ULARGE_INTEGER now_uint64, epoch_uint64 = {0};
+
+    /* calculate the Unix epoch offset */
+    epoch.wDay = 1;
+    epoch.wDayOfWeek = 0;
+    epoch.wHour = 0;
+    epoch.wMilliseconds = 0;
+    epoch.wMinute = 0;
+    epoch.wMonth = 1;
+    epoch.wSecond = 0;
+    epoch.wYear = 1970;
+
+    SystemTimeToFileTime(&epoch, &epoch_ft);
+    epoch_uint64.HighPart = epoch_ft.dwHighDateTime;
+    epoch_uint64.LowPart = epoch_ft.dwLowDateTime;
+
+    /* get current time */
+    GetSystemTime(&now);
+    SystemTimeToFileTime(&now, &now_ft);
+    now_uint64.HighPart = now_ft.dwHighDateTime;
+    now_uint64.LowPart = now_ft.dwLowDateTime;
+
+    /* offset the current time to compensate for epoch */
+    return ((int64_t)now_uint64.QuadPart) - ((int64_t)epoch_uint64.QuadPart);
+}
+#elif OWF_PLATFORM == OWF_PLATFORM_DARWIN
 #include <CoreServices/CoreServices.h>
 #include <mach/mach.h>
 #include <mach/clock.h>
+#include <unistd.h>
+#include <math.h>
 
 owf_time_t owf_benchmark_time_now() {
     clock_serv_t cclock;
@@ -28,6 +62,8 @@ owf_time_t owf_benchmark_time_now() {
 #elif OWF_PLATFORM_IS_GNU
 #include <time.h>
 #include <sys/time.h>
+#include <unistd.h>
+#include <math.h>
 
 owf_time_t owf_benchmark_time_now() {
     struct timespec ts;
@@ -213,7 +249,10 @@ bool owf_benchmark_run(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, owf
     owf_time_t start, end;
     owf_package_t *package_from_decode;
 
-    void *ptr = alloca(size);
+    void *ptr = owf_malloc(alloc, error, size);
+    if (ptr == NULL) {
+        return false;
+    }
     fprintf(logger, "Benchmark started at " OWF_PRINT_TIME "\n", owf_benchmark_time_now());
 
     // Test encoding speed
@@ -230,9 +269,13 @@ bool owf_benchmark_run(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, owf
         }
         end = owf_benchmark_time_now();
         owf_bench_rolling_avg_put(&avg, (end - start) / 1.0e7);
-    }
 
+        if (i % 1000 == 0 && i != 0) {
+            fprintf(logger, "Encode: iteration " OWF_PRINT_SIZE "\n", i);
+        }
+    }
     owf_bench_rolling_avg_print(&avg, logger, "Encoding");
+    fprintf(logger, "Throughput: %.0f bytes/sec\n", size / owf_bench_rolling_avg_mean(&avg));
 
     // Test decoding speed
     owf_bench_rolling_avg_init(&avg);
@@ -245,16 +288,22 @@ bool owf_benchmark_run(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, owf
             if (OWF_NOEXPECT(package_from_decode == NULL)) {
                 fprintf(logger, "binary read failed\n");
                 return false;
-            } else {
+            }
+            else {
                 owf_package_destroy(package_from_decode, alloc);
             }
         }
         end = owf_benchmark_time_now();
         owf_bench_rolling_avg_put(&avg, (end - start) / 1.0e7);
+
+        if (i % 1000 == 0 && i != 0) {
+            fprintf(logger, "Decode: iteration " OWF_PRINT_SIZE "\n", i);
+        }
     }
-
     owf_bench_rolling_avg_print(&avg, logger, "Decoding");
+    fprintf(logger, "Throughput: %.0f bytes/sec\n", size / owf_bench_rolling_avg_mean(&avg));
 
+    owf_free(alloc, ptr);
     return true;
 }
 
@@ -303,7 +352,7 @@ bool owf_benchmark_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, o
 
 int main(int argc, const char **argv) {
     owf_error_t error = OWF_ERROR_DEFAULT;
-    owf_alloc_t alloc = {.malloc = malloc, .realloc = realloc, .free = free, .max_alloc = OWF_ALLOC_DEFAULT_MAX};
+    owf_alloc_t alloc = {.malloc = malloc, .realloc = realloc, .free = free, .max_alloc = 1048576 * 1024};
     owf_bench_config_t config;
     FILE *logger = stderr;
 
@@ -313,13 +362,13 @@ int main(int argc, const char **argv) {
         return 1;
     }
 
-    config.num_messages = strtoull(argv[1], NULL, 10);
-    config.channels_per_message = strtoull(argv[2], NULL, 10);
-    config.namespaces_per_channel = strtoull(argv[3], NULL, 10);
-    config.signals_per_namespace = strtoull(argv[4], NULL, 10);
-    config.events_per_namespace = strtoull(argv[5], NULL, 10);
-    config.alarms_per_namespace = strtoull(argv[6], NULL, 10);
-    config.samples_per_signal = strtoull(argv[7], NULL, 10);
+    config.num_messages = strtoul(argv[1], NULL, 10);
+    config.channels_per_message = strtoul(argv[2], NULL, 10);
+    config.namespaces_per_channel = strtoul(argv[3], NULL, 10);
+    config.signals_per_namespace = strtoul(argv[4], NULL, 10);
+    config.events_per_namespace = strtoul(argv[5], NULL, 10);
+    config.alarms_per_namespace = strtoul(argv[6], NULL, 10);
+    config.samples_per_signal = strtoul(argv[7], NULL, 10);
 
     fprintf(logger, "--------------------------------\n");
     fprintf(logger, "libowf %s benchmark starting\n", owf_version_string());
@@ -329,6 +378,9 @@ int main(int argc, const char **argv) {
         fprintf(logger, "error with benchmark: %s\n", owf_error_strerror(&error));
         return 1;
     }
+
+    fprintf(logger, "(press enter to exit)\n");
+    getc(stdin);
 
     return 0;
 }
