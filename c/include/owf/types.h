@@ -388,6 +388,24 @@ void owf_package_init(owf_package_t *owf);
  */
 void owf_package_destroy(owf_package_t *owf, owf_alloc_t *alloc);
 
+/* Writes a description of a channel to a FILE pointer.
+ * @package The package
+ * @fp The file to write it to
+ *
+ * @return The number of bytes written
+ */
+
+int owf_package_print(owf_package_t *package, FILE *fp);
+
+/* Writes a description of a package to a string.
+ * @package The package
+ * @ptr The string pointer
+ * @size The length of the buffer
+ *
+ * @return The number of bytes written
+ */
+int owf_package_stringify(owf_package_t *package, char *ptr, size_t size);
+
 /* Compares two <owf_package_t> instances
  * @lhs The left hand package
  * @rhs The right hand package
@@ -741,6 +759,15 @@ struct owf_event {
  */
 void owf_event_init(owf_event_t *event);
 
+/* Initializes this <owf_event_t> with a message.
+ * @event The event
+ * @alloc The allocator
+ * @error The error context
+ * @message The message
+ * @return True if the operation was successful
+ */
+bool owf_event_init_message(owf_event_t *event, owf_alloc_t *alloc, owf_error_t *error, const char *message);
+
 /* Destroys this <owf_event_t>.
  * @event The event
  * @alloc The allocator
@@ -815,6 +842,17 @@ struct owf_alarm {
  * @alarm The alarm
  */
 void owf_alarm_init(owf_alarm_t *alarm);
+
+/* Initializes this <owf_alarm_t> with a type and message.
+ * @alarm The alarm
+ * @alloc The allocator
+ * @error The error context
+ * @type The alarm type
+ * @message The alarm message
+ *
+ * @return True if the operation was successful
+ */
+bool owf_alarm_init_type_message(owf_alarm_t *alarm, owf_alloc_t *alloc, owf_error_t *error, const char *type, const char *message);
 
 /* Destroys this <owf_alarm_t>
  * @alarm The alarm

@@ -28,18 +28,18 @@
  */
 #define OWF_BINARY_SAFE_VARIABLE_READ(_binary, _arr, _len, _elem_size, _padding) \
     do { \
-        uint32_t effective_length = _len; \
-        OWF_ARITH_SAFE_ADD32(_binary->reader.error, effective_length, _padding); \
+        uint32_t __effective_length = _len; \
+        OWF_ARITH_SAFE_ADD32(_binary->reader.error, __effective_length, _padding); \
         \
         /* Length of zero is a no-op */ \
-        if (OWF_EXPECT(effective_length > 0)) { \
-            if (!owf_array_reserve_exactly((&(_arr)), _binary->reader.alloc, _binary->reader.error, effective_length, 1)) { \
+        if (OWF_EXPECT(__effective_length > 0)) { \
+            if (!owf_array_reserve_exactly((&(_arr)), _binary->reader.alloc, _binary->reader.error, __effective_length, 1)) { \
                 return false; \
             } \
-            (&(_arr))->length = effective_length / (_elem_size); \
+            (&(_arr))->length = __effective_length / (_elem_size); \
             \
             if (OWF_NOEXPECT(!_binary->reader.read((&(_arr))->ptr, _len, _binary->reader.data))) { \
-                OWF_ERROR_SETF(_binary->reader.error, "variable read error (" OWF_PRINT_U32 " bytes into buffer of length " OWF_PRINT_U32 ")", (uint32_t)_len, (uint32_t)effective_length); \
+                OWF_ERROR_SETF(_binary->reader.error, "variable read error (" OWF_PRINT_U32 " bytes into buffer of length " OWF_PRINT_U32 ")", (uint32_t)_len, (uint32_t)__effective_length); \
                 owf_array_destroy((&(_arr)), _binary->reader.alloc); \
                 return false; \
             } else { \

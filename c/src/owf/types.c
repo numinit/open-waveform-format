@@ -129,6 +129,18 @@ void owf_package_destroy(owf_package_t *owf, owf_alloc_t *alloc) {
     owf_array_destroy(&owf->channels, alloc);
 }
 
+#define OWF_PACKAGE_PRINT_FMT "#<owf_package_t@%p: [" OWF_PRINT_U32 " %s]>"
+#define OWF_PACKAGE_PRINT_ARGS package, \
+    OWF_ARRAY_LEN(package->channels), OWF_ARRAY_LEN(package->channels) == 1 ? "channel" : "channels"
+
+int owf_package_print(owf_package_t *package, FILE *fp) {
+    return fprintf(fp, OWF_PACKAGE_PRINT_FMT, OWF_PACKAGE_PRINT_ARGS);
+}
+
+int owf_package_stringify(owf_package_t *package, char *ptr, size_t size) {
+    return snprintf(ptr, size, OWF_PACKAGE_PRINT_FMT, OWF_PACKAGE_PRINT_ARGS);
+}
+
 int owf_package_compare(owf_package_t *lhs, owf_package_t *rhs) {
     OWF_ARRAY_SEMANTIC_COMPARE(lhs->channels, rhs->channels, owf_channel_t, owf_channel_compare);
     return 0;
@@ -232,7 +244,7 @@ bool owf_channel_set_id(owf_channel_t *channel, owf_alloc_t *alloc, owf_error_t 
 }
 
 bool owf_channel_push_namespace(owf_channel_t *channel, owf_alloc_t *alloc, owf_error_t *error, owf_namespace_t *ns) {
-    return owf_array_push(&channel->namespaces, alloc, error, channel, sizeof(owf_namespace_t));
+    return owf_array_push(&channel->namespaces, alloc, error, ns, sizeof(owf_namespace_t));
 }
 
 void owf_namespace_init(owf_namespace_t *ns) {
@@ -378,7 +390,16 @@ void owf_signal_init(owf_signal_t *signal) {
 
 bool owf_signal_init_id_unit(owf_signal_t *signal, owf_alloc_t *alloc, owf_error_t *error, const char *id, const char *unit) {
     owf_signal_init(signal);
-    return owf_str_set(&signal->id, alloc, error, id) && owf_str_set(&signal->unit, alloc, error, unit);
+    if (OWF_EXPECT(owf_str_set(&signal->id, alloc, error, id))) {
+        if (OWF_NOEXPECT(!owf_str_set(&signal->unit, alloc, error, unit))) {
+            owf_str_destroy(&signal->id, alloc);
+            return false;
+        } else {
+            return true;
+        }
+    } else {
+        return false;
+    }
 }
 
 void owf_signal_destroy(owf_signal_t *signal, owf_alloc_t *alloc) {
@@ -465,6 +486,11 @@ void owf_event_init(owf_event_t *event) {
     owf_str_init(&event->message);
 }
 
+bool owf_event_init_message(owf_event_t *event, owf_alloc_t *alloc, owf_error_t *error, const char *message) {
+    owf_event_init(event);
+    return owf_str_set(&event->message, alloc, error, message);
+}
+
 void owf_event_destroy(owf_event_t *event, owf_alloc_t *alloc) {
     owf_str_destroy(&event->message, alloc);
 }
@@ -511,6 +537,20 @@ void owf_alarm_init(owf_alarm_t *alarm) {
     owf_memoize_init(&alarm->memoize);
     owf_str_init(&alarm->type);
     owf_str_init(&alarm->message);
+}
+
+bool owf_alarm_init_type_message(owf_alarm_t *alarm, owf_alloc_t *alloc, owf_error_t *error, const char *type, const char *message) {
+    owf_alarm_init(alarm);
+    if (OWF_EXPECT(owf_str_set(&alarm->type, alloc, error, type))) {
+        if (OWF_NOEXPECT(!owf_str_set(&alarm->message, alloc, error, message))) {
+            owf_str_destroy(&alarm->type, alloc);
+            return false;
+        } else {
+            return true;
+        }
+    } else {
+        return false;
+    }
 }
 
 void owf_alarm_destroy(owf_alarm_t *alarm, owf_alloc_t *alloc) {
