@@ -75,8 +75,8 @@ test-run: $(LIBOWF) $(LIBOWF_TEST)
 
 bench-run: $(LIBOWF) $(LIBOWF_BENCH)
 	@echo
-	@echo "BENCH $(LIBOWF_BENCH) $(num_messages)"
-	@$(LIBOWF_BENCH) $(num_messages)
+	@echo "BENCH $(LIBOWF_BENCH) messages=$(messages) namespaces=$(namespaces) signals=$(signals) events=$(events) alarms=$(alarms) samples=$(samples)"
+	@$(LIBOWF_BENCH) $(messages) $(channels) $(namespaces) $(signals) $(events) $(alarms) $(samples)
 
 server-run: $(LIBOWF) $(LIBOWF_SERVER)
 	@echo

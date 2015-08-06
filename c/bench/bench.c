@@ -11,6 +11,31 @@
 
 #include <math.h>
 
+#if OWF_PLATFORM == OWF_PLATFORM_DARWIN
+#include <CoreServices/CoreServices.h>
+#include <mach/mach.h>
+#include <mach/clock.h>
+
+owf_time_t owf_benchmark_time_now() {
+    clock_serv_t cclock;
+    mach_timespec_t mts;
+    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+    clock_get_time(cclock, &mts);
+    mach_port_deallocate(mach_task_self(), cclock);
+
+    return mts.tv_sec * 10000000LL + mts.tv_nsec / 100LL;
+}
+#elif OWF_PLATFORM_IS_GNU
+#include <time.h>
+#include <sys/time.h>
+
+owf_time_t owf_benchmark_time_now() {
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    return ts.tv_sec * 10000000LL + ts.tv_nsec / 100LL;
+}
+#endif
+
 typedef struct owf_bench_config {
     size_t num_messages;
     size_t channels_per_message;
@@ -19,7 +44,6 @@ typedef struct owf_bench_config {
     size_t events_per_namespace;
     size_t alarms_per_namespace;
     size_t samples_per_signal;
-    size_t periods_per_signal;
 } owf_bench_config_t;
 
 typedef struct owf_bench_rolling_avg {
@@ -42,7 +66,7 @@ void owf_bench_rolling_avg_put(owf_bench_rolling_avg_t *avg, double d) {
         avg->old_m = avg->new_m;
         avg->old_s = avg->new_s;
     }
-    
+
     avg->num_iterations++;
 }
 
@@ -67,33 +91,6 @@ int owf_bench_rolling_avg_print(owf_bench_rolling_avg_t *avg, FILE *fp, const ch
                    mean, variance, stdev, 1.0 / mean, 1.0 / stdev);
 }
 
-#if OWF_PLATFORM == OWF_PLATFORM_LINUX
-#include <time.h>
-#include <sys/time.h>
-
-owf_time_t owf_benchmark_time_now() {
-    struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
-    return ts.tv_sec * 10000000LL + ts.tv_nsec / 100LL;
-}
-
-#elif OWF_PLATFORM == OWF_PLATFORM_DARWIN
-#include <CoreServices/CoreServices.h>
-#include <mach/mach.h>
-#include <mach/clock.h>
-
-owf_time_t owf_benchmark_time_now() {
-    clock_serv_t cclock;
-    mach_timespec_t mts;
-    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
-    clock_get_time(cclock, &mts);
-    mach_port_deallocate(mach_task_self(), cclock);
-
-    return mts.tv_sec * 10000000LL + mts.tv_nsec / 100LL;
-}
-
-#endif
-
 bool owf_benchmark_init_package(owf_package_t *package, owf_alloc_t *alloc, owf_error_t *error, owf_bench_config_t *config) {
     char buffer[16];
 
@@ -108,7 +105,7 @@ bool owf_benchmark_init_package(owf_package_t *package, owf_alloc_t *alloc, owf_
 
     /* The wave table for the samples */
     double *wave_table = NULL;
-    
+
     /* The return value */
     bool ret = true;
 
@@ -120,7 +117,7 @@ bool owf_benchmark_init_package(owf_package_t *package, owf_alloc_t *alloc, owf_
         }
 
         /* Fill it with a sine wave */
-        double k = (double)config->samples_per_signal / (double)config->periods_per_signal;
+        double k = (double)config->samples_per_signal;
         for (size_t i = 0; i < config->samples_per_signal; i++) {
             wave_table[i] = sin(k * i * 2 * M_PI);
         }
@@ -197,7 +194,7 @@ bool owf_benchmark_init_package(owf_package_t *package, owf_alloc_t *alloc, owf_
             goto fail;
         }
     }
-    
+
     goto out;
 
 fail:
@@ -217,6 +214,7 @@ bool owf_benchmark_run(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, owf
     owf_package_t *package_from_decode;
 
     void *ptr = alloca(size);
+    fprintf(logger, "Benchmark started at " OWF_PRINT_TIME "\n", owf_benchmark_time_now());
 
     // Test encoding speed
     owf_bench_rolling_avg_init(&avg);
@@ -233,9 +231,9 @@ bool owf_benchmark_run(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, owf
         end = owf_benchmark_time_now();
         owf_bench_rolling_avg_put(&avg, (end - start) / 1.0e7);
     }
-    
+
     owf_bench_rolling_avg_print(&avg, logger, "Encoding");
-    
+
     // Test decoding speed
     owf_bench_rolling_avg_init(&avg);
     for (size_t i = 0; i < num_iterations; i++) {
@@ -254,9 +252,9 @@ bool owf_benchmark_run(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, owf
         end = owf_benchmark_time_now();
         owf_bench_rolling_avg_put(&avg, (end - start) / 1.0e7);
     }
-    
+
     owf_bench_rolling_avg_print(&avg, logger, "Decoding");
-    
+
     return true;
 }
 
@@ -276,7 +274,7 @@ bool owf_benchmark_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, o
     num_samples = num_signals * config->samples_per_signal;
     fprintf(logger, OWF_PRINT_SIZE " %s, " OWF_PRINT_SIZE " %s per message, " OWF_PRINT_SIZE " %s per channel,\n"
             OWF_PRINT_SIZE " %s per namespace, " OWF_PRINT_SIZE " %s per namespace, " OWF_PRINT_SIZE " %s per namespace,\n"
-            OWF_PRINT_SIZE " %s per signal, " OWF_PRINT_SIZE " %s per signal\n"
+            OWF_PRINT_SIZE " %s per signal\n"
             "Total of " OWF_PRINT_SIZE " %s per message, for " OWF_PRINT_SIZE " %s (" OWF_PRINT_SIZE " %s) per message\n",
             config->num_messages, config->num_messages == 1 ? "message" : "messages",
             config->channels_per_message, config->channels_per_message == 1 ? "channel" : "channels",
@@ -285,11 +283,10 @@ bool owf_benchmark_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, o
             config->events_per_namespace, config->events_per_namespace == 1 ? "event" : "events",
             config->alarms_per_namespace, config->alarms_per_namespace == 1 ? "alarm" : "alarms",
             config->samples_per_signal, config->samples_per_signal == 1 ? "sample" : "samples",
-            config->periods_per_signal, config->periods_per_signal == 1 ? "period" : "periods",
             num_signals, num_signals == 1 ? "signal" : "signals",
             num_samples, num_samples == 1 ? "sample" : "samples",
             num_samples * sizeof(double), "bytes");
- 
+
     if (!owf_benchmark_init_package(&package, alloc, error, config)) {
         return false;
     } else if (!owf_package_size(&package, error, &package_size)) {
@@ -310,9 +307,9 @@ int main(int argc, const char **argv) {
     owf_bench_config_t config;
     FILE *logger = stderr;
 
-    if (argc != 9) {
+    if (argc != 8) {
         fprintf(logger, "Usage: %s <num-messages> <channels-per-message> <namespaces-per-channel> "
-                "<signals-per-namespace> <events-per-namespace> <alarms-per-namespace> <samples-per-signal> <periods-per-signal>\n", argv[0]);
+                "<signals-per-namespace> <events-per-namespace> <alarms-per-namespace> <samples-per-signal>\n", argv[0]);
         return 1;
     }
 
@@ -323,10 +320,6 @@ int main(int argc, const char **argv) {
     config.events_per_namespace = strtoull(argv[5], NULL, 10);
     config.alarms_per_namespace = strtoull(argv[6], NULL, 10);
     config.samples_per_signal = strtoull(argv[7], NULL, 10);
-    config.periods_per_signal = strtoull(argv[8], NULL, 10);
-
-    config.samples_per_signal = config.samples_per_signal == 0 ? 1024 : config.samples_per_signal;
-    config.periods_per_signal = config.periods_per_signal == 0 ? 1 : config.periods_per_signal;
 
     fprintf(logger, "--------------------------------\n");
     fprintf(logger, "libowf %s benchmark starting\n", owf_version_string());

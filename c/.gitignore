@@ -20,6 +20,7 @@ msvc/build/*
 
 # Xcode userdata
 xcuserdata
+*.xcworkspace
 
 # MSVC userdata
 ipch
