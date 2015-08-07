@@ -70,7 +70,7 @@ owf_time_t owf_bench_time_now() {
 
 bool owf_bench_lock_affinity(uint64_t cpu) {
     thread_t t = pthread_mach_thread_np(pthread_self());
-    thread_affinity_policy p = {0};
+    struct thread_affinity_policy p = {0};
     p.affinity_tag = 1 << cpu;
     return thread_policy_set(t, THREAD_AFFINITY_POLICY, (thread_policy_t)&p, THREAD_AFFINITY_POLICY_COUNT) == KERN_SUCCESS;
 }
