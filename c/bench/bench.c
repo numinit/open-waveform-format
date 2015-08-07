@@ -43,10 +43,18 @@ owf_time_t owf_bench_time_now() {
     /* offset the current time to compensate for epoch */
     return ((int64_t)now_uint64.QuadPart) - ((int64_t)epoch_uint64.QuadPart);
 }
+
+bool owf_bench_lock_affinity(uint64_t cpu) {
+    DWORD_PTR mask = 1 << cpu;
+    return SetProcessAffinityMask(GetCurrentProcess(), mask);
+}
 #elif OWF_PLATFORM == OWF_PLATFORM_DARWIN
 #include <CoreServices/CoreServices.h>
 #include <mach/mach.h>
 #include <mach/clock.h>
+#include <mach/thread_policy.h>
+#include <mach/thread_act.h>
+#include <pthread.h>
 #include <unistd.h>
 #include <math.h>
 
@@ -59,17 +67,34 @@ owf_time_t owf_bench_time_now() {
 
     return mts.tv_sec * 10000000LL + mts.tv_nsec / 100LL;
 }
-#elif OWF_PLATFORM_IS_GNU
+
+bool owf_bench_lock_affinity(uint64_t cpu) {
+    thread_t t = pthread_mach_thread_np(pthread_self());
+    thread_affinity_policy p = {0};
+    p.affinity_tag = 1 << cpu;
+    return thread_policy_set(t, THREAD_AFFINITY_POLICY, (thread_policy_t)&p, THREAD_AFFINITY_POLICY_COUNT) == KERN_SUCCESS;
+}
+#elif OWF_PLATFORM == OWF_PLATFORM_LINUX
 #include <time.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <math.h>
+#include <sched.h>
 
 owf_time_t owf_bench_time_now() {
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     return ts.tv_sec * 10000000LL + ts.tv_nsec / 100LL;
 }
+
+bool owf_bench_lock_affinity(uint64_t cpu) {
+    cpu_set_t set;
+    CPU_ZERO(set);
+    CPU_SET((int)cpu, &set);
+    return sched_setaffinity(getpid(), sizeof(set), &set) == 0;
+}
+#else
+#error "No benchmark for your platform"
 #endif
 
 typedef struct owf_bench_config {
@@ -283,7 +308,7 @@ bool owf_benchmark_run(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, owf
     for (size_t i = 0; i < num_iterations; i++) {
         start = owf_bench_time_now();
         
-        // This benchmark simply writes the package to the allocated buffer  repeatedly.
+        // This benchmark simply writes the package to the allocated buffer repeatedly.
         {
             owf_buffer_init(&buf, ptr, size);
             owf_binary_writer_init_buffer(&writer, &buf, alloc, error);
@@ -294,9 +319,13 @@ bool owf_benchmark_run(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, owf
         }
         end = owf_bench_time_now();
         owf_bench_rolling_avg_put(&avg, (end - start) / 1.0e7);
+
+        if ((i + 1) % 1000 == 0) {
+            fprintf(logger, "Encode: " OWF_PRINT_SIZE "\n", i + 1);
+        }
     }
-    owf_bench_rolling_avg_print(&avg, logger, "Encoding");
-    fprintf(logger, "Throughput: %.0f bytes/sec\n", size / owf_bench_rolling_avg_mean(&avg));
+    owf_bench_rolling_avg_print(&avg, logger, "Encode");
+    fprintf(logger, "Throughput: %.4f GB/sec\n", size / owf_bench_rolling_avg_mean(&avg) / 1073741824);
 
     // Test materialize speed
     owf_bench_rolling_avg_init(&avg);
@@ -328,9 +357,13 @@ bool owf_benchmark_run(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, owf
         } else {
             owf_package_destroy(package_from_decode, alloc);
         }
+
+        if ((i + 1) % 1000 == 0) {
+            fprintf(logger, "Decode (materialize): " OWF_PRINT_SIZE "\n", i + 1);
+        }
     }
     owf_bench_rolling_avg_print(&avg, logger, "Decode (materialize)");
-    fprintf(logger, "Throughput: %.0f bytes/sec\n", size / owf_bench_rolling_avg_mean(&avg));
+    fprintf(logger, "Throughput: %.4f GB/sec\n", size / owf_bench_rolling_avg_mean(&avg) / 1073741824);
     
     // Test visitor speed
     owf_bench_rolling_avg_init(&avg);
@@ -350,10 +383,14 @@ bool owf_benchmark_run(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, owf
         
         end = owf_bench_time_now();
         owf_bench_rolling_avg_put(&avg, (end - start) / 1.0e7);
+
+        if ((i + 1) % 1000 == 0) {
+            fprintf(logger, "Decode (visitor): " OWF_PRINT_SIZE "\n", i + 1);
+        }
     }
     
     owf_bench_rolling_avg_print(&avg, logger, "Decode (visitor)");
-    fprintf(logger, "Throughput: %.0f bytes/sec\n", size / owf_bench_rolling_avg_mean(&avg));
+    fprintf(logger, "Throughput: %.4f GB/sec\n", size / owf_bench_rolling_avg_mean(&avg) / 1073741824);
 
     owf_free(alloc, ptr);
     return true;
@@ -387,6 +424,13 @@ bool owf_benchmark_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, o
             num_signals, num_signals == 1 ? "signal" : "signals",
             num_samples, num_samples == 1 ? "sample" : "samples",
             num_samples * sizeof(double), "bytes");
+
+    if (!owf_bench_lock_affinity(0)) {
+        OWF_ERROR_SET(error, "error setting CPU affinity");
+        return false;
+    } else {
+        fprintf(logger, "Affinity locked to processor 0\n");
+    }
 
     if (!owf_bench_init_package(&package, alloc, error, config)) {
         return false;
