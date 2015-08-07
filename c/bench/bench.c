@@ -15,7 +15,7 @@
 #include <math.h>
 #include <windows.h>
 
-owf_time_t owf_benchmark_time_now() {
+owf_time_t owf_bench_time_now() {
     SYSTEMTIME now = {0}, epoch = {0};
     FILETIME now_ft = {0}, epoch_ft = {0};
     ULARGE_INTEGER now_uint64, epoch_uint64 = {0};
@@ -50,7 +50,7 @@ owf_time_t owf_benchmark_time_now() {
 #include <unistd.h>
 #include <math.h>
 
-owf_time_t owf_benchmark_time_now() {
+owf_time_t owf_bench_time_now() {
     clock_serv_t cclock;
     mach_timespec_t mts;
     host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
@@ -65,7 +65,7 @@ owf_time_t owf_benchmark_time_now() {
 #include <unistd.h>
 #include <math.h>
 
-owf_time_t owf_benchmark_time_now() {
+owf_time_t owf_bench_time_now() {
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     return ts.tv_sec * 10000000LL + ts.tv_nsec / 100LL;
@@ -127,13 +127,13 @@ int owf_bench_rolling_avg_print(owf_bench_rolling_avg_t *avg, FILE *fp, const ch
                    mean, variance, stdev, 1.0 / mean, 1.0 / stdev);
 }
 
-bool owf_benchmark_init_package(owf_package_t *package, owf_alloc_t *alloc, owf_error_t *error, owf_bench_config_t *config) {
+bool owf_bench_init_package(owf_package_t *package, owf_alloc_t *alloc, owf_error_t *error, owf_bench_config_t *config) {
     char buffer[16];
 
     /* Start time is now; end time is now + 1 sec.
      * This package will represent a second of samples.
      */
-    const owf_time_t start_time = owf_benchmark_time_now();
+    const owf_time_t start_time = owf_bench_time_now();
     const owf_time_t end_time = start_time + 10000000LL;
 
     /* A halfway point between the start and end time */
@@ -241,6 +241,29 @@ out:
     return ret;
 }
 
+bool owf_bench_visitor(owf_reader_t *reader, owf_reader_ctx_t *ctx, owf_reader_cb_type_t type, void *data) {
+    switch (type) {
+        case OWF_READ_CHANNEL:
+            owf_channel_destroy(&ctx->channel, reader->alloc);
+            break;
+        case OWF_READ_NAMESPACE:
+            owf_namespace_destroy(&ctx->ns, reader->alloc);
+            break;
+        case OWF_READ_SIGNAL:
+            owf_signal_destroy(&ctx->signal, reader->alloc);
+            break;
+        case OWF_READ_EVENT:
+            owf_event_destroy(&ctx->event, reader->alloc);
+            break;
+        case OWF_READ_ALARM:
+            owf_alarm_destroy(&ctx->alarm, reader->alloc);
+            break;
+        default:
+            break;
+    }
+    return true;
+}
+
 bool owf_benchmark_run(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, owf_package_t *package_to_encode, uint32_t size, size_t num_iterations) {
     owf_binary_writer_t writer;
     owf_binary_reader_t reader;
@@ -253,12 +276,14 @@ bool owf_benchmark_run(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, owf
     if (ptr == NULL) {
         return false;
     }
-    fprintf(logger, "Benchmark started at " OWF_PRINT_TIME "\n", owf_benchmark_time_now());
+    fprintf(logger, "Benchmark started at " OWF_PRINT_TIME "\n", owf_bench_time_now());
 
     // Test encoding speed
     owf_bench_rolling_avg_init(&avg);
     for (size_t i = 0; i < num_iterations; i++) {
-        start = owf_benchmark_time_now();
+        start = owf_bench_time_now();
+        
+        // This benchmark simply writes the package to the allocated buffer  repeatedly.
         {
             owf_buffer_init(&buf, ptr, size);
             owf_binary_writer_init_buffer(&writer, &buf, alloc, error);
@@ -267,20 +292,23 @@ bool owf_benchmark_run(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, owf
                 return false;
             }
         }
-        end = owf_benchmark_time_now();
+        end = owf_bench_time_now();
         owf_bench_rolling_avg_put(&avg, (end - start) / 1.0e7);
-
-        if (i % 1000 == 0 && i != 0) {
-            fprintf(logger, "Encode: iteration " OWF_PRINT_SIZE "\n", i);
-        }
     }
     owf_bench_rolling_avg_print(&avg, logger, "Encoding");
     fprintf(logger, "Throughput: %.0f bytes/sec\n", size / owf_bench_rolling_avg_mean(&avg));
 
-    // Test decoding speed
+    // Test materialize speed
     owf_bench_rolling_avg_init(&avg);
     for (size_t i = 0; i < num_iterations; i++) {
-        start = owf_benchmark_time_now();
+        start = owf_bench_time_now();
+        
+        // This benchmark executes a pessimistic strategy for
+        // memory management during decoding: reading a package and materializing it
+        // entirely to owf_* structures on the heap.
+        
+        // Note that this frees the package after each iteration, which can create convenient slots
+        // to fit the next decode's package into on the heap.
         {
             owf_buffer_init(&buf, ptr, size);
             owf_binary_reader_init_buffer(&reader, &buf, alloc, error, NULL);
@@ -289,18 +317,42 @@ bool owf_benchmark_run(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, owf
                 fprintf(logger, "binary read failed\n");
                 return false;
             }
-            else {
-                owf_package_destroy(package_from_decode, alloc);
-            }
         }
-        end = owf_benchmark_time_now();
+        end = owf_bench_time_now();
         owf_bench_rolling_avg_put(&avg, (end - start) / 1.0e7);
-
-        if (i % 1000 == 0 && i != 0) {
-            fprintf(logger, "Decode: iteration " OWF_PRINT_SIZE "\n", i);
+        
+        if (owf_package_compare(package_to_encode, package_from_decode) != 0) {
+            fprintf(logger, "packages weren't equal\n");
+            owf_package_destroy(package_from_decode, alloc);
+            return false;
+        } else {
+            owf_package_destroy(package_from_decode, alloc);
         }
     }
-    owf_bench_rolling_avg_print(&avg, logger, "Decoding");
+    owf_bench_rolling_avg_print(&avg, logger, "Decode (materialize)");
+    fprintf(logger, "Throughput: %.0f bytes/sec\n", size / owf_bench_rolling_avg_mean(&avg));
+    
+    // Test visitor speed
+    owf_bench_rolling_avg_init(&avg);
+    for (size_t i = 0; i < num_iterations; i++) {
+        start = owf_bench_time_now();
+        
+        // This benchmark simply traverses the packet with a visitor.
+        // Objects are "processed" by deallocation as they come in.
+        {
+            owf_buffer_init(&buf, ptr, size);
+            owf_binary_reader_init_buffer(&reader, &buf, alloc, error, owf_bench_visitor);
+            if (!owf_binary_read(&reader)) {
+                fprintf(logger, "binary read failed\n");
+                return false;
+            }
+        }
+        
+        end = owf_bench_time_now();
+        owf_bench_rolling_avg_put(&avg, (end - start) / 1.0e7);
+    }
+    
+    owf_bench_rolling_avg_print(&avg, logger, "Decode (visitor)");
     fprintf(logger, "Throughput: %.0f bytes/sec\n", size / owf_bench_rolling_avg_mean(&avg));
 
     owf_free(alloc, ptr);
@@ -336,7 +388,7 @@ bool owf_benchmark_start(FILE *logger, owf_alloc_t *alloc, owf_error_t *error, o
             num_samples, num_samples == 1 ? "sample" : "samples",
             num_samples * sizeof(double), "bytes");
 
-    if (!owf_benchmark_init_package(&package, alloc, error, config)) {
+    if (!owf_bench_init_package(&package, alloc, error, config)) {
         return false;
     } else if (!owf_package_size(&package, error, &package_size)) {
         ret = false;

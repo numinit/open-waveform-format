@@ -42,8 +42,9 @@ int owf_array_binary_compare(owf_array_t *lhs, owf_array_t *rhs, uint32_t width)
 bool owf_array_reserve(owf_array_t *arr, owf_alloc_t *alloc, owf_error_t *error, uint32_t capacity, uint32_t width) {
     /* Extend the capacity by a factor of 3/2.
      * Do a safe multiply by 3, then divide by 2.
+     * Keep 3 elements in this array, at minimum.
      */
-    capacity = OWF_MAX(capacity, 2);
+    capacity = OWF_MAX(capacity, 3);
     OWF_ARITH_SAFE_MUL32(error, capacity, 3);
     capacity /= 2;
 
