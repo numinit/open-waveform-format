@@ -19,6 +19,9 @@ LIBOWF_OBJS = $(LIBOWF_SRCS:.c=.o)
 LIBOWF_TEST_SRCS = $(shell find test -type f -name '*.c')
 LIBOWF_TEST_OBJS = $(LIBOWF_TEST_SRCS:.c=.o)
 
+LIBOWF_BENCH_SRCS = $(shell find bench -type f -name '*.c')
+LIBOWF_BENCH_OBJS = $(LIBOWF_BENCH_SRCS:.c=.o)
+
 LIBOWF_SERVER_SRCS = $(shell find server -type f -name '*.c')
 LIBOWF_SERVER_OBJS = $(LIBOWF_SERVER_SRCS:.c=.o)
 
@@ -48,18 +51,20 @@ endif
 # Define output paths
 LIBOWF = build/lib/libowf$(DL_EXT)
 LIBOWF_TEST = build/bin/libowf-test$(BIN_EXT)
+LIBOWF_BENCH = build/bin/libowf-bench$(BIN_EXT)
 LIBOWF_SERVER = build/bin/libowf-server$(BIN_EXT)
 LIBOWF_DOC = doc
 
 # Define `make all`, `make test`, and `make server`
-all: $(LIBOWF) $(LIBOWF_TEST) $(LIBOWF_SERVER)
+all: $(LIBOWF) $(LIBOWF_TEST) $(LIBOWF_BENCH) $(LIBOWF_SERVER)
 test: $(LIBOWF) $(LIBOWF_TEST)
+bench: $(LIBOWF) $(LIBOWF_BENCH)
 server: $(LIBOWF) $(LIBOWF_SERVER)
 
 # Phony targets
 clean:
-	@echo "RM $(LIBOWF) $(LIBOWF_TEST) $(LIBOWF_SERVER)"
-	@rm -f "$(LIBOWF)" "$(LIBOWF_TEST)" "$(LIBOWF_SERVER)"
+	@echo "RM $(LIBOWF) $(LIBOWF_TEST) $(LIBOWF_BENCH) $(LIBOWF_SERVER)"
+	@rm -f "$(LIBOWF)" "$(LIBOWF_TEST)" "$(LIBOWF_BENCH)" "$(LIBOWF_SERVER)"
 	@echo "RM *.o"
 	@find src test server -name '*.o' -exec rm -f {} \;
 
@@ -67,6 +72,11 @@ test-run: $(LIBOWF) $(LIBOWF_TEST)
 	@echo
 	@echo "TEST $(LIBOWF_TEST)"
 	@$(LIBOWF_TEST)
+
+bench-run: $(LIBOWF) $(LIBOWF_BENCH)
+	@echo
+	@echo "BENCH $(LIBOWF_BENCH) messages=$(messages) namespaces=$(namespaces) signals=$(signals) events=$(events) alarms=$(alarms) samples=$(samples)"
+	@$(LIBOWF_BENCH) $(messages) $(channels) $(namespaces) $(signals) $(events) $(alarms) $(samples)
 
 server-run: $(LIBOWF) $(LIBOWF_SERVER)
 	@echo
@@ -110,6 +120,12 @@ $(LIBOWF_TEST): LDFLAGS += -Lbuild/lib -lm -lowf
 $(LIBOWF_TEST): $(LIBOWF) $(LIBOWF_TEST_OBJS)
 	@echo "LD $(LIBOWF_TEST)"
 	@$(CC) $(CFLAGS) -std=c99 $(LIBOWF_TEST_CFLAGS) $(INCLUDES) -o $(LIBOWF_TEST) $(LIBOWF_TEST_OBJS) $(LDFLAGS) $(LIBS)
+
+# Define the libowf-bench target
+$(LIBOWF_BENCH): LDFLAGS += -Lbuild/lib -lm -lowf
+$(LIBOWF_BENCH): $(LIBOWF) $(LIBOWF_BENCH_OBJS)
+	@echo "LD $(LIBOWF_BENCH)"
+	@$(CC) $(CFLAGS) -std=c99 $(LIBOWF_BENCH_CFLAGS) $(INCLUDES) -o $(LIBOWF_BENCH) $(LIBOWF_BENCH_OBJS) $(LDFLAGS) $(LIBS)
 
 # Define the libowf-server target
 $(LIBOWF_SERVER): LDFLAGS += -Lbuild/lib -lm -lowf

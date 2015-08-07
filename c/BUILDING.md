@@ -11,8 +11,10 @@ Whatever libc your platform uses.
 |`make (all)`|Compiles everything.|
 |`make clean`|Cleans everything.|
 |`make test`|Compiles the test harness and test suite|
+|`make bench`|Compiles the benchmark utility|
 |`make server`|Compiles the echo server|
 |`make test-run`|Runs tests|
+|`make bench-run messages=<n> channels=<n> namespaces=<n> signals=<n> events=<n> alarms=<n> samples=<n>`|Runs the benchmark utility for `messages` iterations, using `channels` channels per message, `namespaces` namespaces per channel, `signals` signals per namespace, `events` events per namespace, `alarms` alarms per namespace, and `samples` samples per signal|
 |`make server-run protocol=<tcp|udp> host=<host> port=<port>`|Runs the echo server|
 |`make doc`|Compiles documentation using `cldoc` to `doc`|
 |`make doc-static`|Compiles static HTML documentation using `cldoc` and `cldoc-static` to `doc`|
@@ -28,7 +30,7 @@ You can verify whether the OWF tests still pass using your build settings with `
 
 The \*NIX compile directions still apply, but there's also a libowf Xcode project in the `xcode` directory.
 
-The targets are `libowf`, `libowf-test`, and `libowf-server`.
+The targets are `libowf`, `libowf-test`, `libowf-bench`, and `libowf-server`.
 
 ## Windows
 

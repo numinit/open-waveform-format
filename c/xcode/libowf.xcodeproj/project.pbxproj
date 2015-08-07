@@ -29,6 +29,13 @@
 			remoteGlobalIDString = BF54FDE11B39BFC300760CAE;
 			remoteInfo = "libowf-test";
 		};
+		BFA1A1AE1B73EDBC005BA26C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BFA1A1AA1B73EDBC005BA26C /* libowf-bench.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = BFA1A1981B73EDA6005BA26C;
+			remoteInfo = "libowf-bench";
+		};
 		BFB9066E1B50215600B35A9F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = BFB9066A1B50215600B35A9F /* libowf-server.xcodeproj */;
@@ -59,6 +66,7 @@
 		BF76FF991B4C88DC006076D2 /* writer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = writer.c; sourceTree = "<group>"; };
 		BF76FF9F1B4C8917006076D2 /* binary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = binary.h; sourceTree = "<group>"; };
 		BF76FFA01B4C8917006076D2 /* writer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = writer.h; sourceTree = "<group>"; };
+		BFA1A1AA1B73EDBC005BA26C /* libowf-bench.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "libowf-bench.xcodeproj"; sourceTree = "<group>"; };
 		BFB9066A1B50215600B35A9F /* libowf-server.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "libowf-server.xcodeproj"; sourceTree = "<group>"; };
 		BFBA63731B45E5B80066A119 /* binary.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = binary.h; sourceTree = "<group>"; };
 		BFCFE8581B4EF859001C68A2 /* error.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = error.c; sourceTree = "<group>"; };
@@ -153,6 +161,14 @@
 			path = writer;
 			sourceTree = "<group>";
 		};
+		BFA1A1AB1B73EDBC005BA26C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BFA1A1AF1B73EDBC005BA26C /* libowf-bench */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		BFB9066B1B50215600B35A9F /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -180,6 +196,7 @@
 		BFE790CA1B39BE3900F4A24B = {
 			isa = PBXGroup;
 			children = (
+				BFA1A1AA1B73EDBC005BA26C /* libowf-bench.xcodeproj */,
 				BFB9066A1B50215600B35A9F /* libowf-server.xcodeproj */,
 				BF459D601B39BFE900BB7117 /* libowf-test.xcodeproj */,
 				BF54FDBC1B39BF0900760CAE /* include */,
@@ -254,6 +271,10 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
+					ProductGroup = BFA1A1AB1B73EDBC005BA26C /* Products */;
+					ProjectRef = BFA1A1AA1B73EDBC005BA26C /* libowf-bench.xcodeproj */;
+				},
+				{
 					ProductGroup = BFB9066B1B50215600B35A9F /* Products */;
 					ProjectRef = BFB9066A1B50215600B35A9F /* libowf-server.xcodeproj */;
 				},
@@ -275,6 +296,13 @@
 			fileType = "compiled.mach-o.executable";
 			path = "libowf-test";
 			remoteRef = BF459D641B39BFE900BB7117 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		BFA1A1AF1B73EDBC005BA26C /* libowf-bench */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "libowf-bench";
+			remoteRef = BFA1A1AE1B73EDBC005BA26C /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		BFB9066F1B50215600B35A9F /* libowf-server */ = {
