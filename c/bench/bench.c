@@ -88,7 +88,7 @@ typedef struct owf_bench_rolling_avg {
 } owf_bench_rolling_avg_t;
 
 void owf_bench_rolling_avg_init(owf_bench_rolling_avg_t *avg) {
-    avg->old_m = avg->new_m = avg->old_s = avg->old_s = 0;
+    avg->old_m = avg->new_m = avg->old_s = avg->new_s = 0;
     avg->num_iterations = 0;
 }
 
